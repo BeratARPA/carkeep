@@ -297,6 +297,10 @@ class SnapshotSync {
   /// Yalnız test için: kaç kez yazıldı.
   int writeCount = 0;
 
+  /// K-27: gecikmiş sayısı >0'dan 0'a düştüğünde tepsideki bildirim iptal
+  /// edilir. `null` = henüz gözlemlenmedi (açılışta iptal etmeyelim).
+  int? _lastOverdueCount;
+
   void schedule() {
     if (_disposed) {
       return;
@@ -328,6 +332,28 @@ class SnapshotSync {
     } on Object {
       // 01-spec §9: sessiz; bir sonraki tetikleyicide tekrar denenir.
     }
+    await _cancelIfNothingOverdue();
+  }
+
+  /// K-27. Kullanıcı gecikmişleri kaydedince tepsideki bildirim anlamsız
+  /// kalıyordu; ertelemede de öyle (motor artık onları bildirmez).
+  Future<void> _cancelIfNothingOverdue() async {
+    final int count = engineOverdue(
+      _ref.read(statusesProvider),
+      _ref.read(todayProvider),
+    ).length;
+    final int? previous = _lastOverdueCount;
+    _lastOverdueCount = count;
+    // Yalnız **geçişte** iptal: açılışta zaten 0 ise dokunmuyoruz, aksi halde
+    // az önce basılmış bir bildirimi silebilirdik.
+    if (previous == null || previous == 0 || count != 0) {
+      return;
+    }
+    try {
+      await _ref.read(platformBridgeProvider).cancelNotification();
+    } on Object {
+      // Kanal yoksa sessiz.
+    }
   }
 
   void dispose() {
@@ -341,8 +367,12 @@ final Provider<SnapshotSync> snapshotSyncProvider = Provider<SnapshotSync>((
 ) {
   final SnapshotSync sync = SnapshotSync(ref);
   ref.onDispose(sync.dispose);
+  // 01-spec §6'nın tetikleyicileri. Kayıt/silme/düzeltme/km/madde değişikliği
+  // `statusesProvider` üzerinden gelir; araç ve cihaz değişikliği snapshot'ın
+  // `car` bloğunu değiştirdiği için ayrıca dinleniyor (durum aynı kalabilir).
   ref.listen(statusesProvider, (_, _) => sync.schedule(), fireImmediately: true);
   ref.listen(rulesProvider, (_, _) => sync.schedule());
+  ref.listen(vehicleProvider, (_, _) => sync.schedule());
   ref.keepAlive();
   return sync;
 });

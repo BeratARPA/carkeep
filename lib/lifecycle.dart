@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/date_utils.dart';
 import 'data/platform/platform_bridge.dart';
 import 'providers.dart';
 
@@ -66,12 +67,25 @@ class AppLifecycle {
     }
   }
 
+  /// Gece yarısı geçişi: uygulama açık kalıp gün değiştiyse bütün vade
+  /// hesapları eski güne göre kalırdı (02-mimari §9).
+  void refreshToday() {
+    final DateTime now = dateOnly(DateTime.now());
+    if (!isSameDay(_ref.read(todayProvider), now)) {
+      _ref.read(todayProvider.notifier).state = now;
+    }
+  }
+
   /// 02-mimari §10 adım 7.
   Future<void> onResume() async {
+    // Önce gün: sonraki her hesap doğru güne göre yapılsın.
+    refreshToday();
     await drainPendingEvents();
     await readLaunchAction();
     await _ref.read(bluetoothStateProvider.notifier).refresh();
     await _ref.read(permissionsProvider.notifier).refresh();
+    // 01-spec §6: `resume` de bir snapshot tetikleyicisi.
+    await _ref.read(snapshotSyncProvider).write();
   }
 }
 

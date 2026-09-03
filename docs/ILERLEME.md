@@ -41,7 +41,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T12 Receiver, motor, bildirim | bitti | `feat(T12)` | 436 Dart + 58 Kotlin testi; **kontrol noktası: gerçek araba protokolü bekliyor** |
 | T13 Pending events ve Bluetooth durumu | bitti | `feat(T13)` | 458 Dart + 58 Kotlin testi; cihazda doğrulandı |
 | T14 DailyCheckWorker | bitti | `feat(T14)` | 458 Dart + 72 Kotlin testi; cihazda doğrulandı |
-| T15 Snapshot senkronu ve yaşam döngüsü | bekliyor | | |
+| T15 Snapshot senkronu ve yaşam döngüsü | bitti | `feat(T15)` | 477 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T16 Hata/boş durumlar, metin turu | bekliyor | | |
 | T17 Cihaz testi düzeltmeleri | bekliyor | | |
 | T18 Release | bekliyor | | kontrol noktası |
@@ -171,8 +171,7 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
     → Bağlayıcı boyutun eşiği kullanılacak (§2.2 ile tutarlı tek okuma).
 12. **Kayıt sonrası tepsideki bildirim ne olacak** tanımsız. Kullanıcı gecikmiş maddeleri
     kaydedince bildirim ekranda kalıyor; Dart'ın bildirimi iptal edecek kanal metodu yok.
-    → **Karar gerekiyor** (öneri: `cancelNotification` metodu eklensin, gecikmiş sayısı
-    sıfırlanınca çağrılsın).
+    → **T15'te kapandı, K-27.** Motorun gecikmiş sayısı >0'dan 0'a düşünce iptal edilir.
 13. **Mevsimsel maddeyi erken yapmak vadeyi ilerletmiyor.** "Son yapılıştan sonraki ilk tarih"
     kuralı gereği 20 Eki'de kışlık lastik takılırsa vade hâlâ 1 Kas kalır ve madde
     "2 gün kaldı" demeye devam eder. → **Karar gerekiyor** (öneri: son yapılış tarihi
@@ -587,5 +586,21 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   bildirim "1 kontrol gecikti / **Bir süredir sürüş yok.** Silecek suyu"; ikinci çalıştırma
   → `fallback skipped: recently_notified`; `fallback` satırı `trips`'e yazıldı ama tanı
   satırına girmedi (K-26). Test verisi geri alındı.
+
+### T15
+- **`vehicleProvider` da bir snapshot tetikleyicisi oldu.** Cihaz değişikliği durum listesini
+  değiştirmiyor; yalnız `statusesProvider`'a bakan senkron, snapshot'ın `car` bloğunu
+  güncellemeyebilirdi ve motor eski cihazı dinlemeye devam ederdi. 01-spec §6'nın on iki
+  tetikleyicisinin her biri için test var.
+- **K-27**: motorun gecikmiş saydığı madde sayısı >0'dan 0'a düşünce `cancelNotification`
+  çağrılıyor (denetim md. 12 kapandı). Ölçüt ekranın Gecikmiş bölümü değil `engineOverdue`:
+  ertelenmiş madde ekranda gecikmiş görünmeye devam eder (K-13) ama bildirime girmez.
+  Yalnız **geçişte** iptal ediliyor; açılışta sayı zaten 0 ise dokunulmuyor, aksi halde az
+  önce basılmış bir bildirimi silebilirdik.
+- **Gece yarısı**: `resume` önce `todayProvider`'ı tazeliyor, sonra drain/launch action/
+  izin/Bluetooth, en sonda snapshot. Sıra önemli — sonraki her hesap doğru güne göre.
+- Cihazda doğrulandı: 35 gün gecikmiş madde + 25 dk simülasyon → bildirim; maddeyi "Yaptım"
+  diye kaydedince `dumpsys notification` çıktısında CarKeep kaydı kalmadı, durum çubuğu
+  temiz. Test verisi (düzeltme + Yaptım kayıtları) Geçmiş'ten silinerek geri alındı.
 
 ## Bilinen sorunlar

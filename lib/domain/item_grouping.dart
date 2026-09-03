@@ -1,6 +1,7 @@
 /// Ana ekran bölümleme ve sıralama (01-spec §2.5, K-17). Yan etkisiz.
 library;
 
+import '../core/date_utils.dart';
 import 'models/check_item.dart';
 import 'models/item_status.dart';
 
@@ -86,4 +87,25 @@ int compareByProximity(StatusedItem a, StatusedItem b) {
 int compareBySortOrder(StatusedItem a, StatusedItem b) {
   final int bySort = a.item.sortOrder.compareTo(b.item.sortOrder);
   return bySort != 0 ? bySort : a.item.id.compareTo(b.item.id);
+}
+
+/// `yyyy-MM-dd` leksikografik karşılaştırma = kronolojik (K-10).
+bool _snoozed(String? until, String todayKey) =>
+    until != null && until.compareTo(todayKey) > 0;
+
+/// Motorun bildirim için "gecikmiş" saydıkları: kapalı maddeler ve **ertelenmiş**
+/// olanlar hariç (01-spec §7.1 adım 5).
+///
+/// Ana ekranın Gecikmiş bölümünden farkı erteleme: K-13 gereği ertelenmiş madde
+/// ekranda gecikmiş görünmeye devam eder, ama bildirime girmez. K-27 bu sayıyı
+/// kullanır.
+List<StatusedItem> engineOverdue(List<StatusedItem> all, DateTime today) {
+  final String todayKey = dayKey(today);
+  return <StatusedItem>[
+    for (final StatusedItem e in all)
+      if (e.item.enabled &&
+          e.status.state == ItemState.overdue &&
+          !_snoozed(e.item.snoozeUntilDay, todayKey))
+        e,
+  ];
 }

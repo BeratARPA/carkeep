@@ -158,3 +158,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: Yedek bildirim `trips`'e yazılır: `connected_at = null`, `duration_min = 0`, `counted = false`, `notified = true`, `note = 'fallback'`. Ayarlar tanı satırını besleyen sorgu (`TripDao.lastTrip/watchLastTrip`) `fallback` satırlarını **eler**.
 - Gerekçe: `note` listesinde `fallback` olması olayın bu tabloya ait olduğunu söylüyor; sürüş olmadığı için `counted=false`, bildirim basıldığı için `notified=true` tek tutarlı okuma. Tanı satırı "son kopma"yı anlatır, yedek bildirim kopma değildir.
 - Sonuç: `TripRepo.applyPendingEvents`, `TripDao._lastTripQuery`, `Trip.isFallback`.
+
+## K-27 Gecikmiş kalmayınca tepsideki bildirim iptal edilir
+- Bağlam: Kullanıcı bildirimi görüp arabanın yanında maddeleri kaydediyor; bildirim tepside duruyor ve artık yalan söylüyor. 01-spec bunu tanımlamıyor, Dart'ın bildirimi iptal edecek kanal metodu da çağrılmıyordu (denetim md. 12).
+- Karar: Snapshot her yazıldığında motorun "gecikmiş" saydığı madde sayısı hesaplanır (açık + gecikmiş + ertelenmemiş, 01-spec §7.1 adım 5). Sayı **>0'dan 0'a düştüğünde** `cancelNotification` çağrılır. Açılışta sayı zaten 0 ise hiçbir şey yapılmaz.
+- Gerekçe: Yalnız geçişte iptal etmek, az önce basılmış bir bildirimi silme riskini ortadan kaldırıyor. Ölçüt ekranın Gecikmiş bölümü değil motorun listesi: ertelenmiş madde ekranda gecikmiş görünmeye devam eder (K-13) ama bildirime girmez, dolayısıyla erteleme de bildirimi anlamsız kılar.
+- Sonuç: `SnapshotSync._cancelIfNothingOverdue`, `item_grouping.engineOverdue`.

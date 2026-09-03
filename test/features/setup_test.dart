@@ -60,6 +60,9 @@ class FakeBridge extends PlatformBridge {
   int dailyWorkerRuns = 0;
   bool fallbackEventOnRun = false;
 
+  /// K-27: tepsideki bildirim kaç kez iptal edildi.
+  int cancelCalls = 0;
+
   @override
   Future<bool> hasBluetoothPermission() async => bluetooth;
 
@@ -104,6 +107,11 @@ class FakeBridge extends PlatformBridge {
   @override
   Future<void> scheduleDailyWorker() async {
     scheduleCalls++;
+  }
+
+  @override
+  Future<void> cancelNotification() async {
+    cancelCalls++;
   }
 
   @override
