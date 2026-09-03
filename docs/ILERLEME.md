@@ -27,7 +27,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T01 Proje iskeleti | bitti | `feat(T01)` | ortam kurulumu dahil; cihazda `flutter run` beklemede |
 | T02 Drift şeması ve DAO'lar | bitti | `feat(T02)` | 75 test yeşil |
 | T03 Seed ve şablon birleştirme | bitti | `feat(T03)` | 125 test yeşil |
-| T04 StatusCalculator ve SnapshotBuilder | bekliyor | | |
+| T04 StatusCalculator ve SnapshotBuilder | bitti | `feat(T04)` | 195 test yeşil; 06 §1'in 28 satırı ayrı test |
 | T05 Platform köprüsü | bekliyor | | kontrol noktası |
 | T06 Kurulum sihirbazı | bekliyor | | |
 | T07 Kontroller ekranı | bekliyor | | |
@@ -256,5 +256,25 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 - `TemplateMerge.plan` yalnız `template_key`'e bakar; DB'deki aralık/ad/enabled
   hiç okunmaz. K-07'nin "kullanıcı değişiklikleri asla ezilmez" garantisi bu yüzden
   yapısal, gözden kaçmaya açık bir kontrol değil.
+
+### T04
+- **06 §1 tablosunun 28 satırı da ayrı test olarak yazıldı ve ilk denemede geçti.**
+  Beklenen değerlerin hiçbirinde düzeltme gerekmedi; tablo tutarlı.
+- **`both` maddede son yapılışın yalnız bir yarısı doluysa `unknown`** (denetim md.
+  "both-yarim-son-yapilis"). Spec bu durumu tanımlamıyor. Gerekçe: `both`un iki vadesi
+  var, biri hesaplanamıyorsa bağlayıcı boyut da seçilemez. Pratikte ulaşılamaz: "Tarih/km
+  düzelt" diyaloğu `both` maddede km'yi zorunlu tutuyor (§3.4). İki test yazıldı.
+- **`seasonal` + son yapılış null durumunda `startsFromInstall` yok sayılıyor.**
+  §2.1 mevsimsel için koşulsuz `installDay - 1` diyor, `days` türündeki gibi bir
+  `startsFromInstall` dalı yok. Literal okuma uygulandı; şablondaki tek mevsimsel madde
+  (`winter_tires`) zaten `startsFromInstall=true`, yani fark gözlenemez.
+- **`both` maddede "yaklaşan" eşiği bağlayıcı boyutun eşiği.** §2.3 md. 3 eşikleri
+  boyuta göre veriyor, §2.2 bağlayıcı boyutu seçiyor; tek tutarlı okuma bu.
+- **`lib/domain/item_grouping.dart` eklendi** (02-mimari §2'de yok). K-17'nin sıralama
+  ve bölümleme kuralı; T07 widget'ı bunu çağıracak, iş mantığı widget'a girmesin diye
+  domain'de. 11 test.
+- `SnapshotBuilder` null alanları JSON'a **açıkça** `null` yazıyor (02-mimari §5 örneği
+  böyle). Kotlin tarafı bunları `isNull(key)` ile okumak zorunda — denetim md. 1.
+  Bunu doğrulayan bir test var (`"dueKm":null` metni aranıyor).
 
 ## Bilinen sorunlar
