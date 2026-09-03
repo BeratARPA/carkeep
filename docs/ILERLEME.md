@@ -26,7 +26,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 |---|---|---|---|
 | T01 Proje iskeleti | bitti | `feat(T01)` | ortam kurulumu dahil; cihazda `flutter run` beklemede |
 | T02 Drift şeması ve DAO'lar | bitti | `feat(T02)` | 75 test yeşil |
-| T03 Seed ve şablon birleştirme | bekliyor | | |
+| T03 Seed ve şablon birleştirme | bitti | `feat(T03)` | 125 test yeşil |
 | T04 StatusCalculator ve SnapshotBuilder | bekliyor | | |
 | T05 Platform köprüsü | bekliyor | | kontrol noktası |
 | T06 Kurulum sihirbazı | bekliyor | | |
@@ -242,5 +242,19 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   §3.3 ertelemenin kayıtla temizlendiğini söylüyor, silme için bir şey demiyor.
 - Testte `package:drift/drift.dart`'tan `isNull`/`isNotNull` gizlendi; matcher'daki
   aynı adlı sabitlerle çakışıyorlar.
+
+### T03
+- **Şablon toast metni henüz yok.** `TemplateUpgradeResult.addedCount` üretiliyor ama
+  01-spec §5'teki "Şablona 2 yeni madde eklendi, Ayarlar'dan aç" metni `strings_tr`'ye
+  T06/T15'te (toast'ı gösterecek yerde) eklenecek.
+- **`SeedLoader.load()` henüz çağrılmıyor.** Açılış sırası (02-mimari §10) T15'te
+  kuruluyor; şu an yalnız `SeedLoader.parse` test ediliyor ve testler asset dosyasını
+  diskten okuyor (`rootBundle` widget testi olmadan kurulamıyor).
+- **`data/repositories/item_repo.dart` T03'te üretildi.** Denetim md. 29: repository
+  katmanı hiçbir ticket'ın kapsamında adı geçmiyor ama 02-mimari §2'de var; şablon
+  kurulumu ve yükseltmesi için ilk ihtiyaç burada doğdu.
+- `TemplateMerge.plan` yalnız `template_key`'e bakar; DB'deki aralık/ad/enabled
+  hiç okunmaz. K-07'nin "kullanıcı değişiklikleri asla ezilmez" garantisi bu yüzden
+  yapısal, gözden kaçmaya açık bir kontrol değil.
 
 ## Bilinen sorunlar
