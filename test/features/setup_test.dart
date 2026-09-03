@@ -5,6 +5,7 @@ import 'package:carkeep/core/strings_tr.dart';
 import 'package:carkeep/core/widgets/tr_date_field.dart';
 import 'package:carkeep/data/db/daos/settings_dao.dart';
 import 'package:carkeep/data/db/database.dart';
+import 'package:carkeep/data/platform/device_list.dart';
 import 'package:carkeep/data/platform/platform_bridge.dart';
 import 'package:carkeep/data/seed/seed_loader.dart';
 import 'package:carkeep/domain/item_grouping.dart';
@@ -35,6 +36,11 @@ class FakeBridge extends PlatformBridge {
   Object? bondedThrows;
 
   int scheduleCalls = 0;
+  int clearEngineCalls = 0;
+
+  /// Ayarlar tanı satırı ve snapshot testleri için.
+  BluetoothState btState = BluetoothState.unknown;
+  String? snapshotJson;
 
   @override
   Future<bool> hasBluetoothPermission() async => bluetooth;
@@ -80,6 +86,23 @@ class FakeBridge extends PlatformBridge {
   @override
   Future<void> scheduleDailyWorker() async {
     scheduleCalls++;
+  }
+
+  @override
+  Future<BluetoothState> getBluetoothState() async => btState;
+
+  @override
+  Future<void> writeSnapshot(String json) async {
+    snapshotJson = json;
+  }
+
+  @override
+  Future<String?> readSnapshot() async => snapshotJson;
+
+  @override
+  Future<void> clearEngine() async {
+    clearEngineCalls++;
+    snapshotJson = null;
   }
 }
 

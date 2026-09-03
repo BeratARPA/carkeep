@@ -183,6 +183,85 @@ void main() {
     });
   });
 
+  group('lastTripText (01-spec §3.7)', () {
+    test('sayılan sürüş, bildirim gönderildi', () {
+      expect(
+        lastTripText(
+          disconnectedAt: DateTime(2026, 9, 3, 14, 30),
+          durationMin: 25,
+          counted: true,
+          notified: true,
+          refYear: 2026,
+        ),
+        'Son kopma: 3 Eyl 14:30, 25 dk sürüş, bildirim gönderildi',
+      );
+    });
+
+    test('sayılan sürüş, bildirim yok', () {
+      expect(
+        lastTripText(
+          disconnectedAt: DateTime(2026, 9, 3, 14, 30),
+          durationMin: 25,
+          counted: true,
+          notified: false,
+          refYear: 2026,
+        ),
+        'Son kopma: 3 Eyl 14:30, 25 dk sürüş, bildirim yok',
+      );
+    });
+
+    test('kısa bağlantı sürüş sayılmadı', () {
+      expect(
+        lastTripText(
+          disconnectedAt: DateTime(2026, 9, 3, 14, 30),
+          durationMin: 2,
+          counted: false,
+          notified: false,
+          refYear: 2026,
+        ),
+        'Son kopma: 3 Eyl 14:30, 2 dk, sürüş sayılmadı',
+      );
+    });
+
+    test('geçmiş yılda yıl da yazılır', () {
+      expect(
+        lastTripText(
+          disconnectedAt: DateTime(2025, 12, 31, 9, 5),
+          durationMin: 12,
+          counted: true,
+          notified: true,
+          refYear: 2026,
+        ),
+        'Son kopma: 31 Ara 2025 09:05, 12 dk sürüş, bildirim gönderildi',
+      );
+    });
+
+    test('kopma yoksa', () {
+      expect(
+        lastTripText(
+          disconnectedAt: null,
+          durationMin: 0,
+          counted: false,
+          notified: false,
+          refYear: 2026,
+        ),
+        'Henüz kopma görülmedi',
+      );
+    });
+  });
+
+  group('minutesText / fallbackDaysText', () {
+    test('dakika', () {
+      expect(minutesText(5), '5 dk');
+      expect(minutesText(0), '0 dk');
+    });
+
+    test('yedek bildirim', () {
+      expect(fallbackDaysText(0), 'Kapalı');
+      expect(fallbackDaysText(7), '7 gün sonra');
+    });
+  });
+
   group('capitalizeTr', () {
     test('Türkçe i büyük harfi İ', () {
       expect(capitalizeTr('iki'), 'İki');

@@ -18,6 +18,9 @@ class CarKeepApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Snapshot senkronu uygulama yaşadığı sürece ayakta (02-mimari §9).
+    // Burada okunuyor ki `main.dart` kablolaması olmadan da (testler) çalışsın.
+    ref.watch(snapshotSyncProvider);
     return MaterialApp(
       title: S.appName,
       debugShowCheckedModeBanner: false,

@@ -10,7 +10,6 @@ import 'dart:io';
 
 import 'package:carkeep/data/db/daos/log_dao.dart';
 import 'package:carkeep/data/db/database.dart';
-import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -119,21 +118,21 @@ void main() {
       ..execute(_v1Trips)
       ..execute(_v1Settings);
     raw.execute(
-      "INSERT INTO vehicles (brand, model, year, current_km, created_at) "
+      'INSERT INTO vehicles (brand, model, year, current_km, created_at) '
       "VALUES ('Fiat', 'Egea', '2019', 118420, 1756900000)",
     );
     raw.execute(
-      "INSERT INTO check_items (vehicle_id, template_key, name, group_key, "
-      "schedule_kind, interval_days, measure_type, sort_order, last_done_day, "
+      'INSERT INTO check_items (vehicle_id, template_key, name, group_key, '
+      'schedule_kind, interval_days, measure_type, sort_order, last_done_day, '
       "last_done_km, last_value) VALUES (1, 'oil_level', 'Motor yağı seviyesi', "
       "'frequent', 'days', 14, 'level', 0, '2026-08-12', 117900, 'Orta')",
     );
     raw.execute(
-      "INSERT INTO check_logs (item_id, done_at, done_day, km, value, note) "
+      'INSERT INTO check_logs (item_id, done_at, done_day, km, value, note) '
       "VALUES (1, 1756900000, '2026-08-12', 117900, 'Orta', 'Yarım litre')",
     );
     raw.execute('PRAGMA user_version = 1');
-    raw.dispose();
+    raw.close();
   }
 
   test('v1 → v2 yükseltmesi çalışıyor ve veri korunuyor', () async {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/date_utils.dart';
 import '../../core/format_tr.dart';
 import '../../core/strings_tr.dart';
+import '../../data/platform/device_list.dart';
 import '../../data/platform/platform_bridge.dart';
 import '../../data/repositories/item_list_repo.dart';
 import '../../data/repositories/item_repo.dart';
@@ -16,8 +17,6 @@ import '../../providers.dart';
 const int kSetupStepCount = 6;
 
 /// Cihaz listesinin durumu (01-spec §3.1 adım 4 + T05 bulgusu).
-enum DeviceListState { loading, ok, empty, bluetoothOff, noPermission, error }
-
 class SetupState {
   const SetupState({
     this.step = 1,
@@ -196,34 +195,13 @@ class SetupController extends Notifier<SetupState> {
 
   Future<void> loadDevices() async {
     state = state.copyWith(deviceListState: DeviceListState.loading);
-    final PlatformBridge bridge = ref.read(platformBridgeProvider);
-    try {
-      final bool enabled = await bridge.isBluetoothEnabled();
-      final List<BondedDevice> devices = await bridge.getBondedDevices();
-      state = state.copyWith(
-        devices: devices,
-        deviceListState: devices.isNotEmpty
-            ? DeviceListState.ok
-            // T05 cihaz testi: adaptör kapalıyken liste boş gelir; bu
-            // "eşleşmiş cihaz yok" değildir.
-            : (enabled ? DeviceListState.empty : DeviceListState.bluetoothOff),
-      );
-    } on BluetoothPermissionException {
-      state = state.copyWith(
-        devices: const <BondedDevice>[],
-        deviceListState: DeviceListState.noPermission,
-      );
-    } on BluetoothUnavailableException {
-      state = state.copyWith(
-        devices: const <BondedDevice>[],
-        deviceListState: DeviceListState.bluetoothOff,
-      );
-    } on Object {
-      state = state.copyWith(
-        devices: const <BondedDevice>[],
-        deviceListState: DeviceListState.error,
-      );
+    final DeviceListResult r = await loadBondedDevices(
+      ref.read(platformBridgeProvider),
+    );
+    if (_disposed) {
+      return;
     }
+    state = state.copyWith(devices: r.devices, deviceListState: r.state);
   }
 
   void selectDevice(BondedDevice device) {

@@ -5,9 +5,12 @@
 /// senkron değerlere bakar ve testler kolayca sahte veri verebilir.
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/constants.dart';
 import 'core/date_utils.dart';
 import 'data/db/database.dart';
 import 'data/platform/platform_bridge.dart';
@@ -22,6 +25,7 @@ import 'domain/models/check_item.dart';
 import 'domain/models/check_log.dart';
 import 'domain/models/rules.dart';
 import 'domain/models/vehicle.dart';
+import 'domain/snapshot_builder.dart';
 import 'domain/status_calculator.dart';
 
 // ---------------------------------------------------------------- altyapı
@@ -219,6 +223,78 @@ permissionsProvider =
 final StateProvider<String?> launchActionProvider = StateProvider<String?>(
   (Ref ref) => null,
 );
+
+// ------------------------------------------------------------ snapshot
+
+/// Debounce süresi; test bunu `Duration.zero` ile override eder.
+final Provider<Duration> snapshotDebounceProvider = Provider<Duration>(
+  (Ref ref) => kSnapshotDebounce,
+);
+
+/// Durum veya kural değişince snapshot'ı Kotlin'e yazar (01-spec §6,
+/// 02-mimari §9). `main.dart` bunu okuyup ayakta tutar.
+///
+/// T11'de asgari hâliyle kuruldu (Ayarlar'ın kabul kriteri `readSnapshot`
+/// istiyor); kalan tetikleyiciler ve `resume` bağlantısı T15'te.
+class SnapshotSync {
+  SnapshotSync(this._ref);
+
+  final Ref _ref;
+  Timer? _timer;
+  bool _disposed = false;
+
+  /// Yalnız test için: kaç kez yazıldı.
+  int writeCount = 0;
+
+  void schedule() {
+    if (_disposed) {
+      return;
+    }
+    _timer?.cancel();
+    _timer = Timer(_ref.read(snapshotDebounceProvider), write);
+  }
+
+  Future<void> write() async {
+    if (_disposed) {
+      return;
+    }
+    final Vehicle? vehicle = _ref.read(vehicleProvider).valueOrNull;
+    final DateTime? installDay = _ref.read(installDayProvider);
+    if (vehicle == null || installDay == null) {
+      return;
+    }
+    final String json = SnapshotBuilder.buildJson(
+      vehicle: vehicle,
+      items: _ref.read(itemsProvider).valueOrNull ?? const <CheckItem>[],
+      rules: _ref.read(rulesProvider).valueOrNull ?? Rules.defaults,
+      installDay: installDay,
+      today: _ref.read(todayProvider),
+      generatedAt: DateTime.now(),
+    );
+    writeCount++;
+    try {
+      await _ref.read(platformBridgeProvider).writeSnapshot(json);
+    } on Object {
+      // 01-spec §9: sessiz; bir sonraki tetikleyicide tekrar denenir.
+    }
+  }
+
+  void dispose() {
+    _disposed = true;
+    _timer?.cancel();
+  }
+}
+
+final Provider<SnapshotSync> snapshotSyncProvider = Provider<SnapshotSync>((
+  Ref ref,
+) {
+  final SnapshotSync sync = SnapshotSync(ref);
+  ref.onDispose(sync.dispose);
+  ref.listen(statusesProvider, (_, _) => sync.schedule(), fireImmediately: true);
+  ref.listen(rulesProvider, (_, _) => sync.schedule());
+  ref.keepAlive();
+  return sync;
+});
 
 /// Toast'ları tek yerden göstermek için (widget'lar iş mantığı taşımasın).
 final Provider<GlobalKey<ScaffoldMessengerState>> scaffoldMessengerKeyProvider =

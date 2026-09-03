@@ -102,6 +102,9 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<Rules> watchRules() => watchAll().map(rulesFromMap);
+
+  /// "Verileri sıfırla" (01-spec §3.7).
+  Future<int> clearAll() => delete(settings).go();
 }
 
 /// `settings` haritasından [Rules]; eksik anahtar varsayılana düşer.

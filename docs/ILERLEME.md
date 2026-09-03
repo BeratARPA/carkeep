@@ -37,7 +37,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T08 Madde detayı | bitti | `feat(T08)` | 327 test yeşil; cihazda kayıt uçtan uca |
 | T09 Km giriş | bitti | `feat(T09)` | 341 test yeşil |
 | T10 Geçmiş | bitti | `feat(T10)` | 357 test yeşil; K-23 ve şema v2 dahil |
-| T11 Ayarlar | bekliyor | | |
+| T11 Ayarlar | bitti | `feat(T11)` | 425 test yeşil; cihazda doğrulandı |
 | T12 Receiver, motor, bildirim | bekliyor | | kontrol noktası |
 | T13 Pending events ve Bluetooth durumu | bekliyor | | |
 | T14 DailyCheckWorker | bekliyor | | |
@@ -448,5 +448,34 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   değişikliğinde bu dosyaya bir vaka eklenmeli.**
 - Geçmiş satırının alt metni `değer, km. not`; düzeltme satırlarında `düzeltme`
   etiketi eklenir.
+
+### T11
+- **Snapshot senkronu kuruldu (denetim md. 26).** `snapshotSyncProvider` durum veya
+  kural değişince 300 ms debounce ile `writeSnapshot` çağırıyor. `CarKeepApp` onu
+  `watch` ediyor; böylece `main.dart` kablolaması olmadan da (widget testleri)
+  ayakta. Kalan tetikleyiciler ve `resume` bağlantısı T15'te. Cihazda
+  `shared_prefs/carkeep_engine.xml` içinde doğrulandı.
+- **Cihaz listesi yükleme mantığı ortaklandı.** Kurulum 4. adımı ve Ayarlar'daki
+  seçici aynı hata durumlarını (izin yok / adaptör kapalı / boş) göstermek zorunda;
+  `data/platform/device_list.dart` içine taşındı, `DeviceListState` oraya taşındı.
+- **Adımlayıcı preset dışı değerde yön korur.** K-19 "en yakın preset'e atlar"
+  diyor; ama preset aralığının *dışındaki* bir değerde bu kural yön değiştirtiyor
+  (3 günde − basınca 7'ye çıkardı). Karar: o yönde durak yoksa değer değişmez.
+  Testi var (`interval_stepper_test.dart`).
+- **`both` maddede −/+ yalnız km'yi değiştirir** (01-spec §3.7). Gün için satıra
+  dokunup düzenleme sayfasından değiştiriliyor. Cihazda "Triger seti" (120.000 km)
+  üst uçta olduğu için `+` sönük görünüyor — beklenen.
+- **Madde formunun doğrulaması `domain/item_form.dart`'ta** (widget'ta iş mantığı
+  yok). Aralık sınırları: gün 1–3650, km 100–200.000; presetlerin dışına elle
+  çıkılabiliyor ama sınırsız değil.
+- **Ayarlar satırında başlık ve değer 50/50 esnek.** Sabit 150 px değer sütunu
+  cihazda uzun cihaz adını ("Uconnect NM000000000N00000") üç satıra bölüyordu.
+- **`sqlite3` dev bağımlılık olarak eklendi.** Zaten drift üzerinden geliyordu;
+  `migration_test.dart` doğrudan import ettiği için `depend_on_referenced_packages`
+  uyarısı çıkıyordu. Yeni bir paket ağaca girmedi, 04-kararlar'a madde açılmadı.
+- **Geliştirici bölümü satırları henüz iş yapmıyor** (ticket kapsamı: "T12'de
+  bağlanır"). `kDebugMode` altında görünüyorlar ama `onTap` null; T12'de bağlanacak.
+- Şablon maddesinde ölçüm tipi kilitli ve "Sil" yok; kullanıcı maddesi tam
+  düzenlenebiliyor ve onayla siliniyor (kayıtları FK cascade ile gidiyor).
 
 ## Bilinen sorunlar

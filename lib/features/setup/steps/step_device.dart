@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/strings_tr.dart';
 import '../../../core/theme.dart';
+import '../../../data/platform/device_list.dart';
 import '../../../data/platform/platform_bridge.dart';
 import '../setup_controller.dart';
 import '../setup_screen.dart';

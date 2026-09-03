@@ -98,6 +98,29 @@ class ItemDao extends DatabaseAccessor<AppDatabase> with _$ItemDaoMixin {
         .write(CheckItemsCompanion(snoozeUntilDay: Value<String?>(untilDay)));
   }
 
+  /// Madde düzenleme sayfası (01-spec §3.7).
+  Future<int> setNameAndMeasure(
+    int id, {
+    required String name,
+    required String measureType,
+    String? measureJson,
+  }) {
+    return (update(checkItems)..where(($CheckItemsTable t) => t.id.equals(id)))
+        .write(
+          CheckItemsCompanion(
+            name: Value<String>(name),
+            measureType: Value<String>(measureType),
+            measureJson: Value<String?>(measureJson),
+          ),
+        );
+  }
+
+  /// Yeni kullanıcı maddesi listenin sonuna eklenir.
+  Future<int> maxSortOrder(int vehicleId) async {
+    final List<CheckItemRow> rows = await getAll(vehicleId);
+    return rows.isEmpty ? -1 : rows.last.sortOrder;
+  }
+
   Future<int> setSortOrder(int id, int sortOrder) {
     return (update(checkItems)..where(($CheckItemsTable t) => t.id.equals(id)))
         .write(CheckItemsCompanion(sortOrder: Value<int>(sortOrder)));

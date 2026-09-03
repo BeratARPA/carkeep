@@ -53,4 +53,14 @@ class SettingsRepo {
   Stream<Map<String, String>> watchAll() => _dao.watchAll();
 
   Future<Map<String, String>> getAll() => _dao.getAll();
+
+  /// "Verileri sıfırla": araç (cascade ile maddeler ve kayıtlar), sürüşler ve
+  /// ayarlar silinir (01-spec §3.7). Motor prefs'i çağıran taraf temizler.
+  Future<void> resetAll() async {
+    await _db.transaction(() async {
+      await _db.vehicleDao.deleteAll();
+      await _db.tripDao.deleteAll();
+      await _dao.clearAll();
+    });
+  }
 }

@@ -46,6 +46,52 @@ class ItemListRepo {
     seasonalDates: schedule.seasonalDatesJson,
   );
 
+  /// Madde ekle (01-spec §3.7). Kullanıcı maddesi: `template_key` null.
+  Future<int> createUserItem({
+    required int vehicleId,
+    required String name,
+    required String groupKey,
+    required Schedule schedule,
+    required Measure measure,
+  }) async {
+    final int maxOrder = await _db.itemDao.maxSortOrder(vehicleId);
+    return _db.itemDao.insertOne(
+      CheckItemsCompanion.insert(
+        vehicleId: vehicleId,
+        name: name,
+        groupKey: groupKey,
+        scheduleKind: scheduleKindToString(schedule.kind),
+        intervalDays: Value<int?>(schedule.intervalDays),
+        intervalKm: Value<int?>(schedule.intervalKm),
+        seasonalDates: Value<String?>(schedule.seasonalDatesJson),
+        measureType: measureTypeToString(measure.type),
+        measureJson: Value<String?>(measure.json),
+        sortOrder: maxOrder + 1,
+      ),
+    );
+  }
+
+  /// Madde düzenleme sayfasının kaydı: ad, takvim, ölçüm.
+  Future<void> updateItemForm(
+    int id, {
+    required String name,
+    required Schedule schedule,
+    required Measure measure,
+  }) async {
+    await _db.transaction(() async {
+      await _db.itemDao.setNameAndMeasure(
+        id,
+        name: name,
+        measureType: measureTypeToString(measure.type),
+        measureJson: measure.json,
+      );
+      await setSchedule(id, schedule);
+    });
+  }
+
+  /// Yalnız kullanıcı maddesi silinebilir; kayıtları FK ile birlikte gider.
+  Future<void> deleteItem(int id) => _db.itemDao.deleteItem(id);
+
   static List<CheckItem> toModels(List<CheckItemRow> rows) =>
       <CheckItem>[for (final CheckItemRow r in rows) toModel(r)];
 

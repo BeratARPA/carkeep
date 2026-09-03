@@ -216,6 +216,42 @@ String intervalText({
 }
 
 // ---------------------------------------------------------------------------
+// Ayarlar tanı satırı (01-spec §3.7)
+// ---------------------------------------------------------------------------
+
+/// `Son kopma: 3 Eyl 14:30, 25 dk sürüş, bildirim gönderildi`
+/// `Son kopma: 3 Eyl 14:30, 2 dk, sürüş sayılmadı`
+/// `Henüz kopma görülmedi`
+String lastTripText({
+  required DateTime? disconnectedAt,
+  required int durationMin,
+  required bool counted,
+  required bool notified,
+  required int refYear,
+}) {
+  if (disconnectedAt == null) {
+    return S.lastTripNone;
+  }
+  final String when =
+      '${formatDate(disconnectedAt, refYear: refYear)} '
+      '${formatTime(disconnectedAt)}';
+  if (!counted) {
+    return '${S.lastTripPrefix} $when, $durationMin ${S.unitMinutesShort}, '
+        '${S.lastTripNotCounted}';
+  }
+  final String tail = notified ? S.lastTripNotified : S.lastTripNoNotification;
+  return '${S.lastTripPrefix} $when, $durationMin '
+      '${S.lastTripMinutesSuffix}, $tail';
+}
+
+/// `5 dk`
+String minutesText(int minutes) => '$minutes ${S.unitMinutesShort}';
+
+/// `Kapalı` / `7 gün sonra`
+String fallbackDaysText(int days) =>
+    days <= 0 ? S.ruleFallbackOff : '$days ${S.unitDaysSuffix}';
+
+// ---------------------------------------------------------------------------
 // Yardımcı
 // ---------------------------------------------------------------------------
 

@@ -279,6 +279,119 @@ abstract final class S {
       'Bu kayıt silinsin mi? Maddenin son yapılışı bir önceki kayda döner.';
   static const String historyDeleted = 'Kayıt silindi';
 
+  // ============================================ ayarlar (01-spec §3.7)
+
+  // -------------------------------------------------------------- araç
+  static const String settingsSectionVehicle = 'Araç';
+  static const String settingsVehicleEdit = 'Marka / model / yıl';
+  static const String settingsKmFix = 'Km düzelt';
+  static const String settingsKmBackConfirm = 'Km geriye alınıyor, emin misin?';
+  static const String settingsTireTargets = 'Hedef lastik basıncı';
+  static const String settingsTireTargetsHelp =
+      "Kapıdaki etikette yazar. Boş bırakabilirsin; yalnız 'Yaptım' "
+      'ekranında karşılaştırma için kullanılır.';
+  static const String settingsTireFront = 'Ön (bar)';
+  static const String settingsTireRear = 'Arka (bar)';
+  static const String settingsTireTargetsNotSet = 'Girilmedi';
+  static const String errBarInvalid = 'Basınç 1,0 ile 4,0 bar arasında olmalı';
+
+  // -------------------------------------------------------- bluetooth
+  static const String settingsSectionBluetooth = "Arabanın Bluetooth'u";
+  static const String settingsDeviceRow = 'Seçili cihaz';
+  static const String settingsDeviceNone = 'Seçilmedi';
+  static const String settingsDevicePickTitle = 'Arabanın Bluetooth cihazı';
+
+  /// `Son kopma: 3 Eyl 14:30, 25 dk sürüş, bildirim gönderildi`
+  static const String lastTripPrefix = 'Son kopma:';
+  static const String lastTripNone = 'Henüz kopma görülmedi';
+  static const String lastTripMinutesSuffix = 'dk sürüş';
+  static const String lastTripNotified = 'bildirim gönderildi';
+  static const String lastTripNotCounted = 'sürüş sayılmadı';
+  static const String lastTripNoNotification = 'bildirim yok';
+
+  // --------------------------------------------------------- hatırlatma
+  static const String settingsSectionRules = 'Hatırlatma';
+  static const String ruleOnlyOverdue = 'Sadece gecikmiş varsa';
+  static const String ruleOnlyOverdueHelp =
+      'Kapatırsan yaklaşanlar da bildirilir.';
+  static const String ruleOncePerDay = 'Günde en fazla bir';
+  static const String ruleOncePerDayHelp =
+      'Aynı gün ikinci sürüşte tekrar bildirmez.';
+  static const String ruleMinTrip = 'En az sürüş süresi';
+  static const String ruleMinTripHelp =
+      'Bundan kısa bağlantılar sürüş sayılmaz.';
+  static const String ruleGrace = 'Geri bağlanma toleransı';
+  static const String ruleGraceHelp =
+      'Bu süre içinde tekrar bağlanırsan bildirim iptal edilir.';
+  static const String ruleFallback = 'Sürüş yoksa yedek bildirim';
+  static const String ruleFallbackHelp =
+      'Uzun süre araca binmediysen yine de hatırlatır.';
+  static const String ruleFallbackOff = 'Kapalı';
+  static const String unitMinutesShort = 'dk';
+  static const String unitDaysSuffix = 'gün sonra';
+
+  // ------------------------------------------------------ kontrol listesi
+  static const String settingsSectionChecklist = 'Kontrol listesi';
+  static const String settingsChecklistHelp =
+      '− ve + aralığı değiştirir. Kapattığın madde listede görünmez.';
+  static const String settingsIntervalDecrease = 'Aralığı kısalt';
+  static const String settingsIntervalIncrease = 'Aralığı uzat';
+  static const String settingsAddItem = 'Madde ekle';
+
+  // -------------------------------------------------- madde düzenleme
+  static const String itemEditTitle = 'Maddeyi düzenle';
+  static const String itemEditNewTitle = 'Yeni madde';
+  static const String itemEditName = 'Ad';
+  static const String itemEditGroup = 'Bölüm';
+  static const String itemEditScheduleKind = 'Takvim türü';
+  static const String scheduleKindDays = 'Gün';
+  static const String scheduleKindKm = 'Km';
+  static const String scheduleKindBoth = 'Gün ve km';
+  static const String scheduleKindSeasonal = 'Mevsimsel';
+  static const String itemEditIntervalDays = 'Kaç günde bir';
+  static const String itemEditIntervalKm = "Kaç km'de bir";
+  static const String itemEditSeasonalDates = 'Tarihler';
+  static const String itemEditMeasure = 'Ölçüm';
+  static const String itemEditMeasureLocked =
+      'Şablon maddesinde ölçüm tipi değişmez.';
+  static const String measureTypeNone = 'Yok';
+  static const String measureTypeLevel = 'Seviye';
+  static const String measureTypeTires = 'Dört lastik (bar)';
+  static const String measureTypeNumber = 'Sayı';
+  static const String itemEditDelete = 'Sil';
+  static const String itemEditDeleteConfirm =
+      'Bu madde ve kayıtları silinsin mi?';
+  static const String itemDeletedToast = 'Madde silindi';
+  static const String errNameRequired = 'Ad gir';
+  static const String errIntervalDaysRequired = 'Gün gir (1–3650)';
+  static const String errIntervalKmRequired = 'Km gir (100–200.000)';
+  static const String errSeasonalRequired = 'En az bir tarih ekle';
+  static const String seasonalAddDate = 'Tarih ekle';
+  static const String itemEditNumberUnit = 'Birim';
+  static const String itemEditNumberLabel = 'Etiket';
+  static const String itemEditLevels = 'Seçenekler (virgülle)';
+  static const String errLevelsRequired = 'En az bir seçenek gir';
+  static const String errNumberFieldsRequired = 'Birim ve etiket gir';
+
+  // ----------------------------------------------------------- uygulama
+  static const String settingsSectionApp = 'Uygulama';
+
+  /// `Şablon sürümü 1`
+  static const String templateVersionPrefix = 'Şablon sürümü';
+  static const String settingsReset = 'Verileri sıfırla';
+  static const String settingsResetConfirm =
+      'Araç, kontrol listesi ve tüm kayıtlar silinir. Uygulama kuruluma '
+      'döner. Emin misin?';
+  static const String settingsResetDone = 'Veriler silindi';
+
+  // -------------------------------------------------------- geliştirici
+  static const String settingsSectionDebug = 'Geliştirici';
+  static const String debugSimulateLongTrip = 'Kopmayı simüle et (25 dk)';
+  static const String debugSimulateShortTrip = 'Kopmayı simüle et (2 dk)';
+  static const String debugSimulateConnect = 'Bağlanmayı simüle et';
+  static const String debugShowSnapshot = "Snapshot'ı göster";
+  static const String debugRunFallback = 'Yedek işi şimdi çalıştır';
+
   // ------------------------------------------------------------- hatalar
   static const String errSeedLoad = 'Şablon dosyası okunamadı.';
   static const String errDbOpen = 'Veriler açılamadı.';
