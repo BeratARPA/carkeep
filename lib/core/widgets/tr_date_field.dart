@@ -80,7 +80,7 @@ class _TrDateFieldState extends State<TrDateField> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Expanded(
-              flex: 2,
+              flex: 3,
               child: TextField(
                 key: const Key('date_day'),
                 controller: _day,
@@ -89,13 +89,19 @@ class _TrDateFieldState extends State<TrDateField> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(2),
                 ],
-                decoration: const InputDecoration(hintText: S.dateDay),
+                decoration: const InputDecoration(
+                  hintText: S.dateDay,
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                ),
                 onChanged: (_) => _emit(),
               ),
             ),
             const SizedBox(width: 8),
             Expanded(
-              flex: 3,
+              flex: 4,
               child: DropdownButtonFormField<int>(
                 key: const Key('date_month'),
                 initialValue: _month,
@@ -117,7 +123,7 @@ class _TrDateFieldState extends State<TrDateField> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              flex: 3,
+              flex: 4,
               child: TextField(
                 key: const Key('date_year'),
                 controller: _year,

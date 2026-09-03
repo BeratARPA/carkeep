@@ -13,11 +13,13 @@ import 'data/db/database.dart';
 import 'data/platform/platform_bridge.dart';
 import 'data/repositories/item_list_repo.dart';
 import 'data/repositories/item_repo.dart';
+import 'data/repositories/log_repo.dart';
 import 'data/repositories/settings_repo.dart';
 import 'data/repositories/vehicle_repo.dart';
 import 'data/seed/seed_loader.dart';
 import 'domain/item_grouping.dart';
 import 'domain/models/check_item.dart';
+import 'domain/models/check_log.dart';
 import 'domain/models/rules.dart';
 import 'domain/models/vehicle.dart';
 import 'domain/status_calculator.dart';
@@ -55,6 +57,10 @@ final Provider<SettingsRepo> settingsRepoProvider = Provider<SettingsRepo>(
   (Ref ref) => SettingsRepo(ref.watch(databaseProvider)),
 );
 
+final Provider<LogRepo> logRepoProvider = Provider<LogRepo>(
+  (Ref ref) => LogRepo(ref.watch(databaseProvider)),
+);
+
 // ---------------------------------------------------------------- veri
 
 final StreamProvider<Vehicle?> vehicleProvider = StreamProvider<Vehicle?>(
@@ -69,6 +75,12 @@ final StreamProvider<List<CheckItem>> itemsProvider =
       }
       return ref.watch(itemListRepoProvider).watchAll(vehicle.id);
     });
+
+/// Geçmiş ekranı ve madde detayı buna bakar (denetim md. "gecmis-ekrani-veri-yolu-yok").
+final StreamProvider<List<CheckLog>> logsProvider =
+    StreamProvider<List<CheckLog>>(
+      (Ref ref) => ref.watch(logRepoProvider).watchAll(),
+    );
 
 final StreamProvider<Rules> rulesProvider = StreamProvider<Rules>(
   (Ref ref) => ref.watch(settingsRepoProvider).watchRules(),

@@ -134,6 +134,32 @@ DateTime _parseDayOnly(String key) => DateTime(
   int.parse(key.substring(8, 10)),
 );
 
+/// `Sonraki: 16 Eyl` · `Sonraki: 16 Eyl veya 133.420 km` (01-spec §3.3).
+/// Aralık metninin tersine burada tarih önce gelir.
+String nextDueText({
+  required String? dueDay,
+  required int? dueKm,
+  required int refYear,
+}) {
+  final List<String> parts = <String>[
+    if (dueDay != null) formatDate(_parseDayOnly(dueDay), refYear: refYear),
+    if (dueKm != null) '${formatKm(dueKm)} ${S.unitKm}',
+  ];
+  if (parts.isEmpty) {
+    return '';
+  }
+  return '${S.nextDuePrefix} ${parts.join(' ${S.intervalJoiner} ')}';
+}
+
+/// `number` ölçümünün saklanan biçimi: `6,5 mm`. Spec tanımlamıyor
+/// (ILERLEME denetim notu); ondalık virgülle, birim sonda.
+String formatNumberMeasure(double value, String unit) {
+  final String text = value == value.roundToDouble()
+      ? value.toInt().toString()
+      : value.toString().replaceAll('.', ',');
+  return '$text $unit';
+}
+
 // ---------------------------------------------------------------------------
 // Aralık metinleri (01-spec §2.4)
 // ---------------------------------------------------------------------------

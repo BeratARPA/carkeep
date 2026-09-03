@@ -8,6 +8,7 @@ import '../../domain/item_grouping.dart';
 import '../../domain/models/item_status.dart';
 import '../../domain/models/vehicle.dart';
 import '../../providers.dart';
+import '../item_detail/item_detail_sheet.dart';
 import 'home_controller.dart';
 import 'widgets/home_header.dart';
 import 'widgets/item_row.dart';
@@ -119,9 +120,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               key: Key('item_${e.item.id}'),
               entry: e,
               refYear: refYear,
-              onTap: () {
-                // Madde detayı T08'de.
-              },
+              onTap: () => showItemDetailSheet(context, itemId: e.item.id),
             ),
         ],
       );

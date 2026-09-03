@@ -34,7 +34,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T05 Platform köprüsü | bitti | `feat(T05)` | cihaz testi geçti, 13/13 |
 | T06 Kurulum sihirbazı | bitti | `feat(T06)` | 268 test yeşil; cihazda uçtan uca doğrulandı |
 | T07 Kontroller ekranı | bitti | `feat(T07)` | 293 test yeşil; K-22 sıralama düzeltmesi dahil |
-| T08 Madde detayı | bekliyor | | |
+| T08 Madde detayı | bitti | `feat(T08)` | 327 test yeşil; cihazda kayıt uçtan uca |
 | T09 Km giriş | bekliyor | | |
 | T10 Geçmiş | bekliyor | | |
 | T11 Ayarlar | bekliyor | | |
@@ -400,5 +400,26 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   `areNotificationsEnabled` hazır, `PermissionState` taşıyor; şerit T16'da eklenecek.
 - Satıra dokunma (madde detayı, T08) ve "Km gir" (T09) şu an boş; bağlanacakları
   ticket'lar sırada.
+
+### T08
+- **Kayan nokta tuzağı, testin yakaladığı gerçek hata**: `2,3 - 2,0` çift duyarlıkta
+  0,29999999999999982 çıkıyor, `>= 0,3` yanlış sonuç veriyordu ve 0,3 barlık sapma
+  vurgulanmıyordu. `tireDeviates` artık onda birlik adımlarda karşılaştırıyor.
+- **Cihazda görülen iki kusur düzeltildi**: alt sayfanın alt butonları sistem gezinme
+  çubuğunun arkasında kalıyordu (`MediaQuery.viewPaddingOf` kadar boşluk eklendi);
+  tarih alanındaki "Gün" kutusu dardı, metin kesiliyordu (flex ve dolgu ayarlandı).
+- **`number` ölçümünün saklanan biçimi seçildi**: `6 mm`, ondalıklıysa `6,5 mm`
+  (denetim "number-olcum-deger-metni"; spec tanımlamıyordu).
+- **Denetim md. 5 hâlâ açık**: "Tarih/km düzelt" log üretmiyor, bir kayıt silinince
+  `last_done_*` yalnız loglardan yeniden hesaplanıyor ve elle girilen düzeltme
+  kayboluyor. T10'da (Geçmiş, silme) karara bağlanacak.
+- **Denetim md. 12 hâlâ açık**: kayıt sonrası tepsideki bildirim iptal edilmiyor.
+  Köprüde `cancelNotification` hazır ama çağrılmıyor; T15'te snapshot senkronuyla
+  birlikte bağlanması mantıklı.
+- Widget testlerinde alt sayfanın listesi de tembel; `scrollSheetTo` yardımcısı
+  ölçüm bloğuna ve uyarı satırına kaydırıyor.
+- Düzeltme diyaloğunun "ileri tarih" testi ay açılır listesine dokunmadan yazıldı:
+  madde hazır bir tarihle açılıp yalnız günü ileri çekiliyor. Açılır listeyi
+  test ortamında açmak kararsız çalışıyordu.
 
 ## Bilinen sorunlar

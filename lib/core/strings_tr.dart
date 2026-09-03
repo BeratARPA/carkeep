@@ -211,6 +211,49 @@ abstract final class S {
       'Pil optimizasyonu açık, bildirim gecikebilir.';
   static const String bannerDismiss = 'Kapat';
 
+  // ------------------------------------------ madde detayı (01-spec §3.3)
+  static const String detailWhy = 'Neden';
+  static const String detailHow = 'Nasıl bakılır';
+  static const String detailPreviousLogs = 'Önceki kayıtlar';
+  static const String detailNoteLabel = 'Not (isteğe bağlı)';
+  static const String detailNoteHint = 'Örn. arka sağ hep düşük';
+  static const String detailSaveDone = 'Yaptım olarak kaydet';
+  static const String detailSnooze = 'Yarın hatırlat';
+  static const String detailFixDate = 'Tarih/km düzelt';
+
+  /// `unknown` maddede düzeltme öne çıkarılır (01-spec §3.4).
+  static const String detailUnknownCallout =
+      'Bu bilgi olmadan hesaplayamam.';
+
+  /// Ölçüm blokları
+  static const String measureLevel = 'Seviye';
+  static const String measureTires = 'Ölçülen basınç';
+  static const String tireFrontLeft = 'Ön sol';
+  static const String tireFrontRight = 'Ön sağ';
+  static const String tireRearLeft = 'Arka sol';
+  static const String tireRearRight = 'Arka sağ';
+
+  /// `Hedef: ön 2,3 / arka 2,3`
+  static const String tireTargetPrefix = 'Hedef:';
+  static const String tireTargetFront = 'ön';
+  static const String tireTargetRear = 'arka';
+  static const String tireTargetUnknown =
+      'Hedef değer sürücü kapısındaki etikette yazar.';
+
+  /// Doğrulama uyarıları
+  static const String errPickLevel = 'Önce seviyeyi seç';
+  static const String errAllFourTires = 'Dört lastiği de gir';
+
+  /// `Kaydedildi. Sonraki: 16 Eyl`
+  static const String savedPrefix = 'Kaydedildi.';
+  static const String nextDuePrefix = 'Sonraki:';
+  static const String snoozedToast = 'Yarın tekrar hatırlatırım';
+
+  // ------------------------------------- tarih/km düzelt (01-spec §3.4)
+  static const String fixDialogTitle = 'Bu madde en son ne zaman yapıldı?';
+  static const String errFixDateRequired = 'Tarih gir';
+  static const String errFixKmRequired = 'Km gir';
+
   // ------------------------------------------------------------- hatalar
   static const String errSeedLoad = 'Şablon dosyası okunamadı.';
   static const String errDbOpen = 'Veriler açılamadı.';
