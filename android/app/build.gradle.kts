@@ -45,6 +45,11 @@ dependencies {
     // compileSdk 36 uyumlu sürüm.
     implementation("androidx.core:core-ktx:1.18.0")
     implementation("androidx.work:work-runtime-ktx:2.11.2")
+
+    // 07-android-notlar §9: JVM testleri Android sınıfı kullanmaz; `org.json`
+    // Android'e gömülü olduğu için host JVM'de ayrıca gerekir. Robolectric yok.
+    testImplementation("org.json:json:20260814")
+    testImplementation(kotlin("test"))
 }
 
 flutter {

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'core/strings_tr.dart';
 import 'core/theme.dart';
+import 'dev/bridge_check_screen.dart';
 
-/// Kök widget. Yönlendirme (kurulum mu ana ekran mı) T06'da eklenir.
+/// Kök widget. Yönlendirme (kurulum mu ana ekran mı) T06'da eklenir;
+/// şu an T05 kontrol noktası için geçici köprü ekranı açılıyor.
 class CarKeepApp extends StatelessWidget {
   const CarKeepApp({super.key});
 
@@ -13,21 +15,7 @@ class CarKeepApp extends StatelessWidget {
       title: S.appName,
       debugShowCheckedModeBanner: false,
       theme: buildCarKeepTheme(),
-      home: const _PlaceholderScreen(),
-    );
-  }
-}
-
-/// T01 iskeleti; T06/T07 ile gerçek ekranlar gelir.
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(S.appName, style: Theme.of(context).textTheme.titleLarge),
-      ),
+      home: const BridgeCheckScreen(),
     );
   }
 }

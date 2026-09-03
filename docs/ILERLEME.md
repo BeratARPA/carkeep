@@ -28,7 +28,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T02 Drift şeması ve DAO'lar | bitti | `feat(T02)` | 75 test yeşil |
 | T03 Seed ve şablon birleştirme | bitti | `feat(T03)` | 125 test yeşil |
 | T04 StatusCalculator ve SnapshotBuilder | bitti | `feat(T04)` | 195 test yeşil; 06 §1'in 28 satırı ayrı test |
-| T05 Platform köprüsü | bekliyor | | kontrol noktası |
+| T05 Platform köprüsü | devam | `feat(T05)` | kod bitti, **cihaz testi bekliyor** |
 | T06 Kurulum sihirbazı | bekliyor | | |
 | T07 Kontroller ekranı | bekliyor | | |
 | T08 Madde detayı | bekliyor | | |
@@ -276,5 +276,35 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 - `SnapshotBuilder` null alanları JSON'a **açıkça** `null` yazıyor (02-mimari §5 örneği
   böyle). Kotlin tarafı bunları `isNull(key)` ile okumak zorunda — denetim md. 1.
   Bunu doğrulayan bir test var (`"dueKm":null` metni aranıyor).
+
+### T05
+- **Kanal tablosuna 5 metot eklendi** (02-mimari §6'da yoklar), hepsi denetim
+  bulgularının karşılığı:
+  `getManufacturer` (md. 33, T17'nin OEM metni için), `areNotificationsEnabled` ve
+  `openNotificationSettings` (md. 32, 07 §8 bildirim kanalı kapalıysa uyarı şeridi),
+  `cancelNotification` (md. 12, kayıt sonrası tepsideki bildirimi kapatmak için —
+  **metot var ama hiçbir yerden çağrılmıyor**, çağrılıp çağrılmayacağı hâlâ açık karar).
+- **`Snapshot.kt`, `Notifications.kt`, `DailyCheckWorker.kt` T05'te asgari hâlleriyle
+  yazıldı** (denetim md. 27): T05'in kendi kanal metotları bunlara bağımlı
+  (`writeSnapshot` → `Snapshot.parseCarAddress`, `clearEngine` → `Notifications.cancel`,
+  `scheduleDailyWorker` → `DailyCheckWorker.schedule`). `showOverdue` T12'de,
+  `DailyCheckWorker.runOnce` T14'te doldurulacak.
+- **Denetim md. 1 düzeltildi ve teste bağlandı.** `Snapshot.parse` artık her nullable
+  alanı `isNull(key)` ile okuyor. `SnapshotTest.JSON null degerleri gercek null olarak
+  okunuyor` ve `snoozeUntilDay null iken madde ertelenmis sayilmiyor` testleri bu hatanın
+  geri gelmesini engelliyor.
+- **`DayKey.daysBetween` negatif fark hatası düzeltildi** (`Math.floorDiv`); test var.
+- **Kotlin JVM testleri kuruldu** (denetim md. 31): `testImplementation("org.json:json:20260814")`
+  ve `kotlin("test")`. Komut: `cd android && ./gradlew :app:testDebugUnitTest`.
+  Bu komut CLAUDE.md'nin komut listesinde yok; eklenmesi iyi olur.
+  Şu an 22 test (DayKey 9, Snapshot 13), hepsi yeşil.
+- **`lib/dev/bridge_check_screen.dart` geçici.** T05'in kabul kriterlerinin hepsi fiziksel
+  cihazda doğrulanıyor ama gerçek ekranlar T06'da geliyor; test edilebilsin diye köprünün
+  her metodunu çağıran bir ekran kondu. **T06'nın ilk işi bu dosyayı ve `app.dart`'taki
+  yönlendirmeyi silmek.** İçindeki Türkçe literaller bilinçli (kullanıcı ekranı değil).
+- `openBatteryOptimizationSettings` 07 §6'daki sırayı uyguluyor (doğrudan diyalog önce),
+  02-mimari §6'daki sırayı değil — denetim md. 20, K-01 doğrudan diyaloğu destekliyor.
+- `MainActivity` üst üste izin isteğinde önceki `Result`ı `false` ile kapatıyor
+  (denetim "tek-pendingPermission-slotu"); kurulum 3. adımda iki izin arka arkaya isteniyor.
 
 ## Bilinen sorunlar
