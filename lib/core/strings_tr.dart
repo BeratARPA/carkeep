@@ -215,6 +215,9 @@ abstract final class S {
   static const String detailWhy = 'Neden';
   static const String detailHow = 'Nasıl bakılır';
   static const String detailPreviousLogs = 'Önceki kayıtlar';
+
+  /// K-23: "Tarih/km düzelt" ile yazılan kayıt satırının etiketi.
+  static const String logKindFix = 'düzeltme';
   static const String detailNoteLabel = 'Not (isteğe bağlı)';
   static const String detailNoteHint = 'Örn. arka sağ hep düşük';
   static const String detailSaveDone = 'Yaptım olarak kaydet';
@@ -266,6 +269,15 @@ abstract final class S {
 
   /// `Km güncellendi: 119.950`
   static const String kmUpdatedPrefix = 'Km güncellendi:';
+
+  // ------------------------------------------- geçmiş (01-spec §3.6)
+  static const String historyEmpty =
+      "Henüz kayıt yok. Bir kontrolü 'Yaptım' diye kaydettiğinde burada "
+      'görünür.';
+  static const String historyDelete = 'Sil';
+  static const String historyDeleteConfirm =
+      'Bu kayıt silinsin mi? Maddenin son yapılışı bir önceki kayda döner.';
+  static const String historyDeleted = 'Kayıt silindi';
 
   // ------------------------------------------------------------- hatalar
   static const String errSeedLoad = 'Şablon dosyası okunamadı.';

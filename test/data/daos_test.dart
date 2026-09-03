@@ -518,8 +518,8 @@ void main() {
   // ------------------------------------------------------------------- şema
 
   group('şema', () {
-    test('schemaVersion 1', () {
-      expect(db.schemaVersion, 1);
+    test('schemaVersion 2 (K-23)', () {
+      expect(db.schemaVersion, 2);
     });
 
     test('yabancı anahtarlar açık', () async {

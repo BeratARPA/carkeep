@@ -8,6 +8,7 @@ class CheckLog {
     required this.km,
     required this.value,
     required this.note,
+    required this.kind,
   });
 
   final int id;
@@ -16,15 +17,21 @@ class CheckLog {
 
   /// `yyyy-MM-dd`
   final String doneDay;
-  final int km;
+  /// K-23: gün bazlı bir maddenin düzeltmesinde null.
+  final int? km;
 
   /// Ölçüm değeri; `none` tipinde null.
   final String? value;
   final String? note;
 
+  /// K-23: `done` = "Yaptım", `fix` = "Tarih/km düzelt".
+  final String kind;
+
   bool get hasValue => value != null && value!.isNotEmpty;
   bool get hasNote => note != null && note!.isNotEmpty;
+  bool get isFix => kind == 'fix';
 
   @override
-  String toString() => 'CheckLog($id, item: $itemId, $doneDay, $km km)';
+  String toString() =>
+      'CheckLog($id, item: $itemId, $doneDay, $km km, $kind)';
 }

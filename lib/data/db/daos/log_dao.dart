@@ -5,6 +5,10 @@ import '../tables.dart';
 
 part 'log_dao.g.dart';
 
+/// K-23: kayıt türleri.
+const String kLogKindDone = 'done';
+const String kLogKindFix = 'fix';
+
 @DriftAccessor(tables: <Type>[CheckLogs, CheckItems])
 class LogDao extends DatabaseAccessor<AppDatabase> with _$LogDaoMixin {
   LogDao(super.db);
@@ -38,9 +42,10 @@ class LogDao extends DatabaseAccessor<AppDatabase> with _$LogDaoMixin {
     required int itemId,
     required DateTime doneAt,
     required String doneDay,
-    required int km,
+    int? km,
     String? value,
     String? note,
+    String kind = kLogKindDone,
   }) {
     return transaction(() async {
       final int logId = await into(checkLogs).insert(
@@ -48,11 +53,14 @@ class LogDao extends DatabaseAccessor<AppDatabase> with _$LogDaoMixin {
           itemId: itemId,
           doneAt: doneAt,
           doneDay: doneDay,
-          km: km,
+          km: Value<int?>(km),
           value: Value<String?>(value),
           note: Value<String?>(note),
+          kind: Value<String>(kind),
         ),
       );
+      // Düzeltme ertelemeyi de temizler (01-spec §3.4 sonrası durum
+      // yeniden hesaplanır).
       await _syncItemFromLatestLog(itemId, clearSnooze: true);
       return logId;
     });
@@ -61,9 +69,8 @@ class LogDao extends DatabaseAccessor<AppDatabase> with _$LogDaoMixin {
   /// Geçmişten kayıt silme (01-spec §3.6). Maddenin son yapılışı bir önceki
   /// kayda döner; kayıt kalmazsa null olur.
   ///
-  /// Bilinen sınır (ILERLEME → doküman denetimi md. 5): "Tarih/km düzelt" log
-  /// üretmediği için, elle girilmiş bir son yapılış bu yeniden hesapla
-  /// kaybolabilir. T10'da karara bağlanacak.
+  /// K-23'ten sonra düzeltmeler de log yazdığı için bu yeniden hesap elle
+  /// girilen değeri kaybetmiyor: düzeltme satırı da geçmişte duruyor.
   Future<void> deleteLog(int logId) {
     return transaction(() async {
       final CheckLogRow? row = await getById(logId);

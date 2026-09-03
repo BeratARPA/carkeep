@@ -132,3 +132,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Gerekçe: Kullanıcı bu iki bölümde "sırada ne var" diye bakar; ölçüt takvimdeki yakınlıktır, döngünün ne kadarının geçtiği değil. Gecikmişte ise "en çok gecikmiş" doğru ölçüt ve spec bunu yazıyor.
 - `kAssumedKmPerDay = 50` yalnız sıralamada kullanılır; hiçbir vade hesabına girmez (K-11: km yalnız kullanıcıdan). Gerçek ortalama bilinmediği için sabit; yanlış olsa bile yalnız iki km maddesinin görsel sırasını etkiler.
 - Sonuç: `ItemStatus.proximityKey`, `item_grouping.compareByProximity`, `constants.kAssumedKmPerDay`.
+
+## K-23 "Tarih/km düzelt" de kayıt satırı yazar
+- Bağlam: 01-spec §3.4 düzeltmenin **log oluşturmadığını** söylüyor; §3.6 ise kayıt silmenin `last_done_*`'ı **yalnız kalan loglardan** yeniden hesapladığını. İkisi birlikte veri kaybediyor: kullanıcı trigerin son yapılışını elle girer, sonra aynı maddede bir kaydı siler, elle girdiği değer sessizce yok olur ve madde "Bilinmiyor"a döner (denetim md. 5).
+- Karar: Düzeltme de bir `check_logs` satırı yazar, ama `kind = 'fix'` ile işaretlenir; Geçmiş ekranında "düzeltme" olarak görünür. "Yaptım" kayıtları `kind = 'done'`.
+- Gerekçe: Silme mantığı hiç değişmeden her zaman doğru çalışır (tek doğruluk kaynağı loglar). Kullanıcı girdiği bilgiyi Geçmiş'te görür ve geri alabilir; bugün göremiyor. §3.4'ün "log satırı oluşturulmaz" cümlesinden bilinçli sapma.
+- Sonuç: `check_logs.kind` sütunu eklendi ve `check_logs.km` **nullable** yapıldı (gün bazlı bir maddenin düzeltmesinde km yoktur; uydurmak yerine boş bırakılır). `schemaVersion` 1 → 2, `MigrationStrategy.onUpgrade` ile `TableMigration`.

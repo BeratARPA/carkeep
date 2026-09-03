@@ -85,9 +85,14 @@ class CheckLogs extends Table {
 
   /// `yyyy-MM-dd`
   TextColumn get doneDay => text()();
-  IntColumn get km => integer()();
+
+  /// K-23: gün bazlı bir maddenin düzeltmesinde km bilinmez, uydurulmaz.
+  IntColumn get km => integer().nullable()();
   TextColumn get value => text().nullable()();
   TextColumn get note => text().nullable()();
+
+  /// K-23: `done` = "Yaptım", `fix` = "Tarih/km düzelt".
+  TextColumn get kind => text().withDefault(const Constant<String>('done'))();
 }
 
 @DataClassName('TripRow')

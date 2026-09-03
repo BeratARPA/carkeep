@@ -1,5 +1,6 @@
 import '../../core/constants.dart';
 import '../../domain/models/check_log.dart';
+import '../db/daos/log_dao.dart';
 import '../db/database.dart';
 
 /// `check_logs` satırları ↔ domain modeli. Yazma işlemleri `LogDao`'da tek
@@ -22,9 +23,10 @@ class LogRepo {
     required int itemId,
     required DateTime doneAt,
     required String doneDay,
-    required int km,
+    int? km,
     String? value,
     String? note,
+    String kind = kLogKindDone,
   }) {
     return _db.logDao.addLog(
       itemId: itemId,
@@ -33,6 +35,7 @@ class LogRepo {
       km: km,
       value: value,
       note: note,
+      kind: kind,
     );
   }
 
@@ -49,5 +52,6 @@ class LogRepo {
     km: r.km,
     value: r.value,
     note: r.note,
+    kind: r.kind,
   );
 }

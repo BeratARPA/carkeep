@@ -2019,9 +2019,9 @@ class $CheckLogsTable extends CheckLogs
   late final GeneratedColumn<int> km = GeneratedColumn<int>(
     'km',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _valueMeta = const VerificationMeta('value');
   @override
@@ -2041,6 +2041,16 @@ class $CheckLogsTable extends CheckLogs
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _kindMeta = const VerificationMeta('kind');
+  @override
+  late final GeneratedColumn<String> kind = GeneratedColumn<String>(
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('done'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2050,6 +2060,7 @@ class $CheckLogsTable extends CheckLogs
     km,
     value,
     note,
+    kind,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2092,8 +2103,6 @@ class $CheckLogsTable extends CheckLogs
     }
     if (data.containsKey('km')) {
       context.handle(_kmMeta, km.isAcceptableOrUnknown(data['km']!, _kmMeta));
-    } else if (isInserting) {
-      context.missing(_kmMeta);
     }
     if (data.containsKey('value')) {
       context.handle(
@@ -2105,6 +2114,12 @@ class $CheckLogsTable extends CheckLogs
       context.handle(
         _noteMeta,
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('kind')) {
+      context.handle(
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
       );
     }
     return context;
@@ -2135,7 +2150,7 @@ class $CheckLogsTable extends CheckLogs
       km: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}km'],
-      )!,
+      ),
       value: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}value'],
@@ -2144,6 +2159,10 @@ class $CheckLogsTable extends CheckLogs
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       ),
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
     );
   }
 
@@ -2160,17 +2179,23 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
 
   /// `yyyy-MM-dd`
   final String doneDay;
-  final int km;
+
+  /// K-23: gün bazlı bir maddenin düzeltmesinde km bilinmez, uydurulmaz.
+  final int? km;
   final String? value;
   final String? note;
+
+  /// K-23: `done` = "Yaptım", `fix` = "Tarih/km düzelt".
+  final String kind;
   const CheckLogRow({
     required this.id,
     required this.itemId,
     required this.doneAt,
     required this.doneDay,
-    required this.km,
+    this.km,
     this.value,
     this.note,
+    required this.kind,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2179,13 +2204,16 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
     map['item_id'] = Variable<int>(itemId);
     map['done_at'] = Variable<DateTime>(doneAt);
     map['done_day'] = Variable<String>(doneDay);
-    map['km'] = Variable<int>(km);
+    if (!nullToAbsent || km != null) {
+      map['km'] = Variable<int>(km);
+    }
     if (!nullToAbsent || value != null) {
       map['value'] = Variable<String>(value);
     }
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
     }
+    map['kind'] = Variable<String>(kind);
     return map;
   }
 
@@ -2195,11 +2223,12 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
       itemId: Value(itemId),
       doneAt: Value(doneAt),
       doneDay: Value(doneDay),
-      km: Value(km),
+      km: km == null && nullToAbsent ? const Value.absent() : Value(km),
       value: value == null && nullToAbsent
           ? const Value.absent()
           : Value(value),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      kind: Value(kind),
     );
   }
 
@@ -2213,9 +2242,10 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
       itemId: serializer.fromJson<int>(json['itemId']),
       doneAt: serializer.fromJson<DateTime>(json['doneAt']),
       doneDay: serializer.fromJson<String>(json['doneDay']),
-      km: serializer.fromJson<int>(json['km']),
+      km: serializer.fromJson<int?>(json['km']),
       value: serializer.fromJson<String?>(json['value']),
       note: serializer.fromJson<String?>(json['note']),
+      kind: serializer.fromJson<String>(json['kind']),
     );
   }
   @override
@@ -2226,9 +2256,10 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
       'itemId': serializer.toJson<int>(itemId),
       'doneAt': serializer.toJson<DateTime>(doneAt),
       'doneDay': serializer.toJson<String>(doneDay),
-      'km': serializer.toJson<int>(km),
+      'km': serializer.toJson<int?>(km),
       'value': serializer.toJson<String?>(value),
       'note': serializer.toJson<String?>(note),
+      'kind': serializer.toJson<String>(kind),
     };
   }
 
@@ -2237,17 +2268,19 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
     int? itemId,
     DateTime? doneAt,
     String? doneDay,
-    int? km,
+    Value<int?> km = const Value.absent(),
     Value<String?> value = const Value.absent(),
     Value<String?> note = const Value.absent(),
+    String? kind,
   }) => CheckLogRow(
     id: id ?? this.id,
     itemId: itemId ?? this.itemId,
     doneAt: doneAt ?? this.doneAt,
     doneDay: doneDay ?? this.doneDay,
-    km: km ?? this.km,
+    km: km.present ? km.value : this.km,
     value: value.present ? value.value : this.value,
     note: note.present ? note.value : this.note,
+    kind: kind ?? this.kind,
   );
   CheckLogRow copyWithCompanion(CheckLogsCompanion data) {
     return CheckLogRow(
@@ -2258,6 +2291,7 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
       km: data.km.present ? data.km.value : this.km,
       value: data.value.present ? data.value.value : this.value,
       note: data.note.present ? data.note.value : this.note,
+      kind: data.kind.present ? data.kind.value : this.kind,
     );
   }
 
@@ -2270,13 +2304,15 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
           ..write('doneDay: $doneDay, ')
           ..write('km: $km, ')
           ..write('value: $value, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('kind: $kind')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, itemId, doneAt, doneDay, km, value, note);
+  int get hashCode =>
+      Object.hash(id, itemId, doneAt, doneDay, km, value, note, kind);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2287,7 +2323,8 @@ class CheckLogRow extends DataClass implements Insertable<CheckLogRow> {
           other.doneDay == this.doneDay &&
           other.km == this.km &&
           other.value == this.value &&
-          other.note == this.note);
+          other.note == this.note &&
+          other.kind == this.kind);
 }
 
 class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
@@ -2295,9 +2332,10 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
   final Value<int> itemId;
   final Value<DateTime> doneAt;
   final Value<String> doneDay;
-  final Value<int> km;
+  final Value<int?> km;
   final Value<String?> value;
   final Value<String?> note;
+  final Value<String> kind;
   const CheckLogsCompanion({
     this.id = const Value.absent(),
     this.itemId = const Value.absent(),
@@ -2306,19 +2344,20 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
     this.km = const Value.absent(),
     this.value = const Value.absent(),
     this.note = const Value.absent(),
+    this.kind = const Value.absent(),
   });
   CheckLogsCompanion.insert({
     this.id = const Value.absent(),
     required int itemId,
     required DateTime doneAt,
     required String doneDay,
-    required int km,
+    this.km = const Value.absent(),
     this.value = const Value.absent(),
     this.note = const Value.absent(),
+    this.kind = const Value.absent(),
   }) : itemId = Value(itemId),
        doneAt = Value(doneAt),
-       doneDay = Value(doneDay),
-       km = Value(km);
+       doneDay = Value(doneDay);
   static Insertable<CheckLogRow> custom({
     Expression<int>? id,
     Expression<int>? itemId,
@@ -2327,6 +2366,7 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
     Expression<int>? km,
     Expression<String>? value,
     Expression<String>? note,
+    Expression<String>? kind,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -2336,6 +2376,7 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
       if (km != null) 'km': km,
       if (value != null) 'value': value,
       if (note != null) 'note': note,
+      if (kind != null) 'kind': kind,
     });
   }
 
@@ -2344,9 +2385,10 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
     Value<int>? itemId,
     Value<DateTime>? doneAt,
     Value<String>? doneDay,
-    Value<int>? km,
+    Value<int?>? km,
     Value<String?>? value,
     Value<String?>? note,
+    Value<String>? kind,
   }) {
     return CheckLogsCompanion(
       id: id ?? this.id,
@@ -2356,6 +2398,7 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
       km: km ?? this.km,
       value: value ?? this.value,
       note: note ?? this.note,
+      kind: kind ?? this.kind,
     );
   }
 
@@ -2383,6 +2426,9 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (kind.present) {
+      map['kind'] = Variable<String>(kind.value);
+    }
     return map;
   }
 
@@ -2395,7 +2441,8 @@ class CheckLogsCompanion extends UpdateCompanion<CheckLogRow> {
           ..write('doneDay: $doneDay, ')
           ..write('km: $km, ')
           ..write('value: $value, ')
-          ..write('note: $note')
+          ..write('note: $note, ')
+          ..write('kind: $kind')
           ..write(')'))
         .toString();
   }
@@ -4356,18 +4403,20 @@ typedef $$CheckLogsTableCreateCompanionBuilder = CheckLogsCompanion Function({
   required int itemId,
   required DateTime doneAt,
   required String doneDay,
-  required int km,
+  Value<int?> km,
   Value<String?> value,
   Value<String?> note,
+  Value<String> kind,
 });
 typedef $$CheckLogsTableUpdateCompanionBuilder = CheckLogsCompanion Function({
   Value<int> id,
   Value<int> itemId,
   Value<DateTime> doneAt,
   Value<String> doneDay,
-  Value<int> km,
+  Value<int?> km,
   Value<String?> value,
   Value<String?> note,
+  Value<String> kind,
 });
 
 final class $$CheckLogsTableReferences
@@ -4428,6 +4477,11 @@ class $$CheckLogsTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get kind => $composableBuilder(
+    column: $table.kind,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4494,6 +4548,11 @@ class $$CheckLogsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get kind => $composableBuilder(
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$CheckItemsTableOrderingComposer get itemId {
     final $$CheckItemsTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -4544,6 +4603,9 @@ class $$CheckLogsTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => column);
 
   $$CheckItemsTableAnnotationComposer get itemId {
     final $$CheckItemsTableAnnotationComposer composer = $composerBuilder(
@@ -4601,9 +4663,10 @@ class $$CheckLogsTableTableManager
                 Value<int> itemId = const Value.absent(),
                 Value<DateTime> doneAt = const Value.absent(),
                 Value<String> doneDay = const Value.absent(),
-                Value<int> km = const Value.absent(),
+                Value<int?> km = const Value.absent(),
                 Value<String?> value = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String> kind = const Value.absent(),
               }) => CheckLogsCompanion(
                 id: id,
                 itemId: itemId,
@@ -4612,6 +4675,7 @@ class $$CheckLogsTableTableManager
                 km: km,
                 value: value,
                 note: note,
+                kind: kind,
               ),
           createCompanionCallback:
               ({
@@ -4619,9 +4683,10 @@ class $$CheckLogsTableTableManager
                 required int itemId,
                 required DateTime doneAt,
                 required String doneDay,
-                required int km,
+                Value<int?> km = const Value.absent(),
                 Value<String?> value = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String> kind = const Value.absent(),
               }) => CheckLogsCompanion.insert(
                 id: id,
                 itemId: itemId,
@@ -4630,6 +4695,7 @@ class $$CheckLogsTableTableManager
                 km: km,
                 value: value,
                 note: note,
+                kind: kind,
               ),
           withReferenceMapper: (p0) => p0
               .map(

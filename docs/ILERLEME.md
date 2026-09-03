@@ -36,7 +36,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T07 Kontroller ekranı | bitti | `feat(T07)` | 293 test yeşil; K-22 sıralama düzeltmesi dahil |
 | T08 Madde detayı | bitti | `feat(T08)` | 327 test yeşil; cihazda kayıt uçtan uca |
 | T09 Km giriş | bitti | `feat(T09)` | 341 test yeşil |
-| T10 Geçmiş | bekliyor | | |
+| T10 Geçmiş | bitti | `feat(T10)` | 357 test yeşil; K-23 ve şema v2 dahil |
 | T11 Ayarlar | bekliyor | | |
 | T12 Receiver, motor, bildirim | bekliyor | | kontrol noktası |
 | T13 Pending events ve Bluetooth durumu | bekliyor | | |
@@ -431,5 +431,22 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   uyarı `SnackBar` içinde aranıyor.
 - Km küçültme burada reddediliyor; geriye alma yalnız Ayarlar → Araç'tan
   (§3.7, onay diyaloğuyla) — T11'de gelecek.
+
+### T10
+- **Denetim md. 5 kapandı (K-23).** "Tarih/km düzelt" artık `kind='fix'` işaretli bir
+  kayıt satırı yazıyor. Böylece son yapılış tek doğruluk kaynağı olan loglardan
+  türemeye devam ediyor ve bir kayıt silindiğinde elle girilen değer kaybolmuyor.
+  §3.4'ün "log satırı oluşturulmaz" cümlesinden bilinçli sapma; testi var.
+- **Şema 1 → 2**: `check_logs.kind` eklendi, `check_logs.km` nullable oldu (gün bazlı
+  bir maddenin düzeltmesinde km yoktur, uydurulmuyor).
+- **Migration cihazda patladı, testler yakalayamadı.** Bütün DB testleri
+  `NativeDatabase.memory()` ile sıfırdan kurduğu için hep `onCreate` yolunu izliyor,
+  `onUpgrade` hiç çalışmıyordu. `TableMigration`'a `newColumns`/`columnTransformer`
+  verilmeyince drift eski tablodan `kind` sütununu seçmeye çalışıp
+  `no such column: kind` ile açılışta çöktü. `test/data/migration_test.dart` artık
+  gerçek bir v1 şeması kurup dosya üzerinden yükseltiyor; **yeni her şema
+  değişikliğinde bu dosyaya bir vaka eklenmeli.**
+- Geçmiş satırının alt metni `değer, km. not`; düzeltme satırlarında `düzeltme`
+  etiketi eklenir.
 
 ## Bilinen sorunlar

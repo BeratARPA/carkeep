@@ -20,13 +20,30 @@ class AppDatabase extends _$AppDatabase {
   /// Testler için: `NativeDatabase.memory()` veya başka bir executor.
   AppDatabase.forTesting(super.executor);
 
+  /// 2: K-23 — `check_logs.kind` eklendi, `check_logs.km` nullable oldu.
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (Migrator m) async {
       await m.createAll();
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        // K-23: `kind` eklenir ve `km` nullable olur. Tablo yeniden kurulur;
+        // `newColumns` olmadan drift eski tablodan `kind`i seçmeye çalışıp
+        // "no such column: kind" ile patlıyor.
+        await m.alterTable(
+          TableMigration(
+            checkLogs,
+            newColumns: <GeneratedColumn<Object>>[checkLogs.kind],
+            columnTransformer: <GeneratedColumn<Object>, Expression<Object>>{
+              checkLogs.kind: const Constant<String>(kLogKindDone),
+            },
+          ),
+        );
+      }
     },
     beforeOpen: (OpeningDetails details) async {
       // 02-mimari §3: yabancı anahtarlar açık.

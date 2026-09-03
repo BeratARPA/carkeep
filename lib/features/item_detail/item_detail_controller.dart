@@ -4,6 +4,7 @@ import '../../core/constants.dart';
 import '../../core/date_utils.dart';
 import '../../core/format_tr.dart';
 import '../../core/strings_tr.dart';
+import '../../data/db/daos/log_dao.dart';
 import '../../domain/models/check_item.dart';
 import '../../domain/models/check_log.dart';
 import '../../domain/models/item_status.dart';
@@ -135,15 +136,27 @@ class ItemDetailController {
         .setSnooze(item.id, dayKey(addDays(today, 1)));
   }
 
-  /// "Tarih/km düzelt" (01-spec §3.4). **Log oluşturmaz.**
+  /// "Tarih/km düzelt" (01-spec §3.4).
+  ///
+  /// K-23: `kind = 'fix'` işaretli bir kayıt satırı yazar. Böylece son yapılış
+  /// tek doğruluk kaynağı olan loglardan türemeye devam eder ve bir kayıt
+  /// silindiğinde elle girilen değer kaybolmaz.
   Future<void> fixLastDone(
     CheckItem item, {
     required DateTime day,
     required int? km,
   }) async {
     await ref
-        .read(itemListRepoProvider)
-        .setLastDone(item.id, day: dayKey(day), km: km);
+        .read(logRepoProvider)
+        .add(
+          itemId: item.id,
+          doneAt: DateTime.now(),
+          doneDay: dayKey(day),
+          km: km,
+          value: null,
+          note: null,
+          kind: kLogKindFix,
+        );
   }
 
   Future<List<CheckLog>> recentLogs(int itemId) =>

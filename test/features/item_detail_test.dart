@@ -372,7 +372,8 @@ void main() {
   // ------------------------------------------------------- tarih/km düzelt
 
   group('Tarih/km düzelt', () {
-    test('log oluşturmuyor, last_* değişiyor, unknown hesaplanıyor', () async {
+    test('K-23 kayıt satırı yazıyor, last_* değişiyor, unknown hesaplanıyor',
+        () async {
       final int v = await seedVehicle();
       final ProviderContainer c = makeContainer();
       await settle(c);
@@ -392,7 +393,13 @@ void main() {
             km: 60000,
           );
 
-      expect(await db.logDao.getAll(), isEmpty);
+      // K-23: düzeltme de bir kayıt satırı yazar, `fix` işaretli.
+      final List<CheckLogRow> logs = await db.logDao.getAll();
+      expect(logs.length, 1);
+      expect(logs.single.kind, 'fix');
+      expect(logs.single.doneDay, '2022-05-10');
+      expect(logs.single.km, 60000);
+
       final CheckItemRow row = (await db.itemDao.getById(id))!;
       expect(row.lastDoneDay, '2022-05-10');
       expect(row.lastDoneKm, 60000);
@@ -416,7 +423,44 @@ void main() {
           );
       final CheckItemRow row = (await db.itemDao.getById(id))!;
       expect(row.lastDoneDay, '2026-08-12');
+      // Gün bazlı maddede km uydurulmaz (K-23).
       expect(row.lastDoneKm, isNull);
+      expect((await db.logDao.getAll()).single.km, isNull);
+    });
+
+    test('K-23: düzeltme, sonraki bir kayıt silinince kaybolmuyor', () async {
+      final int v = await seedVehicle();
+      final ProviderContainer c = makeContainer();
+      await settle(c);
+      final int id = await itemId(v, 'timing_belt');
+
+      // Kullanıcı son yapılışı elle giriyor.
+      await c
+          .read(itemDetailControllerProvider)
+          .fixLastDone(
+            (await db.itemDao.getById(id))!.toModel(),
+            day: DateTime(2022, 5, 10),
+            km: 60000,
+          );
+      // Sonra "Yaptım" diyor.
+      await c
+          .read(itemDetailControllerProvider)
+          .saveDone(
+            item: (await db.itemDao.getById(id))!.toModel(),
+            input: const MeasureInput(),
+          );
+      expect((await db.itemDao.getById(id))!.lastDoneDay, '2026-09-03');
+
+      // Bu kaydı yanlışlıkla eklediğini fark edip siliyor.
+      final CheckLogRow done = (await db.logDao.getAll()).firstWhere(
+        (CheckLogRow r) => r.kind == 'done',
+      );
+      await db.logDao.deleteLog(done.id);
+
+      // Elle girdiği değer geri geliyor; eskiden `unknown`a düşüyordu.
+      final CheckItemRow row = (await db.itemDao.getById(id))!;
+      expect(row.lastDoneDay, '2022-05-10');
+      expect(row.lastDoneKm, 60000);
     });
   });
 
@@ -432,6 +476,7 @@ void main() {
         km: 118100,
         value: '2,3 / 2,3 / 2,3 / 2,2 bar',
         note: 'Arka sağ düşük',
+        kind: 'done',
       );
       expect(
         recentLogLine(log, refYear: 2026),
@@ -448,6 +493,7 @@ void main() {
         km: 118300,
         value: null,
         note: null,
+        kind: 'done',
       );
       expect(recentLogLine(log, refYear: 2026), '25 Ağu, 118.300 km');
     });
@@ -461,6 +507,7 @@ void main() {
         km: 104900,
         value: null,
         note: null,
+        kind: 'done',
       );
       expect(recentLogLine(log, refYear: 2026), '12 Mar 2025, 104.900 km');
     });
@@ -629,14 +676,15 @@ void main() {
       await tester.tap(find.byKey(const Key('fix_save')));
       await tester.pumpAndSettle();
 
-      // Diyalog kapanmadı, uyarı çıktı, tarih değişmedi.
+      // Diyalog kapanmadı, uyarı çıktı, tarih değişmedi, kayıt açılmadı.
       expect(find.byKey(const Key('fix_error')), findsOneWidget);
       expect((await db.itemDao.getById(id))!.lastDoneDay, '2026-09-01');
+      expect(await db.logDao.getAll(), isEmpty);
 
       await disposeTree(tester);
     });
 
-    testWidgets('düzeltme geçmiş tarihi kaydediyor, log açmıyor', (
+    testWidgets('düzeltme geçmiş tarihi kaydediyor ve fix satırı yazıyor', (
       WidgetTester tester,
     ) async {
       final int v = await seedVehicle();
@@ -653,7 +701,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect((await db.itemDao.getById(id))!.lastDoneDay, '2026-09-02');
-      expect(await db.logDao.getAll(), isEmpty);
+      final List<CheckLogRow> logs = await db.logDao.getAll();
+      expect(logs.length, 1);
+      expect(logs.single.kind, 'fix');
 
       await disposeTree(tester);
     });

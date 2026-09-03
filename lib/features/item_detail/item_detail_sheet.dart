@@ -526,10 +526,13 @@ String recentLogLine(CheckLog log, {required int refYear}) {
     int.parse(log.doneDay.substring(5, 7)),
     int.parse(log.doneDay.substring(8, 10)),
   );
+  final int? km = log.km;
   final String head = <String>[
     formatDate(day, refYear: refYear),
-    '${formatKm(log.km)} ${S.unitKm}',
+    if (km != null) '${formatKm(km)} ${S.unitKm}',
     if (log.hasValue) log.value!,
+    // K-23: elle girilen düzeltmeler ayırt edilebilsin.
+    if (log.isFix) S.logKindFix,
   ].join(', ');
   return log.hasNote ? '$head. ${log.note}' : head;
 }
