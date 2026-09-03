@@ -1,0 +1,657 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CarKeep — uygulama önizlemesi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141A24; --ink-2:#4A5361; --ink-3:#8A93A0;
+  --page:#E6E9EE; --screen:#F6F7F9; --surface:#FFFFFF; --line:#E1E5EA;
+  --red:#C4301C; --red-bg:#FBEBE8;
+  --amber:#A66300; --amber-bg:#FFF3DC;
+  --green:#1E7A45; --green-bg:#E4F3EA;
+  --focus:#1A55C8;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Manrope,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--page);color:var(--ink);-webkit-font-smoothing:antialiased;padding:28px 20px 64px;line-height:1.35}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+input{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+
+.intro{max-width:860px;margin:0 auto 26px}
+.intro h1{font-size:22px;font-weight:800;margin:0 0 6px;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--ink-2);font-size:14px;max-width:62ch}
+
+.stage{display:grid;grid-template-columns:392px minmax(300px,400px);gap:36px;justify-content:center;align-items:start}
+@media (max-width:840px){.stage{grid-template-columns:minmax(0,392px);justify-items:center}}
+
+/* telefon */
+.phone{width:392px;max-width:100%;height:min(820px,88vh);min-height:660px;border-radius:46px;background:#0E1116;padding:12px;box-shadow:0 30px 60px rgba(20,26,36,.28)}
+.screen{position:relative;height:100%;border-radius:36px;background:var(--screen);overflow:hidden;display:flex;flex-direction:column}
+.statusbar{height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 26px;font-size:14px;font-weight:700}
+.statusbar .icons{display:flex;gap:8px;align-items:center}
+.statusbar svg{width:16px;height:16px;fill:var(--ink)}
+.content{flex:1;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.nav{height:64px;flex:none;border-top:1px solid var(--line);background:var(--surface);display:flex}
+.nav button{flex:1;background:none;border:0;font-size:11.5px;font-weight:600;color:var(--ink-3);display:flex;flex-direction:column;align-items:center;gap:4px;padding-top:9px}
+.nav button svg{width:22px;height:22px;fill:currentColor}
+.nav button.on{color:var(--ink)}
+
+/* ortak */
+.btn{display:block;width:100%;height:48px;border:0;border-radius:12px;background:var(--ink);color:#fff;font-weight:700;font-size:15px}
+.btn.ghost{background:transparent;color:var(--ink);margin-top:6px}
+.btn.small{display:inline-block;width:auto;height:36px;padding:0 12px;font-size:13px;border-radius:10px}
+.btn.small.ghost{margin:0;border:1px solid var(--line);background:var(--surface)}
+.btn:disabled{opacity:.4;cursor:default}
+.link{background:none;border:0;padding:6px 0;font-weight:700;font-size:13.5px;color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.field{display:block;margin:0 0 14px}
+.field span{display:block;font-size:12.5px;font-weight:600;color:var(--ink-2);margin-bottom:6px}
+.field input{width:100%;height:48px;border:1px solid var(--line);border-radius:10px;padding:0 14px;font-size:16px;background:var(--surface)}
+.help{font-size:13px;color:var(--ink-2);margin:0 0 16px}
+
+.sec{padding:20px 20px 8px;font-size:13px;font-weight:700;color:var(--ink-2)}
+.sec.overdue{color:var(--red)}
+.sec.soon{color:var(--amber)}
+.row{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 20px;border:0;border-bottom:1px solid var(--line);background:var(--surface);border-left:3px solid transparent}
+.row .t{font-weight:700;font-size:15px}
+.row .s{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.row .r{margin-left:auto;text-align:right;font-size:12.5px;font-weight:700;white-space:nowrap;color:var(--ink-3)}
+.row.st-overdue{border-left-color:var(--red)}
+.row.st-overdue .r{color:var(--red)}
+.row.st-soon .r{color:var(--amber)}
+.row.flash{animation:flash 1.2s ease-out}
+@keyframes flash{0%{background:var(--red-bg)}100%{background:var(--surface)}}
+.empty{padding:20px;font-size:14px;color:var(--ink-2)}
+
+/* ana ekran başlığı */
+.hero{padding:10px 20px 18px}
+.hero .car{font-size:13px;color:var(--ink-2);font-weight:600}
+.hero .kmline{display:flex;align-items:baseline;gap:14px;margin-top:2px}
+.hero .km{font-size:34px;font-weight:800;letter-spacing:-.02em}
+.chip{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:5px 10px;border-radius:999px;background:#EAEDF1;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.chip.on{background:var(--green-bg);color:var(--green)}
+.chip svg{width:14px;height:14px;fill:currentColor}
+
+/* kurulum */
+.setup{display:flex;flex-direction:column;height:100%;padding:8px 20px 20px}
+.dots{display:flex;gap:6px;margin-bottom:22px}
+.dots i{height:4px;flex:1;border-radius:2px;background:var(--line)}
+.dots i.on{background:var(--ink)}
+.setup h2{font-size:24px;font-weight:800;margin:0 0 8px;letter-spacing:-.01em}
+.setup .body{flex:1;overflow-y:auto}
+.setup .foot{display:flex;gap:10px;padding-top:12px}
+.setup .foot .btn{flex:1;margin:0}
+.dev{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:14px 4px;border:0;border-bottom:1px solid var(--line);background:none;font-weight:600;font-size:15px}
+.dev .radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--ink-3);flex:none}
+.dev.on .radio{border-color:var(--ink);background:radial-gradient(circle,var(--ink) 45%,transparent 50%)}
+.dev .sub{font-size:12px;color:var(--ink-3);font-weight:500;margin-left:auto}
+
+/* ayar satırları */
+.srow{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--surface);font-size:15px}
+.srow .t{font-weight:700}
+.srow .s{font-size:12.5px;color:var(--ink-2);margin-top:2px}
+.srow .right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.srow.btnrow{border:0;width:100%;text-align:left}
+.sw{width:42px;height:26px;border-radius:13px;border:0;background:#CCD2DA;position:relative;padding:0;flex:none}
+.sw span{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:left .15s}
+.sw.on{background:var(--ink)}
+.sw.on span{left:19px}
+.step{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.step button{width:30px;height:30px;border:0;background:var(--surface);font-weight:800}
+.step b{padding:0 6px;font-size:12.5px;white-space:nowrap;font-weight:700}
+.dis{opacity:.45}
+
+/* alt sayfa */
+.dim{position:absolute;inset:0;background:rgba(14,17,22,.38);z-index:20;border:0;padding:0}
+.sheet{position:absolute;left:0;right:0;bottom:0;max-height:88%;background:var(--surface);border-radius:24px 24px 0 0;z-index:21;display:flex;flex-direction:column;animation:up .28s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:none;opacity:1}}
+.sheet .sh{padding:10px 20px 6px}
+.grab{width:36px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+.sheet h3{font-size:20px;font-weight:800;margin:0 0 4px;letter-spacing:-.01em}
+.stline{font-size:13px;font-weight:700;color:var(--ink-3)}
+.stline.st-overdue{color:var(--red)}
+.stline.st-soon{color:var(--amber)}
+.sheet .sb{overflow-y:auto;padding:6px 20px 20px}
+.sheet .sf{padding:12px 20px 18px;border-top:1px solid var(--line)}
+.why{font-size:14px;color:var(--ink-2);margin:8px 0 14px}
+.hlbl{font-size:13px;font-weight:700;margin-bottom:6px}
+.how ol{margin:0 0 16px;padding-left:20px;font-size:14px}
+.how li{margin-bottom:4px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.chip-b{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-size:13.5px;font-weight:600}
+.chip-b.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tires{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.tires .field{margin:0}
+.tires input{height:44px}
+.mini{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
+.mini .l{font-size:12.5px;color:var(--ink-2);padding:4px 0}
+
+/* bildirim ve toast */
+.notif{position:absolute;top:8px;left:10px;right:10px;background:var(--surface);border-radius:20px;box-shadow:0 12px 32px rgba(20,26,36,.28);padding:12px 14px 10px;z-index:30;animation:drop .32s ease-out}
+@keyframes drop{from{transform:translateY(-70px);opacity:0}to{transform:none;opacity:1}}
+.notif .app{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-2);font-weight:600}
+.notif .app svg{width:14px;height:14px;fill:var(--ink)}
+.notif .app .tm{margin-left:auto;font-weight:500}
+.notif .ttl{font-weight:800;font-size:14.5px;margin-top:6px}
+.notif .bd{font-size:13px;color:var(--ink-2);margin-top:2px}
+.notif .acts{display:flex;gap:6px;margin-top:8px}
+.notif .acts button{background:none;border:0;padding:6px 10px;font-weight:800;font-size:13px;border-radius:8px}
+.notif .acts button:hover{background:#EEF1F4}
+.toast{position:absolute;left:16px;right:16px;bottom:76px;background:var(--ink);color:#fff;padding:12px 16px;border-radius:12px;font-size:13.5px;font-weight:600;z-index:25;animation:up .2s ease-out}
+
+/* simülatör */
+.sim{background:var(--surface);border-radius:20px;padding:20px;border:1px solid var(--line);width:100%}
+.sim h2{font-size:16px;font-weight:800;margin:0 0 4px}
+.sim .hint{font-size:13px;color:var(--ink-2);margin:0 0 14px}
+.sim .grp{padding:14px 0;border-top:1px solid var(--line)}
+.sim .lbl{font-size:12.5px;font-weight:700;color:var(--ink-2)}
+.sim .big{font-size:18px;font-weight:800;margin-top:4px}
+.sim .st{font-size:14px;font-weight:700;margin-top:4px}
+.sim .st.on{color:var(--green)}
+.sim .btns{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.events{list-style:none;margin:8px 0 0;padding:0;max-height:280px;overflow:auto;font-size:12.5px}
+.events li{padding:7px 0;border-bottom:1px dashed var(--line)}
+.events li b{font-weight:700;color:var(--ink-3);margin-right:6px;white-space:nowrap}
+.events li.notif-ev{color:var(--red);font-weight:700}
+.events li.skip{color:var(--amber);font-weight:600}
+.events li.ok{color:var(--green);font-weight:600}
+.events .none{color:var(--ink-3);padding:6px 0}
+
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="intro">
+  <h1>CarKeep — Flutter uygulamasının tıklanabilir taslağı</h1>
+  <p>Soldaki telefon uygulamanın kendisi, sağdaki panel telefonun dışındaki dünya: günler geçer, araba bağlanır ve kopar. Veriler örnek. Kurulumu bitir, sonra sağdan bir sürüş yap ve bildirimin ne zaman geldiğine bak.</p>
+</header>
+
+<main class="stage">
+  <section class="phone" aria-label="Telefon"><div class="screen" id="screen"></div></section>
+  <aside class="sim" id="sim" aria-label="Simülatör"></aside>
+</main>
+
+<script>
+(function(){
+'use strict';
+const M=['Oca','Şub','Mar','Nis','May','Haz','Tem','Ağu','Eyl','Eki','Kas','Ara'];
+const DAY=864e5;
+const $=s=>document.querySelector(s);
+const fmtKm=n=>Number(n).toLocaleString('tr-TR');
+const fmtD=d=>d.getDate()+' '+M[d.getMonth()];
+const fmtDY=d=>fmtD(d)+' '+d.getFullYear();
+const fmtT=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+const sod=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+const ICON={
+  bt:'<svg viewBox="0 0 24 24"><path d="M17.71 7.71 12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29zM13 5.83l1.88 1.88L13 9.59V5.83zm1.88 10.46L13 18.17v-3.76l1.88 1.88z"/></svg>',
+  check:'<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+  hist:'<svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>',
+  tune:'<svg viewBox="0 0 24 24"><path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/></svg>',
+  wrench:'<svg viewBox="0 0 24 24"><path d="M22.7 19l-9.1-9.1c.9-2.3.4-5-1.5-6.9-2-2-5-2.4-7.4-1.3L9 6 7 8 2.6 3.7C1.4 6 1.9 9 3.9 11c1.9 1.9 4.6 2.4 6.9 1.5l9.1 9.1c.4.4 1 .4 1.4 0l1.4-1.4c.4-.4.4-1.1 0-1.4z"/></svg>'
+};
+
+let state;
+const DAYS_PRESET=[7,14,30,90,180,365];
+const KM_PRESET=[5000,10000,15000,20000,30000];
+
+function makeItems(){
+  const D=(m,d,y)=>new Date(y||2026,m-1,d,10,0);
+  return [
+    {id:'oil',name:'Motor yağı seviyesi',everyDays:14,measure:'level',levels:['Min\'e yakın','Orta','Max\'a yakın'],
+     last:{date:D(8,12),km:117900,value:'Orta'},
+     why:'Yağ azalınca motor kendini sürtünmeye karşı koruyamaz; en pahalı arıza buradan çıkar. Egea\'da seviye sensörü yok, çubuk dışında bilen yok.',
+     how:['Motor soğukken, araba düz zeminde.','Çubuğu çek, bezle sil, tekrar sok, çek.','Seviye Min ile Max arasında olmalı. Min\'e yakınsa ekle.']},
+    {id:'tire',name:'Lastik basıncı',everyDays:14,measure:'tires',
+     last:{date:D(8,16),km:118100,value:'2,3 / 2,3 / 2,3 / 2,2 bar'},
+     why:'Düşük basınç lastiği ısıtır, yakıtı artırır, fren mesafesini uzatır. Arabanın uyarısı ancak belirgin düşüşte yanar.',
+     how:['Lastikler soğukken, en az 3 saat durmuş.','Hedef değer sürücü kapısındaki etikette.','Dördünü ölç, farklı olanı hedefe getir.']},
+    {id:'coolant',name:'Soğutma suyu seviyesi',everyDays:30,measure:'level',levels:['Min\'de','Orta','Max\'ta'],
+     last:{date:D(8,5),km:117500,value:'Orta'},
+     why:'Su azalırsa motor ısınır; ısınan motor sızdırmazlığı bozar.',
+     how:['Motor soğukken; kapağı açma, seviyeye dışarıdan bak.','Genleşme kabındaki seviye Min ile Max arasında olmalı.','Sık düşüyorsa serviste kaçak baktır.']},
+    {id:'brakefluid',name:'Fren hidroliği seviyesi',everyDays:30,measure:'level',levels:['Min\'de','Orta','Max\'ta'],
+     last:{date:D(8,5),km:117500,value:'Orta'},
+     why:'Seviye düşüyorsa balata bitmiştir ya da kaçak vardır; ikisi de fren demek.',
+     how:['Şeffaf kap motor bölmesinde, sürücü tarafında.','Min ile Max arasında olmalı.','Düşükse ekleme, servise git.']},
+    {id:'washer',name:'Silecek suyu',everyDays:30,measure:'level',levels:['Boş','Yarım','Dolu'],
+     last:{date:D(8,20),km:118200,value:'Dolu'},
+     why:'Boş depo yağmurda ve çamurda görüşü anında kapatır.',
+     how:['Mavi kapaklı depoyu aç, doldur.','Kışın antifrizli silecek suyu kullan.']},
+    {id:'lights',name:'Farlar, sinyaller, stoplar',everyDays:30,measure:'none',
+     last:{date:D(8,25),km:118300,value:''},
+     why:'Yanmayan stop lambası arkadan çarpma sebebi, üstüne ceza.',
+     how:['Kısa far, uzun far, sinyaller, dörtlü, stop ve geri vites lambası.','Biri içeride bassın, biri dışarıdan baksın.']},
+    {id:'wipers',name:'Silecek lastikleri',everyDays:90,measure:'none',
+     last:{date:D(6,20),km:113800,value:''},
+     why:'Çizgi bırakan silecek yağmurda görüşü kapatır.',
+     how:['Islak camda çalıştır; çizgi kalıyor veya ses çıkarıyorsa değiştir.']},
+    {id:'tread',name:'Lastik diş derinliği',everyDays:90,measure:'none',
+     last:{date:D(7,10),km:115200,value:''},
+     why:'1,6 mm yasal sınır; 3 mm altında ıslak zemin tutuşu ciddi düşer.',
+     how:['Diş içindeki aşınma göstergesine bak.','Tek taraflı aşınma varsa rot balans yaptır.']},
+    {id:'battery',name:'Akü kutup başları',everyDays:90,measure:'none',
+     last:{date:D(7,10),km:115200,value:''},
+     why:'Oksitlenen kutup başı bir sabah marş basmaz demektir.',
+     how:['Kutup başlarında beyaz-yeşil tortu var mı bak.','Varsa temizle, gevşekse sık.']},
+    {id:'oilchange',name:'Motor yağı ve filtre değişimi',everyDays:365,everyKm:15000,measure:'none',
+     last:{date:D(3,12),km:104900,value:''},
+     why:'Yağ 15.000 km sonra özelliğini kaybeder; dizelde partikül filtresi temizliği yağı inceltir.',
+     how:['Serviste yaptır.','Fişi ve km\'yi buraya kaydet.']},
+    {id:'pollen',name:'Polen filtresi',everyKm:15000,measure:'none',
+     last:{date:D(3,12),km:104900,value:''},
+     why:'Tıkalı filtre camları buğulatır, klimayı zayıflatır.',
+     how:['Torpido arkasında; yağ değişimiyle birlikte değiştir.']},
+    {id:'rotation',name:'Lastik rotasyonu',everyKm:10000,measure:'none',
+     last:{date:D(5,2),km:110000,value:''},
+     why:'Ön lastikler daha hızlı aşınır; rotasyon ömrü eşitler.',
+     how:['Lastikçide ön-arka yer değiştir.']},
+    {id:'pads',name:'Fren balataları',everyKm:20000,measure:'none',
+     last:{date:D(3,12),km:104900,value:''},
+     why:'Balata bittikten sonra disk de gider; kontrol ucuz, disk pahalı.',
+     how:['Jant aralığından balata kalınlığına bak, 3 mm altıysa değiştir.']}
+  ];
+}
+
+function seed(){
+  state={
+    sim:{now:new Date(2026,8,2,14,5),bt:false,btSince:null,lastNotif:null,busy:false},
+    car:{brand:'Fiat',model:'Egea 1.6 MultiJet',year:'2019',km:118420,device:'Uconnect'},
+    setup:{brand:'Fiat',model:'Egea 1.6 MultiJet',year:'2019',km:'118420',device:'Uconnect'},
+    rules:{onlyOverdue:true,oncePerDay:true,minTrip:true},
+    items:makeItems(),
+    log:[],
+    events:[],
+    ui:{screen:'setup',step:1,tab:'home',sheet:null,toast:null,notif:null,measure:{},kmInput:'',flash:false}
+  };
+  state.items.forEach(it=>{it.enabled=true;it.snooze=null;});
+  state.log=state.items.map(it=>({date:it.last.date,km:it.last.km,id:it.id,value:it.last.value,note:''}));
+  const D=(m,d)=>new Date(2026,m-1,d,10,0);
+  state.log.push({date:D(8,2),km:117400,id:'tire',value:'2,3 / 2,3 / 2,2 / 2,2 bar',note:'Arka sağ yine düşük'});
+  state.log.push({date:D(7,29),km:117200,id:'oil',value:'Orta',note:''});
+  state.log.push({date:D(7,19),km:116600,id:'tire',value:'2,3 / 2,3 / 2,3 / 2,3 bar',note:''});
+  state.log.sort((a,b)=>b.date-a.date);
+}
+
+const byId=id=>state.items.find(i=>i.id===id);
+
+function intervalText(it){
+  const p=[];
+  if(it.everyKm)p.push(fmtKm(it.everyKm)+' km\'de bir');
+  if(it.everyDays){
+    const d=it.everyDays;
+    p.push(d===365?'yılda bir':d===30?'ayda bir':d%30===0?(d/30)+' ayda bir':d+' günde bir');
+  }
+  return cap(p.join(' veya '));
+}
+function intervalShort(it){
+  const p=[];
+  if(it.everyKm)p.push(fmtKm(it.everyKm)+' km');
+  if(it.everyDays)p.push(it.everyDays===365?'1 yıl':it.everyDays===30?'1 ay':it.everyDays%30===0?(it.everyDays/30)+' ay':it.everyDays+' gün');
+  return p.join(' / ');
+}
+
+function status(it){
+  const now=state.sim.now,r={};
+  if(it.everyDays){r.due=new Date(it.last.date.getTime()+it.everyDays*DAY);r.daysLeft=Math.round((sod(r.due)-sod(now))/DAY);}
+  if(it.everyKm){r.dueKm=it.last.km+it.everyKm;r.kmLeft=r.dueKm-state.car.km;}
+  let useKm;
+  if(r.kmLeft!==undefined&&r.daysLeft!==undefined)useKm=(r.kmLeft/it.everyKm)<(r.daysLeft/it.everyDays);
+  else useKm=r.kmLeft!==undefined;
+  let s='ok',text='';
+  if(useKm){
+    if(r.kmLeft<0){s='overdue';text=fmtKm(-r.kmLeft)+' km geçti';}
+    else if(r.kmLeft<=1500){s='soon';text=fmtKm(r.kmLeft)+' km kaldı';}
+    else text=fmtKm(r.kmLeft)+' km kaldı';
+  }else{
+    if(r.daysLeft<0){s='overdue';text=(-r.daysLeft)+' gün gecikti';}
+    else if(r.daysLeft===0){s='soon';text='Bugün';}
+    else if(r.daysLeft<=3){s='soon';text=r.daysLeft+' gün kaldı';}
+    else text=fmtD(r.due);
+  }
+  if(s==='overdue'&&it.snooze&&sod(now)<it.snooze){s='soon';text='Yarın';}
+  r.s=s;r.text=text;r.long=text+'. '+intervalText(it)+'.';
+  return r;
+}
+const overdueItems=()=>state.items.filter(it=>it.enabled&&status(it).s==='overdue');
+function nextText(it){
+  const p=[];
+  if(it.everyDays)p.push(fmtD(new Date(it.last.date.getTime()+it.everyDays*DAY)));
+  if(it.everyKm)p.push(fmtKm(it.last.km+it.everyKm)+' km');
+  return p.join(' veya ');
+}
+function lastText(it){
+  const v=it.last.value?', '+it.last.value:'';
+  if(it.everyKm&&!it.everyDays)return 'Son: '+fmtKm(it.last.km)+' km, '+fmtD(it.last.date)+v;
+  if(it.everyKm)return 'Son: '+fmtD(it.last.date)+', '+fmtKm(it.last.km)+' km'+v;
+  return 'Son: '+fmtD(it.last.date)+v;
+}
+
+/* olay günlüğü */
+function logEvent(text,kind){
+  const n=state.sim.now;
+  state.events.unshift({t:fmtD(n)+' '+fmtT(n),text,kind:kind||''});
+  if(state.events.length>40)state.events.length=40;
+}
+let toastTimer=null;
+function toast(msg){
+  state.ui.toast=msg;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{state.ui.toast=null;render();},2800);
+}
+let notifTimer=null;
+function showNotif(ids){
+  const names=ids.map(id=>byId(id).name);
+  const list=names.map((n,i)=>i?n.charAt(0).toLowerCase()+n.slice(1):n);
+  state.ui.notif={
+    title:ids.length===1?'1 kontrol gecikti':ids.length+' kontrol gecikti',
+    body:list.join(', ')+'. Arabanın yanındayken birkaç dakika sürer.',
+    ids
+  };
+  clearTimeout(notifTimer);
+  notifTimer=setTimeout(()=>{if(state.ui.notif){state.ui.notif=null;render();}},14000);
+}
+
+/* bluetooth kopma kuralı — uygulamanın asıl mantığı */
+function evaluateDisconnect(minutes){
+  if(state.rules.minTrip&&minutes<5){logEvent('Bağlantı '+minutes+' dk sürdü, sürüş sayılmadı. Bildirim yok.','skip');return;}
+  const od=overdueItems();
+  if(state.rules.onlyOverdue&&od.length===0){logEvent('Sürüş bitti. Gecikmiş kontrol yok, bildirim yok.','ok');return;}
+  const today=sod(state.sim.now).getTime();
+  if(state.rules.oncePerDay&&state.sim.lastNotif===today){logEvent('Sürüş bitti. Bugün zaten hatırlatıldı, tekrar edilmedi.','skip');return;}
+  state.sim.lastNotif=today;
+  const ids=od.map(i=>i.id);
+  showNotif(ids);
+  logEvent('Sürüş bitti. '+(ids.length?ids.length+' gecikmiş kontrol var, bildirim gönderildi.':'Bildirim gönderildi.'),'notif-ev');
+}
+function simTrip(minutes){
+  if(state.sim.busy)return;
+  state.sim.busy=true;state.sim.bt=true;state.sim.btSince=new Date(state.sim.now);
+  logEvent(state.car.device+' bağlandı. Sürüş başladı.');
+  render();
+  setTimeout(()=>{
+    state.sim.now=new Date(state.sim.now.getTime()+minutes*60000);
+    state.sim.bt=false;
+    logEvent(state.car.device+' koptu. 2 dk geri bağlanma bekleniyor.');
+    render();
+    setTimeout(()=>{
+      state.sim.now=new Date(state.sim.now.getTime()+2*60000);
+      evaluateDisconnect(minutes);
+      state.sim.busy=false;
+      render();
+    },1500);
+  },1700);
+}
+
+/* çizim */
+function render(){
+  const sc=$('#screen');
+  const c=sc.querySelector('.content'),sb=sc.querySelector('.sb');
+  const top=c?c.scrollTop:0,sbTop=sb?sb.scrollTop:0;
+  sc.innerHTML=renderStatusBar()+(state.ui.screen==='setup'?renderSetup():renderApp())+renderOverlays();
+  const c2=sc.querySelector('.content'),sb2=sc.querySelector('.sb');
+  if(c2&&!state.ui.resetScroll)c2.scrollTop=top;
+  if(sb2)sb2.scrollTop=sbTop;
+  state.ui.resetScroll=false;
+  $('#sim').innerHTML=renderSim();
+}
+function renderStatusBar(){
+  return '<div class="statusbar"><span class="num">'+fmtT(state.sim.now)+'</span><span class="icons">'+(state.sim.bt?ICON.bt:'')+'<span class="num" style="font-size:12px">'+fmtD(state.sim.now)+'</span></span></div>';
+}
+function renderNav(tab){
+  const b=(id,ic,l)=>'<button class="'+(tab===id?'on':'')+'" data-act="tab" data-tab="'+id+'">'+ic+l+'</button>';
+  return '<nav class="nav">'+b('home',ICON.check,'Kontroller')+b('history',ICON.hist,'Geçmiş')+b('settings',ICON.tune,'Ayarlar')+'</nav>';
+}
+function renderApp(){
+  const t=state.ui.tab;
+  return (t==='home'?renderHome():t==='history'?renderHistory():renderSettings())+renderNav(t);
+}
+function row(it,flash){
+  const st=status(it);
+  return '<button class="row st-'+st.s+(flash?' flash':'')+'" data-act="open-item" data-id="'+it.id+'"><div><div class="t">'+esc(it.name)+'</div><div class="s">'+esc(lastText(it))+'</div></div><div class="r num">'+esc(st.text)+'</div></button>';
+}
+function renderHome(){
+  const car=state.car;
+  const en=state.items.filter(i=>i.enabled);
+  const g={overdue:[],soon:[],ok:[]};
+  en.forEach(it=>g[status(it).s].push(it));
+  const byDue=(a,b)=>{const A=status(a),B=status(b);return (A.daysLeft!==undefined?A.daysLeft:A.kmLeft/100)-(B.daysLeft!==undefined?B.daysLeft:B.kmLeft/100);};
+  g.overdue.sort(byDue);g.soon.sort(byDue);g.ok.sort(byDue);
+  const flash=state.ui.flash;state.ui.flash=false;
+  let h='<div class="content"><div class="hero"><div class="car">'+esc(car.brand+' '+car.model+', '+car.year)+'</div>'+
+    '<div class="kmline"><span class="km num">'+fmtKm(car.km)+' km</span><button class="link" data-act="open-km">Km gir</button></div>'+
+    '<div class="chip'+(state.sim.bt?' on':'')+'">'+ICON.bt+(state.sim.bt?esc(car.device)+' bağlı, sürüşte':esc(car.device)+' bağlı değil')+'</div></div>';
+  if(g.overdue.length)h+='<div class="sec overdue">Gecikmiş ('+g.overdue.length+')</div>'+g.overdue.map(it=>row(it,flash)).join('');
+  if(g.soon.length)h+='<div class="sec soon">Yaklaşan ('+g.soon.length+')</div>'+g.soon.map(it=>row(it)).join('');
+  if(!g.overdue.length&&!g.soon.length)h+='<div class="empty">Her şey zamanında. Bir sonraki sürüşten sonra gecikmiş bir şey olursa haber veririm.</div>';
+  h+='<div class="sec">Zamanında ('+g.ok.length+')</div>'+g.ok.map(it=>row(it)).join('');
+  if(!en.length)h+='<div class="empty">Kontrol listesi boş. Ayarlar\'dan madde aç.</div>';
+  return h+'<div style="height:16px"></div></div>';
+}
+function renderHistory(){
+  if(!state.log.length)return '<div class="content"><div class="empty">Henüz kayıt yok. Bir kontrolü "Yaptım" diye kaydettiğinde burada görünür.</div></div>';
+  let h='<div class="content">',lastKey='';
+  state.log.forEach(e=>{
+    const k=fmtDY(e.date);
+    if(k!==lastKey){h+='<div class="sec">'+k+'</div>';lastKey=k;}
+    const it=byId(e.id);
+    h+='<div class="srow"><div><div class="t">'+esc(it?it.name:e.id)+'</div><div class="s">'+(e.value?esc(e.value)+', ':'')+fmtKm(e.km)+' km'+(e.note?'. '+esc(e.note):'')+'</div></div></div>';
+  });
+  return h+'<div style="height:16px"></div></div>';
+}
+function sw(on,act,extra){return '<button class="sw'+(on?' on':'')+'" role="switch" aria-checked="'+on+'" data-act="'+act+'" '+(extra||'')+'><span></span></button>';}
+function renderSettings(){
+  const car=state.car,r=state.rules;
+  let h='<div class="content"><div class="sec">Araç</div>'+
+    '<div class="srow"><div><div class="t">'+esc(car.brand+' '+car.model)+'</div><div class="s">'+esc(car.year)+', '+fmtKm(car.km)+' km</div></div><div class="right"><button class="link" data-act="open-km">Km gir</button></div></div>'+
+    '<button class="srow btnrow" data-act="open-devices"><div><div class="t">Arabanın Bluetooth\'u</div><div class="s">'+esc(car.device)+'. Bu cihazdan kopunca hatırlatır.</div></div></button>'+
+    '<div class="sec">Hatırlatma</div>'+
+    '<div class="srow"><div><div class="t">Sadece gecikmiş varsa</div><div class="s">Her inişte değil, iş varsa.</div></div><div class="right">'+sw(r.onlyOverdue,'rule','data-key="onlyOverdue"')+'</div></div>'+
+    '<div class="srow"><div><div class="t">Günde en fazla bir</div><div class="s">Aynı gün ikinci sürüşte susar.</div></div><div class="right">'+sw(r.oncePerDay,'rule','data-key="oncePerDay"')+'</div></div>'+
+    '<div class="srow"><div><div class="t">5 dakikadan kısa bağlantıyı sayma</div><div class="s">Kısa kesintiler sürüş sayılmaz.</div></div><div class="right">'+sw(r.minTrip,'rule','data-key="minTrip"')+'</div></div>'+
+    '<div class="sec">Kontrol listesi</div>';
+  state.items.forEach(it=>{
+    h+='<div class="srow'+(it.enabled?'':' dis')+'"><div><div class="t">'+esc(it.name)+'</div><div class="s">'+esc(intervalText(it))+'</div></div><div class="right">'+
+      '<span class="step"><button data-act="int" data-id="'+it.id+'" data-dir="-1" aria-label="Aralığı kısalt">−</button><b class="num">'+esc(intervalShort(it))+'</b><button data-act="int" data-id="'+it.id+'" data-dir="1" aria-label="Aralığı uzat">+</button></span>'+
+      sw(it.enabled,'toggle-item','data-id="'+it.id+'"')+'</div></div>';
+  });
+  h+='<div style="padding:16px 20px 24px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn small ghost" data-act="show-setup">Kurulumu tekrar göster</button><button class="btn small ghost" data-act="reset">Örnek verilere dön</button></div></div>';
+  return h;
+}
+
+/* kurulum */
+const DEVICES=[['Uconnect','Araç'],['Galaxy Buds2 Pro','Kulaklık'],['JBL Flip 6','Hoparlör'],['Mi Band 8','Saat']];
+function renderSetup(){
+  const s=state.setup,st=state.ui.step;
+  let body='',title='',help='';
+  if(st===1){
+    title='Aracın';help='Bir kere gir, bir daha sorulmaz.';
+    body='<label class="field"><span>Marka</span><input data-bind="setup.brand" value="'+esc(s.brand)+'"></label>'+
+      '<label class="field"><span>Model</span><input data-bind="setup.model" value="'+esc(s.model)+'"></label>'+
+      '<label class="field"><span>Yıl</span><input data-bind="setup.year" inputmode="numeric" value="'+esc(s.year)+'"></label>';
+  }else if(st===2){
+    title='Kaç km\'de?';help='Gösterge km\'si. Yağ değişimi gibi km\'ye bağlı bakımlar bundan sayılır. Sonra yakıt alırken güncellersin.';
+    body='<label class="field"><span>Km</span><input data-bind="setup.km" type="number" inputmode="numeric" value="'+esc(s.km)+'"></label>';
+  }else if(st===3){
+    title='Arabanın Bluetooth\'u hangisi?';help='Telefon bu cihazdan koptuğunda arabadan indiğini anlar ve o anda hatırlatır. Android Auto kullanıyorsan da aynı cihaz.';
+    body=DEVICES.map(d=>'<button class="dev'+(s.device===d[0]?' on':'')+'" data-act="pick-device" data-name="'+esc(d[0])+'"><span class="radio"></span>'+esc(d[0])+'<span class="sub">'+esc(d[1])+'</span></button>').join('');
+  }else{
+    title='Kontrol listesi';help='Aralıklar hazır. İstemediğini kapat; sonra Ayarlar\'dan değiştirebilirsin.';
+    body=state.items.map(it=>'<div class="srow" style="padding:12px 0"><div><div class="t">'+esc(it.name)+'</div><div class="s">'+esc(intervalText(it))+'</div></div><div class="right">'+sw(it.enabled,'toggle-item','data-id="'+it.id+'"')+'</div></div>').join('');
+  }
+  return '<div class="setup"><div class="dots">'+[1,2,3,4].map(i=>'<i class="'+(i<=st?'on':'')+'"></i>').join('')+'</div>'+
+    '<h2>'+title+'</h2><p class="help">'+help+'</p><div class="body">'+body+'</div>'+
+    '<div class="foot">'+(st>1?'<button class="btn ghost" data-act="setup-back">Geri</button>':'<button class="btn ghost" data-act="setup-skip">Örnekle geç</button>')+
+    '<button class="btn" data-act="setup-next">'+(st===4?'Başla':'İleri')+'</button></div></div>';
+}
+
+/* alt sayfalar ve katmanlar */
+function measureBlock(it){
+  const m=state.ui.measure;
+  if(it.measure==='level'){
+    return '<div class="hlbl">Seviye</div><div class="chips">'+it.levels.map(l=>'<button class="chip-b'+(m.level===l?' on':'')+'" data-act="set-level" data-v="'+esc(l)+'">'+esc(l)+'</button>').join('')+'</div>';
+  }
+  if(it.measure==='tires'){
+    const f=(k,l)=>'<label class="field"><span>'+l+'</span><input data-bind="ui.measure.'+k+'" type="number" step="0.1" inputmode="decimal" placeholder="bar" value="'+esc(m[k]||'')+'"></label>';
+    return '<div class="hlbl">Ölçülen basınç</div><div class="tires">'+f('fl','Ön sol')+f('fr','Ön sağ')+f('rl','Arka sol')+f('rr','Arka sağ')+'</div><p class="help">Hedef değer sürücü kapısındaki etikette yazar.</p>';
+  }
+  return '';
+}
+function renderItemSheet(it){
+  const st=status(it),m=state.ui.measure;
+  const hist=state.log.filter(e=>e.id===it.id).slice(0,3);
+  return '<button class="dim" data-act="close-sheet" aria-label="Kapat"></button><div class="sheet" role="dialog" aria-label="'+esc(it.name)+'">'+
+    '<div class="sh"><div class="grab"></div><h3>'+esc(it.name)+'</h3><div class="stline st-'+st.s+'">'+esc(st.long)+'</div></div>'+
+    '<div class="sb"><p class="why">'+esc(it.why)+'</p>'+
+    '<div class="how"><div class="hlbl">Nasıl bakılır</div><ol>'+it.how.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ol></div>'+
+    measureBlock(it)+
+    '<label class="field"><span>Not (isteğe bağlı)</span><input data-bind="ui.measure.note" value="'+esc(m.note||'')+'" placeholder="Örn. arka sağ hep düşük"></label>'+
+    (hist.length?'<div class="mini"><div class="hlbl">Önceki kayıtlar</div>'+hist.map(e=>'<div class="l">'+fmtD(e.date)+', '+fmtKm(e.km)+' km'+(e.value?', '+esc(e.value):'')+(e.note?'. '+esc(e.note):'')+'</div>').join('')+'</div>':'')+
+    '</div><div class="sf"><button class="btn" data-act="done-item" data-id="'+it.id+'">Yaptım olarak kaydet</button>'+
+    (st.s==='overdue'?'<button class="btn ghost" data-act="snooze-item" data-id="'+it.id+'">Yarın hatırlat</button>':'')+'</div></div>';
+}
+function renderKmSheet(){
+  return '<button class="dim" data-act="close-sheet" aria-label="Kapat"></button><div class="sheet" role="dialog" aria-label="Km gir">'+
+    '<div class="sh"><div class="grab"></div><h3>Güncel km</h3></div>'+
+    '<div class="sb"><p class="help">Yakıt alırken gösterge km\'sini gir. Km\'ye bağlı bakımlar bununla hesaplanır.</p>'+
+    '<label class="field"><span>Km</span><input data-bind="ui.kmInput" type="number" inputmode="numeric" value="'+esc(state.ui.kmInput)+'"></label></div>'+
+    '<div class="sf"><button class="btn" data-act="save-km">Kaydet</button></div></div>';
+}
+function renderDeviceSheet(){
+  return '<button class="dim" data-act="close-sheet" aria-label="Kapat"></button><div class="sheet" role="dialog" aria-label="Bluetooth cihazı">'+
+    '<div class="sh"><div class="grab"></div><h3>Arabanın Bluetooth\'u</h3></div>'+
+    '<div class="sb"><p class="help">Eşleşmiş cihazlar. Araba hangisiyse onu seç.</p>'+
+    DEVICES.map(d=>'<button class="dev'+(state.car.device===d[0]?' on':'')+'" data-act="pick-device-live" data-name="'+esc(d[0])+'"><span class="radio"></span>'+esc(d[0])+'<span class="sub">'+esc(d[1])+'</span></button>').join('')+
+    '</div></div>';
+}
+function renderOverlays(){
+  let h='';
+  const sh=state.ui.sheet;
+  if(sh){
+    if(sh.type==='item')h+=renderItemSheet(byId(sh.id));
+    else if(sh.type==='km')h+=renderKmSheet();
+    else if(sh.type==='devices')h+=renderDeviceSheet();
+  }
+  if(state.ui.toast)h+='<div class="toast" role="status">'+esc(state.ui.toast)+'</div>';
+  const n=state.ui.notif;
+  if(n)h+='<div class="notif" role="alert"><div class="app">'+ICON.wrench+'CarKeep<span class="tm num">'+fmtT(state.sim.now)+'</span></div><div class="ttl">'+esc(n.title)+'</div><div class="bd">'+esc(n.body)+'</div><div class="acts"><button data-act="notif-open">Aç</button><button data-act="notif-close">Kapat</button></div></div>';
+  return h;
+}
+
+/* simülatör paneli */
+function renderSim(){
+  const s=state.sim;
+  return '<h2>Simülatör</h2><p class="hint">Telefonun dışındaki dünya. Gerçek kullanımda bunlara dokunmazsın; araba bağlanır, kopar, günler geçer. Burada elle tetikliyoruz.</p>'+
+    '<div class="grp"><div class="lbl">Saat</div><div class="big num">'+fmtDY(s.now)+', '+fmtT(s.now)+'</div><div class="btns"><button class="btn small ghost" data-act="sim-day" data-n="1">+1 gün</button><button class="btn small ghost" data-act="sim-day" data-n="7">+7 gün</button></div></div>'+
+    '<div class="grp"><div class="lbl">Araba, '+esc(state.car.device)+'</div><div class="st'+(s.bt?' on':'')+'">'+(s.bt?'Bağlı, sürüşte':'Bağlı değil')+'</div>'+
+    '<div class="btns"><button class="btn small" data-act="sim-trip" data-min="25"'+(s.busy?' disabled':'')+'>Bin, 25 dk sür, in</button><button class="btn small ghost" data-act="sim-trip" data-min="2"'+(s.busy?' disabled':'')+'>2 dk bağlan, kop</button></div></div>'+
+    '<div class="grp"><div class="lbl">Olaylar</div><ul class="events">'+(state.events.length?state.events.map(e=>'<li class="'+e.kind+'"><b class="num">'+e.t+'</b>'+esc(e.text)+'</li>').join(''):'<li class="none">Henüz olay yok. Kurulumu bitir, sonra sürüş yap.</li>')+'</ul></div>'+
+    '<div class="grp"><div class="btns"><button class="btn small ghost" data-act="show-setup">Kurulumu göster</button><button class="btn small ghost" data-act="reset">Baştan başla</button></div></div>';
+}
+
+/* eylemler */
+function setPath(path,val){
+  const p=path.split('.');let o=state;
+  for(let i=0;i<p.length-1;i++)o=o[p[i]];
+  o[p[p.length-1]]=val;
+}
+function stepPreset(list,cur,dir){
+  let i=list.findIndex(v=>v>=cur);if(i<0)i=list.length-1;
+  if(list[i]!==cur&&dir<0)i=Math.max(0,i);
+  else i=Math.min(list.length-1,Math.max(0,i+dir));
+  return list[i];
+}
+function act(a,d){
+  const ui=state.ui;
+  switch(a){
+    case 'setup-next':{
+      if(ui.step===2){const k=parseInt(state.setup.km,10);if(isNaN(k)||k<0){toast('Km gir');break;}}
+      if(ui.step<4){ui.step++;break;}
+      const s=state.setup;
+      state.car={brand:s.brand||'Araç',model:s.model||'',year:s.year||'',km:parseInt(s.km,10)||0,device:s.device};
+      ui.screen='app';ui.tab='home';ui.resetScroll=true;
+      logEvent('Kurulum tamamlandı. Araba: '+state.car.device+'. Artık her kopmada kural çalışır.');
+      toast('Hazır. Bir sonraki sürüşten sonra hatırlatırım.');
+      break;}
+    case 'setup-back':ui.step=Math.max(1,ui.step-1);break;
+    case 'setup-skip':ui.screen='app';ui.tab='home';ui.resetScroll=true;logEvent('Kurulum örnek verilerle geçildi.');break;
+    case 'pick-device':state.setup.device=d.name;break;
+    case 'pick-device-live':state.car.device=d.name;ui.sheet=null;toast(d.name+' araba olarak seçildi');break;
+    case 'toggle-item':{const it=byId(d.id);it.enabled=!it.enabled;break;}
+    case 'tab':ui.tab=d.tab;ui.sheet=null;ui.resetScroll=true;break;
+    case 'open-item':ui.sheet={type:'item',id:d.id};ui.measure={};break;
+    case 'open-km':ui.sheet={type:'km'};ui.kmInput=String(state.car.km);break;
+    case 'open-devices':ui.sheet={type:'devices'};break;
+    case 'close-sheet':ui.sheet=null;break;
+    case 'set-level':ui.measure.level=d.v;break;
+    case 'done-item':{
+      const it=byId(d.id),m=ui.measure;let value='';
+      if(it.measure==='level'){if(!m.level){toast('Önce seviyeyi seç');break;}value=m.level;}
+      if(it.measure==='tires'){
+        const v=['fl','fr','rl','rr'].map(k=>(m[k]||'').trim()).filter(Boolean);
+        if(v.length<4){toast('Dört lastiği de gir');break;}
+        value=v.map(x=>x.replace('.',',')).join(' / ')+' bar';
+      }
+      it.last={date:new Date(state.sim.now),km:state.car.km,value};it.snooze=null;
+      state.log.unshift({date:new Date(state.sim.now),km:state.car.km,id:it.id,value,note:(m.note||'').trim()});
+      ui.sheet=null;ui.measure={};
+      toast('Kaydedildi. Sonraki: '+nextText(it));
+      logEvent(it.name+' yapıldı olarak kaydedildi.','ok');
+      break;}
+    case 'snooze-item':{const it=byId(d.id);it.snooze=new Date(sod(state.sim.now).getTime()+DAY);ui.sheet=null;toast('Yarın tekrar hatırlatırım');break;}
+    case 'save-km':{
+      const k=parseInt(ui.kmInput,10);
+      if(isNaN(k)){toast('Km gir');break;}
+      if(k<state.car.km){toast('Şu anki km '+fmtKm(state.car.km)+'. Daha küçük olamaz');break;}
+      state.car.km=k;ui.sheet=null;toast('Km güncellendi: '+fmtKm(k));logEvent('Km girildi: '+fmtKm(k)+'.');break;}
+    case 'rule':state.rules[d.key]=!state.rules[d.key];break;
+    case 'int':{
+      const it=byId(d.id),dir=parseInt(d.dir,10);
+      if(it.everyKm&&!it.everyDays)it.everyKm=stepPreset(KM_PRESET,it.everyKm,dir);
+      else if(it.everyDays&&it.everyKm){it.everyKm=stepPreset(KM_PRESET,it.everyKm,dir);}
+      else it.everyDays=stepPreset(DAYS_PRESET,it.everyDays,dir);
+      break;}
+    case 'show-setup':ui.screen='setup';ui.step=1;ui.sheet=null;ui.notif=null;state.setup.km=String(state.car.km);break;
+    case 'reset':seed();break;
+    case 'sim-day':{
+      const n=parseInt(d.n,10);
+      state.sim.now=new Date(state.sim.now.getTime()+n*DAY);
+      logEvent('Takvim ilerledi: '+fmtDY(state.sim.now)+'.');
+      break;}
+    case 'sim-trip':simTrip(parseInt(d.min,10));return;
+    case 'notif-open':ui.notif=null;ui.screen='app';ui.tab='home';ui.sheet=null;ui.flash=true;ui.resetScroll=true;logEvent('Bildirime dokunuldu, uygulama gecikmişlerde açıldı.');break;
+    case 'notif-close':ui.notif=null;logEvent('Bildirim kapatıldı. Yarın tekrar gelir.','skip');break;
+  }
+  render();
+}
+document.addEventListener('click',e=>{
+  const el=e.target.closest('[data-act]');
+  if(!el||el.disabled)return;
+  act(el.dataset.act,el.dataset);
+});
+document.addEventListener('input',e=>{
+  const el=e.target;
+  if(el.dataset&&el.dataset.bind)setPath(el.dataset.bind,el.value);
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&state.ui.sheet){state.ui.sheet=null;render();}
+  if(e.key==='Enter'&&e.target.tagName==='INPUT'){
+    if(state.ui.sheet&&state.ui.sheet.type==='km')act('save-km',{});
+    else if(state.ui.screen==='setup')act('setup-next',{});
+  }
+});
+seed();
+render();
+})();
+</script>
+</body>
+</html>

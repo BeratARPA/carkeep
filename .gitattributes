@@ -1,0 +1,14 @@
+# Depoda satır sonu daima LF; çalışma kopyasında Windows'ta CRLF olabilir.
+* text=auto eol=lf
+
+# İkili dosyalar dokunulmaz.
+*.ttf   binary
+*.png   binary
+*.jar   binary
+*.jks   binary
+*.keystore binary
+*.apk   binary
+
+# Gradle sarmalayıcı betikleri
+gradlew      text eol=lf
+gradlew.bat  text eol=crlf

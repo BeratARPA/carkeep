@@ -1,0 +1,610 @@
+{
+  "version": 1,
+  "targetVehicle": "2019 Fiat Egea 1.6 MultiJet (dizel, otomatik)",
+  "groups": {
+    "frequent": "Sık (2 haftada bir)",
+    "monthly": "Aylık",
+    "quarterly": "3–6 ayda bir",
+    "service": "Servis ve parça",
+    "yearly": "Yıllık ve belgeler",
+    "seasonal": "Mevsimsel"
+  },
+  "items": [
+    {
+      "id": "oil_level",
+      "group": "frequent",
+      "name": "Motor yağı seviyesi",
+      "schedule": { "kind": "days", "days": 14 },
+      "measure": { "type": "level", "levels": ["Min'e yakın", "Orta", "Max'a yakın"] },
+      "why": "Yağ azalınca motor kendini sürtünmeye karşı koruyamaz; en pahalı arıza buradan çıkar. Bu araçta seviye sensörü yok, çubuk dışında bilen yok. Dizelde partikül filtresi temizliği yağı zamanla mazotla artırabilir de; Max üstü de sorundur.",
+      "how": [
+        "Motor soğuk (en az 10 dk durmuş), araba düz zeminde.",
+        "Çubuğu çek, bezle sil, sonuna kadar sok, tekrar çek.",
+        "Seviye Min ile Max arasında olmalı; Min'e yakınsa aynı özellikte yağdan yarım litre ekle, tekrar ölç.",
+        "Yağ sütlü/köpüklü görünüyorsa veya Max'ın üstündeyse ekleme, servise git."
+      ],
+      "warn": "Min altındaysa aracı çalıştırma; Max üstündeyse veya yağ sütlüyse servise git.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "tire_pressure",
+      "group": "frequent",
+      "name": "Lastik basıncı",
+      "schedule": { "kind": "days", "days": 14 },
+      "measure": { "type": "tires", "unit": "bar" },
+      "why": "Düşük basınç lastiği ısıtır, yakıtı artırır, fren mesafesini uzatır, lastiği omuzdan yer. Arabanın uyarısı ancak belirgin düşüşte yanar; 0,3 bar eksiği hiçbir zaman söylemez.",
+      "how": [
+        "Lastikler soğukken ölç (en az 3 saat durmuş veya 2 km'den az gidilmiş).",
+        "Hedef değer sürücü kapısı direğindeki etikette; yük ve lastik ölçüsüne göre iki değer olabilir.",
+        "Dördünü de ölç, hedeften düşük olanı tamamla; sıcak ölçtüysen 0,2 bar ekle.",
+        "Basınç uyarı sistemi varsa şişirdikten sonra araç menüsünden sıfırla."
+      ],
+      "warn": "Bir lastik iki haftada 0,2 bar ve üstü kaybediyorsa lastikçiye götür (çivi, jant sızıntısı).",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "coolant_level",
+      "group": "monthly",
+      "name": "Soğutma suyu seviyesi",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "level", "levels": ["Min'de", "Orta", "Max'ta"] },
+      "why": "Su azalırsa motor ısınır; ısınan motor conta yakar, silindir kapağı eğilir. Kapalı devre sistemde su kendi kendine eksilmez; eksiliyorsa bir yerden kaçıyordur.",
+      "how": [
+        "Motor soğukken bak. Sıcakken genleşme kabının kapağını asla açma.",
+        "Şeffaf kaptaki seviye Min ile Max arasında olmalı.",
+        "Düşükse kılavuzda yazan spesifikasyondaki antifrizle tamamla, saf suyla değil.",
+        "Ne kadar eklediğini nota yaz; iki ayda tekrar düşerse kaçak var."
+      ],
+      "warn": "Tekrar eden düşüş veya kapta yağ lekesi/çamur varsa servise.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "brake_fluid_level",
+      "group": "monthly",
+      "name": "Fren hidroliği seviyesi",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "level", "levels": ["Min'de", "Orta", "Max'ta"] },
+      "why": "Hidrolik seviyesi düşüyorsa iki ihtimal var: balata bitmiş (pistonlar ileri çıkmış) ya da kaçak. İkisinde de fren gidiyor.",
+      "how": [
+        "Kap motor bölmesinde sürücü tarafında, şeffaf, sarı/koyu sıvı.",
+        "Dışarıdan bak, Min ile Max arasında olmalı. Kapağı açma; hidrolik nem çeker.",
+        "Düşükse ekleme, sebebi buldur."
+      ],
+      "warn": "Min'e inmişse veya fren pedalı yumuşadıysa aracı kullanma, servise çektir.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "washer_fluid",
+      "group": "monthly",
+      "name": "Silecek suyu",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "level", "levels": ["Boş", "Yarım", "Dolu"] },
+      "why": "Boş depo yağmurda, çamurda ve tuzlu yolda görüşü anında kapatır.",
+      "how": [
+        "Mavi kapaklı depoyu aç, silecek suyuyla doldur.",
+        "Kışın antifrizli silecek suyu kullan; yazın da musluk suyu koyma, kireç fıskiyeyi tıkar."
+      ],
+      "warn": null,
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "lights_horn",
+      "group": "monthly",
+      "name": "Işıklar ve korna",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "none" },
+      "why": "Yanmayan stop lambası arkadan çarpma sebebi; sinyal ve far cezası da var. Kendin fark edemezsin, arkadaki fark eder.",
+      "how": [
+        "Kısa far, uzun far, park, sinyaller, dörtlü, sis farı.",
+        "Stop ve geri vites lambaları: birisi pedala bassın sen arkadan bak; yalnızsan cama veya duvara yansımadan kontrol et.",
+        "Plaka lambası ve korna."
+      ],
+      "warn": "Yanmayan ampulü ertelemeden değiştir; LED modülse servis.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "tire_visual",
+      "group": "monthly",
+      "name": "Lastik gövde kontrolü",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "none" },
+      "why": "Yanakta şişlik iç kat kopmasıdır, patlar. Çivi yavaş yavaş boşaltır, basınç kontrolünde de ipucu verir.",
+      "how": [
+        "Dört lastiğin yanaklarında şişlik, kesik, çatlak var mı?",
+        "Sırtta çivi, vida, taş sıkışmış mı?",
+        "Aşınma tek tarafta mı (rot-balans sinyali)?"
+      ],
+      "warn": "Yanak şişliği → lastik değişir, tamir olmaz. Çivi → çıkarma, lastikçiye git.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "leak_check",
+      "group": "monthly",
+      "name": "Park yeri sızıntı kontrolü",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "none" },
+      "why": "Sızıntı önce yerde görünür, gösterge panelinde değil. Bir gecelik leke ucuz onarımla kapanır; bir ay sonra motor.",
+      "how": [
+        "Sabah aracı çektikten sonra park yerine bak.",
+        "Siyah/kahverengi yağlı leke: motor yağı. Renkli (pembe/yeşil/mavi), tatlı kokulu: antifriz. Berrak su: klima yoğuşması, normal.",
+        "Lekenin yerini (ön/orta/arka) nota yaz."
+      ],
+      "warn": "Yağ veya antifriz lekesi varsa servise.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "dpf_drive",
+      "group": "monthly",
+      "name": "Uzun yol sürüşü (partikül filtresi)",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "none" },
+      "why": "Dizel partikül filtresi ancak uzun süre yüksek egzoz sıcaklığında kendini temizler. Sürekli kısa şehir içi sürüş filtreyi tıkar; DPF uyarısı ve pahalı temizlik/değişim gelir.",
+      "how": [
+        "Ayda en az bir kez 20–30 dakika kesintisiz, tercihen 70 km/s üstü ve 2.000 devir civarı sürüş yap.",
+        "Rölanti fanı çalışıyor ve tüketim geçici arttıysa temizlik (rejenerasyon) yapıyor demektir; o anda motoru kapatma."
+      ],
+      "warn": "DPF uyarı lambası yandıysa kılavuzdaki rejenerasyon sürüşünü yap; sönmüyorsa servise.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "adblue_level",
+      "group": "monthly",
+      "name": "AdBlue seviyesi (varsa)",
+      "schedule": { "kind": "days", "days": 30 },
+      "measure": { "type": "none" },
+      "why": "AdBlue biterse araç bir süre sonra çalışmaz; uyarı geç gelir ve dolum yeri her yerde yok.",
+      "how": [
+        "Gösterge menüsünden kalan menzili gör.",
+        "1.000 km altına inmeden dolum yap; sadece ISO 22241 AdBlue kullan."
+      ],
+      "warn": null,
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": false,
+      "verified": "false",
+      "sourceNote": "Egea 1.6 MultiJet'in Euro 6d sürümlerinde SCR/AdBlue var; 2019 aracın durumunu kılavuz veya gösterge menüsünden doğrula. Yoksa kapalı bırak."
+    },
+    {
+      "id": "tread_depth",
+      "group": "quarterly",
+      "name": "Lastik diş derinliği",
+      "schedule": { "kind": "days", "days": 90 },
+      "measure": { "type": "number", "unit": "mm", "label": "En düşük diş" },
+      "why": "1,6 mm yasal sınır; 3 mm'nin altında ıslak zemin tutuşu belirgin düşer, kışlıkta 4 mm.",
+      "how": [
+        "Dişlerin içindeki aşınma göstergesi (küçük kabartı) sırtla aynı seviyeye geldiyse sınır.",
+        "Diş ölçer varsa en düşük noktayı ölç, kaydet.",
+        "Orta aşınmış → basınç fazla; kenarlar aşınmış → basınç düşük."
+      ],
+      "warn": "3 mm altı → değişimi planla; 1,6 mm altı → sürme.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "battery_terminals",
+      "group": "quarterly",
+      "name": "Akü kutup başları",
+      "schedule": { "kind": "days", "days": 90 },
+      "measure": { "type": "none" },
+      "why": "Oksitlenen kutup başı bir sabah marş basmaz demektir; akü sağlam olsa bile.",
+      "how": [
+        "Kutup başlarında beyaz/yeşil toz var mı?",
+        "Varsa fırça ve sıcak suyla temizle, kuruyunca ince vazelin sür.",
+        "Kelepçeler ve akü sabitleme gevşekse sık."
+      ],
+      "warn": "Gövde şişmiş veya sızıntı varsa akü değişir.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "wiper_blades",
+      "group": "quarterly",
+      "name": "Silecek lastikleri",
+      "schedule": { "kind": "days", "days": 90 },
+      "measure": { "type": "none" },
+      "why": "Çizgi bırakan, ses çıkaran silecek yağmurda görüşü kapatır; kışa girmeden değiştirmek ucuz.",
+      "how": [
+        "Cam ıslakken çalıştır: çizgi, atlama, gıcırtı var mı?",
+        "Lastiğin kenarı yırtık/sertleşmişse değiştir; arka silecek dahil."
+      ],
+      "warn": null,
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "spare_tire",
+      "group": "quarterly",
+      "name": "Stepne ve tamir kiti",
+      "schedule": { "kind": "days", "days": 90 },
+      "measure": { "type": "none" },
+      "why": "Stepne altı ayda kendi kendine iner; lazım olduğu gece inik stepneyle kalırsın. Kitli araçta köpüğün son kullanma tarihi var.",
+      "how": [
+        "Bagaj altındaki stepnenin basıncını ölç; üzerindeki etikette yazan değere şişir.",
+        "Kriko, bijon anahtarı, bijon kilit adaptörü yerinde mi?",
+        "Tamir kiti varsa köpük şişesinin son kullanma tarihine bak."
+      ],
+      "warn": null,
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "belt_visual",
+      "group": "quarterly",
+      "name": "V kayışı görsel kontrol",
+      "schedule": { "kind": "days", "days": 180 },
+      "measure": { "type": "none" },
+      "why": "Aksesuar kayışı alternatörü ve klima kompresörünü çevirir; koparsa şarj kesilir, yolda kalırsın.",
+      "how": [
+        "Motor kapalıyken kayışın görünen kısmına bak: çatlak, tüylenme, parlama var mı?",
+        "Soğuk çalıştırmada ilk saniyelerde ıslık/cıyaklama → gerginlik veya yıpranma."
+      ],
+      "warn": "Çatlak veya ses varsa serviste kayış ve gergi kontrolü.",
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "oil_change",
+      "group": "service",
+      "name": "Motor yağı ve yağ filtresi",
+      "schedule": { "kind": "both", "days": 365, "km": 15000 },
+      "measure": { "type": "none" },
+      "why": "Yağ 15.000 km ya da bir yılda özelliğini kaybeder; dizelde partikül filtresi rejenerasyonu yağı mazotla inceltir. Filtre yağla birlikte değişir.",
+      "how": [
+        "Kılavuzdaki viskozite/spesifikasyona uygun yağ (partikül filtreli motor için düşük küllü).",
+        "Fişi sakla; km'yi ve tarihi buraya kaydet."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": true,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "Türkiye'de yaygın uygulama 15.000 km / 12 ay; Tofaş resmi takvimi 20.000 km / 12 ay olabilir. Kendi tercihini Ayarlar'dan gir."
+    },
+    {
+      "id": "pollen_filter",
+      "group": "service",
+      "name": "Polen (kabin) filtresi",
+      "schedule": { "kind": "both", "days": 365, "km": 15000 },
+      "measure": { "type": "none" },
+      "why": "Tıkalı filtre camları buğulatır, klimayı zayıflatır, kabine koku verir.",
+      "how": [
+        "Torpido arkasında; yağ değişimiyle birlikte değiştirt veya kendin değiştir (5 dk)."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": true,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "air_filter",
+      "group": "service",
+      "name": "Hava filtresi",
+      "schedule": { "kind": "km", "km": 30000 },
+      "measure": { "type": "none" },
+      "why": "Kirli hava filtresi tüketimi artırır, turboyu zorlar, performansı düşürür.",
+      "how": [
+        "Her periyodik bakımda kontrol, 30.000 km'de değişim; tozlu yollarda daha erken."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "Yaygın öneri 30.000 km; kılavuzu doğrula."
+    },
+    {
+      "id": "fuel_filter",
+      "group": "service",
+      "name": "Yakıt filtresi (dizel)",
+      "schedule": { "kind": "km", "km": 30000 },
+      "measure": { "type": "none" },
+      "why": "Dizel enjektörleri kir ve neme karşı bu filtre korur; tıkanınca güç kaybı, zor çalışma, sonra enjektör masrafı.",
+      "how": [
+        "30.000 km'de değişim; kalitesiz mazot kullanıldıysa daha erken. Değişim sonrası hava alma servisin işi."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "1.3/1.6 MultiJet için 30.000 km yaygın; kılavuzu doğrula."
+    },
+    {
+      "id": "brake_pads",
+      "group": "service",
+      "name": "Fren balataları",
+      "schedule": { "kind": "km", "km": 20000 },
+      "measure": { "type": "none" },
+      "why": "Balata bittikten sonra disk de gider; kontrol ucuz, disk pahalı. Şehir içi kullanımda ön balata 30–40 bin km'de biter.",
+      "how": [
+        "Jant aralığından balata kalınlığına bak: 3 mm altı değişim.",
+        "Fren sırasında metalik ses, titreme, uzayan mesafe → hemen kontrol.",
+        "Servis her bakımda kalınlığı ölçsün, nota yaz."
+      ],
+      "warn": "Metal metale ses varsa sürme, servise.",
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "tire_rotation",
+      "group": "service",
+      "name": "Lastik rotasyonu",
+      "schedule": { "kind": "km", "km": 10000 },
+      "measure": { "type": "none" },
+      "why": "Önden çekişte ön lastikler çok daha hızlı aşınır; rotasyon dördünün ömrünü eşitler, dördü aynı anda değişir.",
+      "how": [
+        "Lastikçide ön-arka yer değiştir (yön işaretli lastikte aynı tarafta).",
+        "Rotasyondan sonra basınçları hedefe getir, TPMS sıfırla."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "brake_fluid_change",
+      "group": "service",
+      "name": "Fren hidroliği değişimi",
+      "schedule": { "kind": "days", "days": 730 },
+      "measure": { "type": "none" },
+      "why": "Hidrolik havadan nem çeker; nemli hidrolik sert frende kaynar, pedal boşa basar. Görünüşte değişmez, takvimle değişir.",
+      "how": [
+        "2 yılda bir serviste değiştir; kılavuzdaki sınıf (DOT 4)."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "coolant_change",
+      "group": "service",
+      "name": "Antifriz (soğutma sıvısı) değişimi",
+      "schedule": { "kind": "days", "days": 730 },
+      "measure": { "type": "none" },
+      "why": "Antifrizin korozyon önleyicisi zamanla biter; radyatör ve su pompası paslanır.",
+      "how": [
+        "Serviste değişim; kılavuzdaki spesifikasyon. Uzun ömürlü antifriz kullanılıyorsa aralığı kılavuza göre uzat."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "Yaygın öneri 2 yıl; uzun ömürlü (OAT) antifrizde 5 yıl olabilir. Kılavuzu doğrula, aralığı düzenle."
+    },
+    {
+      "id": "timing_belt",
+      "group": "service",
+      "name": "Triger seti",
+      "schedule": { "kind": "both", "days": 1825, "km": 120000 },
+      "measure": { "type": "none" },
+      "why": "1.6 MultiJet çakışmalı motor: kayış koparsa supaplar pistonlara çarpar, motor tek seferde biter. Değişim aralığı hem km hem yıl; ikisinden hangisi önce dolarsa.",
+      "how": [
+        "120.000 km veya 5 yılda bir; kayış, gergi ve devirdaim pompası set olarak değişir.",
+        "Arızaya değil takvime göre değiştir; kayış uyarı vermez."
+      ],
+      "warn": "Motor bölmesinden tıkırtı/sürtme sesi varsa hemen servise, sürme.",
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true",
+      "sourceNote": "Kaynaklar 120.000 km / 5 yıl konusunda hemfikir; bazı servisler 7 yıl tolerans der, 5 yılı esas al."
+    },
+    {
+      "id": "aux_belt",
+      "group": "service",
+      "name": "V kayışı (aksesuar kayışı) değişimi",
+      "schedule": { "kind": "both", "days": 1460, "km": 80000 },
+      "measure": { "type": "none" },
+      "why": "Alternatör ve klima kayışı; kopunca şarj kesilir, yolda kalırsın. Trigerle birlikte değiştirilmesi işçilikten tasarruf sağlar.",
+      "how": [
+        "80.000 km / 4–5 yılda değişim; 60.000 km bakımında kontrol."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "Servis kaynaklarında 80.000 km / 4–5 yıl; kılavuzu doğrula."
+    },
+    {
+      "id": "battery_age",
+      "group": "service",
+      "name": "Akü yaşı",
+      "schedule": { "kind": "days", "days": 1460 },
+      "measure": { "type": "none" },
+      "why": "Akü 4–5 yılda tükenir ve genellikle ilk soğuk sabah haber vermeden bırakır. Yaşını bilmek en ucuz sigorta.",
+      "how": [
+        "Akünün üstündeki üretim tarihine bak (etiket veya kod); satın alma tarihini 'son yapılış' olarak gir.",
+        "4 yılı geçtiyse kışa girmeden test ettir (servis veya akücü ücretsiz ölçer)."
+      ],
+      "warn": "Soğukta marş yavaşladıysa test ettir.",
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "gearbox_oil",
+      "group": "service",
+      "name": "Otomatik şanzıman yağı",
+      "schedule": { "kind": "km", "km": 60000 },
+      "measure": { "type": "none" },
+      "why": "Otomatik şanzıman yağı 'ömürlük' denilse de 60–80 bin km'de değişimi vites geçiş kalitesini ve şanzıman ömrünü korur.",
+      "how": [
+        "Yetkili serviste veya şanzımancıda, doğru spesifikasyon yağla."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": false,
+      "verified": "false",
+      "sourceNote": "Şanzıman tipine (tork konvertörlü otomatik / DCT) göre değişir; kılavuz ve serviste doğrula, sonra aç."
+    },
+    {
+      "id": "safety_kit",
+      "group": "yearly",
+      "name": "Zorunlu ekipman ve son kullanma",
+      "schedule": { "kind": "days", "days": 365 },
+      "measure": { "type": "none" },
+      "why": "Üçgen reflektör (2 adet), ilk yardım çantası ve yangın söndürücü muayenede ve denetimde sorulur; söndürücü ve ilk yardım malzemesinin son kullanma tarihi var.",
+      "how": [
+        "Yangın söndürücü: basınç göstergesi yeşilde mi, son kullanma/dolum tarihi geçmiş mi?",
+        "İlk yardım çantası: eksik ve tarihi geçmiş malzeme.",
+        "2 üçgen reflektör, yedek ampul seti, reflektif yelek yerinde mi?"
+      ],
+      "warn": null,
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "Zorunlu ekipman listesi ve söndürücü periyodu için güncel mevzuatı doğrula."
+    },
+    {
+      "id": "inspection",
+      "group": "yearly",
+      "name": "Araç muayenesi",
+      "schedule": { "kind": "days", "days": 730 },
+      "measure": { "type": "none" },
+      "why": "Binek otomobilde ilk muayene 3. yılda, sonra 2 yılda bir. Gecikmenin her ayı için ek ücret ve trafik cezası.",
+      "how": [
+        "Son muayene tarihini ruhsattan veya e-Devlet'ten gir.",
+        "Randevuyu 1 ay önceden al; muayeneden önce ışıklar, lastik, silecek, cam çatlağı ve emisyon kontrolü."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "Süreleri e-Devlet/TÜVTÜRK'ten doğrula; son muayene tarihi girilmeden hesap yapılmaz."
+    },
+    {
+      "id": "insurance",
+      "group": "yearly",
+      "name": "Trafik sigortası yenileme",
+      "schedule": { "kind": "days", "days": 365 },
+      "measure": { "type": "none" },
+      "why": "Sigortasız gün trafik cezası ve kaza riski; yenileme tarihi poliçede.",
+      "how": [
+        "Poliçe başlangıç tarihini 'son yapılış' olarak gir.",
+        "Bitişten 2 hafta önce teklif topla."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "true"
+    },
+    {
+      "id": "kasko",
+      "group": "yearly",
+      "name": "Kasko yenileme",
+      "schedule": { "kind": "days", "days": 365 },
+      "measure": { "type": "none" },
+      "why": "Kasko varsa yenileme tarihi trafik sigortasından farklı olabilir.",
+      "how": [
+        "Poliçe başlangıç tarihini gir."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": false,
+      "verified": "true"
+    },
+    {
+      "id": "emission",
+      "group": "yearly",
+      "name": "Egzoz emisyon ölçümü",
+      "schedule": { "kind": "days", "days": 365 },
+      "measure": { "type": "none" },
+      "why": "Egzoz emisyon pulu olmadan trafik cezası; periyot araç tipine göre değişir.",
+      "how": [
+        "Son ölçüm tarihini gir; periyodu mevzuattan doğrulayıp aralığı düzenle."
+      ],
+      "warn": null,
+      "startsFromInstall": false,
+      "appliesLastService": false,
+      "enabledByDefault": false,
+      "verified": "false",
+      "sourceNote": "Binek için periyot ve muafiyet süresi mevzuata göre değişti; doğrulamadan açma."
+    },
+    {
+      "id": "ac_check",
+      "group": "yearly",
+      "name": "Klima kontrolü",
+      "schedule": { "kind": "days", "days": 365 },
+      "measure": { "type": "none" },
+      "why": "Gaz eksilmesi ve evaporatör bakterisi yaz gelince ortaya çıkar; bahar sonunda kontrol ettirmek ucuz.",
+      "how": [
+        "Nisan–Mayıs'ta soğutma performansına bak; koku varsa evaporatör temizliği, soğutmuyorsa gaz/kaçak kontrolü."
+      ],
+      "warn": null,
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": false,
+      "verified": "true"
+    },
+    {
+      "id": "winter_tires",
+      "group": "seasonal",
+      "name": "Kışlık / yazlık lastik değişimi",
+      "schedule": { "kind": "seasonal", "dates": [ { "month": 11, "day": 1 }, { "month": 4, "day": 1 } ] },
+      "measure": { "type": "none" },
+      "why": "7 °C altında yazlık lastik sertleşir ve tutmaz. Zorunluluk şehirlerarası/ticari araçlar için; özel araçta zorunlu olmasa da fren mesafesi farkı büyük.",
+      "how": [
+        "Kasım başında kışlık, Nisan başında yazlık; havaya göre 2 hafta oynat.",
+        "Değişimde diş derinliğine ve depodaki lastiklerin yaşına (DOT kodu, 6 yıl) bak.",
+        "Değişim sonrası basınç ve TPMS sıfırlama."
+      ],
+      "warn": null,
+      "startsFromInstall": true,
+      "appliesLastService": false,
+      "enabledByDefault": true,
+      "verified": "partial",
+      "sourceNote": "Zorunluluk kapsamı (ticari/özel) ve tarihler için güncel yönetmeliği doğrula."
+    }
+  ]
+}

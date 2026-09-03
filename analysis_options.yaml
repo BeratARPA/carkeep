@@ -1,0 +1,17 @@
+# CLAUDE.md: flutter_lints varsayılanı + prefer_single_quotes, always_declare_return_types.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - "**/*.g.dart"
+  errors:
+    # Drift'in ürettiği dosyalar dışında her uyarı hatadır sayılmaz; ama
+    # bilerek göz ardı edilen bir kural yok.
+    todo: ignore
+
+linter:
+  rules:
+    - prefer_single_quotes
+    - always_declare_return_types
