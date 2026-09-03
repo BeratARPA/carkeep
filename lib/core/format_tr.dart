@@ -151,6 +151,13 @@ String nextDueText({
   return '${S.nextDuePrefix} ${parts.join(' ${S.intervalJoiner} ')}';
 }
 
+/// `Şu anki km 118.420. Daha küçük olamaz` (01-spec §3.5).
+String kmTooSmallText(int currentKm) =>
+    '${S.errKmSmallerPrefix} ${formatKm(currentKm)}. ${S.errKmSmallerSuffix}';
+
+/// `Km güncellendi: 119.950`
+String kmUpdatedText(int km) => '${S.kmUpdatedPrefix} ${formatKm(km)}';
+
 /// `number` ölçümünün saklanan biçimi: `6,5 mm`. Spec tanımlamıyor
 /// (ILERLEME denetim notu); ondalık virgülle, birim sonda.
 String formatNumberMeasure(double value, String unit) {

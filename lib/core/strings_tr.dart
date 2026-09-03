@@ -254,6 +254,19 @@ abstract final class S {
   static const String errFixDateRequired = 'Tarih gir';
   static const String errFixKmRequired = 'Km gir';
 
+  // ------------------------------------------- km giriş (01-spec §3.5)
+  static const String kmEntryTitle = 'Güncel km';
+  static const String kmEntryHelp =
+      "Yakıt alırken gösterge km'sini gir. Km'ye bağlı bakımlar bununla "
+      'hesaplanır.';
+
+  /// `Şu anki km 118.420. Daha küçük olamaz`
+  static const String errKmSmallerPrefix = 'Şu anki km';
+  static const String errKmSmallerSuffix = 'Daha küçük olamaz';
+
+  /// `Km güncellendi: 119.950`
+  static const String kmUpdatedPrefix = 'Km güncellendi:';
+
   // ------------------------------------------------------------- hatalar
   static const String errSeedLoad = 'Şablon dosyası okunamadı.';
   static const String errDbOpen = 'Veriler açılamadı.';

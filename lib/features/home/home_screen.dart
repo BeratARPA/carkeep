@@ -9,6 +9,7 @@ import '../../domain/models/item_status.dart';
 import '../../domain/models/vehicle.dart';
 import '../../providers.dart';
 import '../item_detail/item_detail_sheet.dart';
+import '../km_entry/km_entry_sheet.dart';
 import 'home_controller.dart';
 import 'widgets/home_header.dart';
 import 'widgets/item_row.dart';
@@ -74,9 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   deviceName: vehicle.btName,
                   connected: bt.connected,
                 ),
-                onKmTap: () {
-                  // Km giriş alt sayfası T09'da.
-                },
+                onKmTap: () => showKmEntrySheet(context),
               ),
             for (final HomeBanner banner in banners)
               WarningBanner(

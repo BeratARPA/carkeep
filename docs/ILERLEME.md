@@ -35,7 +35,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T06 Kurulum sihirbazı | bitti | `feat(T06)` | 268 test yeşil; cihazda uçtan uca doğrulandı |
 | T07 Kontroller ekranı | bitti | `feat(T07)` | 293 test yeşil; K-22 sıralama düzeltmesi dahil |
 | T08 Madde detayı | bitti | `feat(T08)` | 327 test yeşil; cihazda kayıt uçtan uca |
-| T09 Km giriş | bekliyor | | |
+| T09 Km giriş | bitti | `feat(T09)` | 341 test yeşil |
 | T10 Geçmiş | bekliyor | | |
 | T11 Ayarlar | bekliyor | | |
 | T12 Receiver, motor, bildirim | bekliyor | | kontrol noktası |
@@ -421,5 +421,15 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 - Düzeltme diyaloğunun "ileri tarih" testi ay açılır listesine dokunmadan yazıldı:
   madde hazır bir tarihle açılıp yalnız günü ileri çekiliyor. Açılır listeyi
   test ortamında açmak kararsız çalışıyordu.
+
+### T09
+- **Cihazda bulunan kusur**: alan güncel km ile dolu açılıyor ama metin seçili
+  gelmediği için yazmaya başlayınca sonuna ekliyordu (`118420` + `119950` →
+  `1184201`). Artık açılışta tüm metin seçili; testi de var.
+- **"Km gir" iki farklı yerde aynı metin**: ana ekrandaki bağlantı (01-spec §3.2)
+  ve boş giriş uyarısı (§3.5). Spec ikisini de böyle yazıyor; widget testinde
+  uyarı `SnackBar` içinde aranıyor.
+- Km küçültme burada reddediliyor; geriye alma yalnız Ayarlar → Araç'tan
+  (§3.7, onay diyaloğuyla) — T11'de gelecek.
 
 ## Bilinen sorunlar
