@@ -46,6 +46,12 @@ abstract final class S {
   /// Son yapılışı bilinmeyen madde.
   static const String enterDate = 'Tarih gir';
 
+  /// K-18: son yapılışı olmayan maddenin liste alt satırı.
+  static const String lastDoneMissing = 'Son yapılış girilmedi';
+
+  /// `Son: 12 Ağu, Orta` öneki.
+  static const String lastDonePrefix = 'Son:';
+
   // ----------------------------------------------------- aralık metinleri
   /// `14 günde bir`
   static const String everyNDaysSuffix = 'günde bir';

@@ -84,3 +84,32 @@
 
 ## K-16 Kapsam dışı sabit listesi
 Android Auto, OBD-II, GPS, çoklu araç, bulut/hesap, iOS, yakıt/harcama, servis randevusu, Play Store yayını, karanlık tema, çoklu dil. Bunlardan biri gündeme gelirse yeni karar + yeni sürüm; v1 ticket'larına eklenmez.
+
+---
+
+Aşağıdakiler T01 sonundaki doküman denetiminde bulunan boşluklar/hatalar için alınmış,
+onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Notlar → "Doküman denetimi".
+
+## K-17 Sıralama anahtarı: her bölümde bağlayıcı oran
+- Bağlam: 01-spec §2.5 yalnız Gecikmiş için formül veriyor ("bağlayıcı oran en negatif"). Yaklaşan ve Zamanında için sadece "en yakın önce" yazıyor; gün ve km maddeleri aynı listede karışık ve ortak ölçü tanımsız. 06-test-planı §1 "normalize km" diyor ama tanımlamıyor. Mockup üçüncü bir cevap veriyor (`kmLeft/100`) ve o da §2.5'in gecikmiş kuralıyla çelişiyor.
+- Karar: Dört bölümün hepsinde tek sıralama anahtarı `sortKey = bağlayıcı kalan / bağlayıcı aralık`, artan. `days` için `daysLeft / intervalDays`, `km` için `kmLeft / intervalKm`, `both` için §2.2'nin seçtiği bağlayıcı boyutun oranı, `seasonal` için `daysLeft / 365`. `unknown` bölümü şablon sırasında kalır (§2.5).
+- Gerekçe: Gecikmiş için spec'in yazdığı kuralın birebir kendisi; aynı anahtarı diğer bölümlere uzatmak ikinci bir sıralama mantığı yazmayı önler ve gün/km maddelerini karşılaştırılabilir kılar. Mockup burada spec ile çeliştiği için kullanılamaz (CLAUDE.md: spec kazanır).
+- Sonuç: `ItemStatus.sortKey` double. Ertelenmiş maddenin `sortKey`'i ertelemeden etkilenmez (negatif kalır), yani Yaklaşan bölümünün başında görünür.
+
+## K-18 "Bilinmiyor" maddenin liste alt satırı
+- Bağlam: 01-spec §3.2 satır alt metnini `Son: 12 Ağu, Orta` olarak tanımlıyor ama son yapılışı olmayan maddede ne yazacağını söylemiyor; mockup'ta bu durum hiç yok.
+- Karar: Alt satır `Son yapılış girilmedi`.
+- Gerekçe: Satır yüksekliği diğerleriyle aynı kalır ve kullanıcıya ne yapması gerektiğini söyler; sağdaki durum metni zaten `Tarih gir`.
+- Sonuç: `strings_tr.dart` → `S.lastDoneMissing`.
+
+## K-19 Gün preset listesine 1460 eklendi
+- Bağlam: Şablonda `battery_age` (akü yaşı) ve `aux_belt` (V kayışı) `days: 1460`; 01-spec §3.7 gün preseti `7,14,30,60,90,180,365,730,1825`. Şablon değeri preset üzerinde durmuyor, −/+ davranışı tanımsız.
+- Karar: Gün preseti `7,14,30,60,90,180,365,730,1460,1825` olur. Şablondaki aralık değerleri **değişmez** (03-kontrol-listesi kuralı korunur); yalnız adımlayıcının durakları genişler. Adımlayıcı preset dışı bir değerde durursa en yakın preset'e atlar.
+- Gerekçe: Kullanıcı 4 yılı bir kez değiştirdikten sonra geri dönemiyor olmamalı.
+- Sonuç: `constants.dart` → `kIntervalDaysPresets`.
+
+## K-20 Yedek bildirim `last_notified_at` yazmaz
+- Bağlam: `DailyCheckWorker` (01-spec §7.2) bildirimi bastıktan sonra `last_notified_at = now` yazıyor. K-06'nın hızlı geri bağlanma dalı bu alanı okuyor: kullanıcı 19:00 yedek bildirimini alıp `graceMinutes` içinde arabaya binerse `ACL_CONNECTED` bunu sahte kopma sanıp bildirimi iptal ediyor ve `last_notified_day`'i geri alıyor.
+- Karar: Yedek bildirim yalnız `last_notified_day` (ve `prev_last_notified_day`) yazar; `last_notified_at`'e dokunmaz. Bu alan yalnız gerçek kopma bildirimlerinde set edilir.
+- Gerekçe: `last_notified_at`'in tek işi K-06'nın grace penceresini ölçmek; yedek bildirimin bir kopmayla ilgisi yok, dolayısıyla pencere açmamalı. "Günde en fazla bir" kuralı `last_notified_day` üzerinden çalıştığı için bozulmaz.
+- Sonuç: 01-spec §7.2 ve 07 §5 `runOnce` buna göre uygulanır (T14).

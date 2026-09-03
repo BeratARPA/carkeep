@@ -47,6 +47,8 @@ const List<int> kFallbackAfterDaysOptions = <int>[0, 3, 7, 14];
 // Aralık adımlayıcı presetleri (01-spec §3.7)
 // ---------------------------------------------------------------------------
 
+/// K-19: 1460 spec listesine sonradan eklendi (şablonda `battery_age` ve
+/// `aux_belt` bu değerde).
 const List<int> kIntervalDaysPresets = <int>[
   7,
   14,
@@ -56,6 +58,7 @@ const List<int> kIntervalDaysPresets = <int>[
   180,
   365,
   730,
+  1460,
   1825,
 ];
 
