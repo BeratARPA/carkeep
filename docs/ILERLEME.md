@@ -187,10 +187,10 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 29. **`lib/data/repositories/*` (5 dosya) ve `lib/providers.dart` hiçbir ticket kapsamında
     adı geçmiyor**, ama 02-mimari §2'de var ve her ekran bunlara dayanıyor.
     → İlk ihtiyaç duyulan ticket'ta (T06) üretilecek.
-30. **T02'nin in-memory Drift testleri için host'ta native sqlite3 gerekiyor.**
-    `sqlite3_flutter_libs` yalnız cihazda çalışır; `flutter test` masaüstü VM'de koşar.
-    Hiçbir ticket bunu sağlamıyor. → **Karar gerekiyor** (bir dev bağımlılığı ya da
-    `sqlite3.dll` indirme adımı; CLAUDE.md gereği önce sorulacak).
+30. ~~T02'nin in-memory Drift testleri için host'ta native sqlite3 gerekiyor.~~
+    **Çözüldü, iş yok.** Deneyle doğrulandı: `sqlite3.openInMemory()` bu Windows 11
+    makinesinde `flutter test` altında çalışıyor (sistemin `winsqlite3.dll`'i bulunuyor).
+    Ek bağımlılık gerekmiyor. Başka bir makinede kurulursa yeniden bakılmalı.
 31. **T12'nin Kotlin JVM testleri için ne komut ne bağımlılık var.** `org.json` JVM'de
     yok (Android'e gömülü); `testImplementation("org.json:json:…")` gerekiyor ve CLAUDE.md
     komut listesinde Kotlin testi çalıştıran komut yok.
