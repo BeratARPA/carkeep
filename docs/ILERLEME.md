@@ -11,7 +11,10 @@ Claude Code her ticket sonunda bu dosyayı günceller. Durum: `bekliyor` / `deva
 - Android SDK: `%LOCALAPPDATA%\Android\Sdk` — platform `android-36`, build-tools `36.1.0`,
   platform-tools `37.0.1`. Tüm lisanslar kabul edildi.
 - `compileSdk = 36`, `targetSdk = 36`, `minSdk = 26` (K-14).
-- Test cihazı (marka, model, Android sürümü): **henüz bağlanmadı** — T05 kontrol noktasında doldurulacak.
+- Test cihazı: **Samsung SM-A556E (Galaxy A55 5G)**, Android 16, API 36, One UI.
+  OEM pil kısıtı notu 07 §7'deki **Samsung** satırı geçerli (T17).
+- Aracın Bluetooth'u: `Uconnect NM000000000N00000` — `12:34:56:78:9A:BC`
+  (sistemde `device_type=Carkit` olarak işaretli).
 
 ### Ortam kurulumu notu
 Bu makinede Flutter, Android SDK ve `java` PATH'te yoktu; T01 kapsamında kuruldu.
@@ -28,7 +31,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T02 Drift şeması ve DAO'lar | bitti | `feat(T02)` | 75 test yeşil |
 | T03 Seed ve şablon birleştirme | bitti | `feat(T03)` | 125 test yeşil |
 | T04 StatusCalculator ve SnapshotBuilder | bitti | `feat(T04)` | 195 test yeşil; 06 §1'in 28 satırı ayrı test |
-| T05 Platform köprüsü | devam | `feat(T05)` | kod bitti, **cihaz testi bekliyor** |
+| T05 Platform köprüsü | bitti | `feat(T05)` | cihaz testi geçti, 13/13 |
 | T06 Kurulum sihirbazı | bekliyor | | |
 | T07 Kontroller ekranı | bekliyor | | |
 | T08 Madde detayı | bekliyor | | |
@@ -43,7 +46,31 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T17 Cihaz testi düzeltmeleri | bekliyor | | |
 | T18 Release | bekliyor | | kontrol noktası |
 
-## Cihaz testi (06 §3)
+## Cihaz testi
+
+### T05 köprü kontrolü — 2026-09-03, SM-A556E / Android 16
+Protokol 06 §3'te yok; T05 kabul kriterlerinden yazıldı. Etkileşimler `adb` ile
+sürüldü, sonuçlar hem ekrandan hem `dumpsys`/`shared_prefs`'ten doğrulandı.
+
+| # | Adım | Sonuç |
+|---|---|---|
+| 1 | Ortam | `getSdkInt 36`, `getManufacturer samsung` ✓ |
+| 2 | İzinsiz `getBondedDevices` | `NO_PERMISSION` ✓ |
+| 3 | `requestBluetoothPermission` | `true` → `hasBluetoothPermission true`; `dumpsys: granted=true USER_SET` ✓ |
+| 4 | İzinli `getBondedDevices` | 6 cihaz, Uconnect listede, adres `dumpsys`'teki Carkit ile aynı ✓ |
+| 5 | `requestNotificationPermission` | `true`; `dumpsys: granted=true USER_SET` ✓ (API 33+ gerçek akış) |
+| 6 | `writeSnapshot` → `readSnapshot` | Aynı string. `shared_prefs/carkeep_engine.xml` doğrudan okundu: `snapshot_json` tam, Türkçe karakterler ve `"dueKm":null` bozulmamış, `car_address` snapshot'tan doğru ayıklanmış ✓ |
+| 7 | `force-stop` + yeniden açılış | `readSnapshot` 335 karakter — kalıcı ✓ |
+| 8 | `getBluetoothState` | `connected=false since=null lastTrip=null` ✓ (receiver T12'de) |
+| 9 | `drainPendingEvents` boşken | `[]` → 0 olay ✓ |
+| 10 | `openBatteryOptimizationSettings` | `com.android.settings/...RequestIgnoreBatteryOptimizations` doğrudan diyaloğu açıldı ✓ (denetim md. 20: 07 §6 yolu doğru) |
+| 11 | Muafiyet verildikten sonra | `isIgnoringBatteryOptimizations true`; `dumpsys deviceidle whitelist` → `user,com.beratarpa.carkeep` ✓ |
+| 12 | `openAppSettings` / `openNotificationSettings` | `InstalledAppDetails` ve `AppNotificationSettingsActivity` açıldı, geri dönüşte `MainActivity` ✓ |
+| 13 | `scheduleDailyWorker` | Log: `daily check scheduled in 34 min` (18:25 + 34 = **19:00**, hedef saat doğru). `dumpsys jobscheduler`: `#DailyCheckWorker#` `RUNNABLE`, `RUN_ANY_IN_BACKGROUND allowed` ✓ |
+| + | `onNewIntent` → `onLaunchAction` | Uygulama açıkken `--es carkeep_action overdue` → Dart'a `overdue` ulaştı ✓ |
+| + | Soğuk başlatma | `force-stop` sonrası aynı intent → `getLaunchAction: overdue` ✓ |
+
+### T12 gerçek araba protokolü (06 §3)
 | Tarih | Adım | Sonuç | Kopma → bildirim (sn) | Not |
 |---|---|---|---|---|
 
@@ -306,5 +333,11 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   02-mimari §6'daki sırayı değil — denetim md. 20, K-01 doğrudan diyaloğu destekliyor.
 - `MainActivity` üst üste izin isteğinde önceki `Result`ı `false` ile kapatıyor
   (denetim "tek-pendingPermission-slotu"); kurulum 3. adımda iki izin arka arkaya isteniyor.
+- **Cihaz testinde bulundu: `isBluetoothEnabled` eklendi.** Adaptör kapalıyken
+  `getBondedDevices` hata değil **boş liste** dönüyor. Bu haliyle kurulum sihirbazının
+  4. adımı (01-spec §3.1) "Eşleşmiş cihaz yok. Telefonu önce arabayla eşleştir." derdi —
+  araba eşleşmiş olduğu halde yanlış yönlendirme. Yeni kanal metodu bu iki durumu
+  ayırmayı mümkün kılıyor; **ayrı metin T06'da yazılacak** (`strings_tr`).
+  Testte gerçekten yaşandı: Bluetooth kapalıyken 0 cihaz, açıkken 6 cihaz.
 
 ## Bilinen sorunlar

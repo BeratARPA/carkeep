@@ -68,6 +68,7 @@ class _BridgeCheckScreenState extends State<BridgeCheckScreen> {
     await _run('getSdkInt', _bridge.getSdkInt);
     await _run('getManufacturer', _bridge.getManufacturer);
     await _run('hasBluetoothPermission', _bridge.hasBluetoothPermission);
+    await _run('isBluetoothEnabled', _bridge.isBluetoothEnabled);
     await _run('hasNotificationPermission', _bridge.hasNotificationPermission);
     await _run('areNotificationsEnabled', _bridge.areNotificationsEnabled);
     await _run(

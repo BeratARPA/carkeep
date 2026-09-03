@@ -114,6 +114,23 @@ void main() {
       expect(await bridge.getBondedDevices(), isEmpty);
     });
 
+    test('isBluetoothEnabled adaptör durumunu veriyor', () async {
+      fake.replies['isBluetoothEnabled'] = true;
+      expect(await bridge.isBluetoothEnabled(), isTrue);
+      fake.replies['isBluetoothEnabled'] = false;
+      expect(await bridge.isBluetoothEnabled(), isFalse);
+      // Cevap gelmezse "kapalı" varsayılır: yanlışlıkla "cihaz yok" demeyiz.
+      fake.replies.remove('isBluetoothEnabled');
+      expect(await bridge.isBluetoothEnabled(), isFalse);
+    });
+
+    test('adaptör kapalıyken boş liste hata değil', () async {
+      fake.replies['isBluetoothEnabled'] = false;
+      fake.replies['getBondedDevices'] = <Object?>[];
+      expect(await bridge.isBluetoothEnabled(), isFalse);
+      expect(await bridge.getBondedDevices(), isEmpty);
+    });
+
     test('NO_PERMISSION → BluetoothPermissionException', () async {
       fake.errors['getBondedDevices'] = PlatformException(
         code: 'NO_PERMISSION',

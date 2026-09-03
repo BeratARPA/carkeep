@@ -77,6 +77,13 @@ class MainActivity : FlutterActivity() {
             "areNotificationsEnabled" ->
                 result.success(Notifications.areNotificationsEnabled(this))
 
+            // Adaptor kapaliyken `getBondedDevices` bos liste doner; cihaz
+            // secici "eslesmis cihaz yok" yerine "Bluetooth kapali" demeli.
+            "isBluetoothEnabled" -> {
+                val manager = getSystemService(Context.BLUETOOTH_SERVICE) as? BluetoothManager
+                result.success(manager?.adapter?.isEnabled == true)
+            }
+
             "getBondedDevices" -> {
                 if (!hasBt()) {
                     result.error("NO_PERMISSION", "BLUETOOTH_CONNECT", null)

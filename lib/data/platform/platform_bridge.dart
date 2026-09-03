@@ -270,6 +270,12 @@ class PlatformBridge {
 
   // -------------------------------------------------------------- bluetooth
 
+  /// Adaptör açık mı. Kapalıyken [getBondedDevices] **boş liste** döner
+  /// (hata değil); cihaz seçici "eşleşmiş cihaz yok" yerine "Bluetooth kapalı"
+  /// demek için bunu sorar. T05 cihaz testinde bulundu.
+  Future<bool> isBluetoothEnabled() async =>
+      await channel.invokeMethod<bool>('isBluetoothEnabled') ?? false;
+
   /// İzin yoksa [BluetoothPermissionException], adaptör yoksa
   /// [BluetoothUnavailableException].
   Future<List<BondedDevice>> getBondedDevices() async {
