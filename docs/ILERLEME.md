@@ -1,4 +1,4 @@
-# İlerleme
+﻿# İlerleme
 
 Claude Code her ticket sonunda bu dosyayı günceller. Durum: `bekliyor` / `devam` / `bitti` / `engel`.
 
@@ -25,7 +25,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | Ticket | Durum | Commit | Not |
 |---|---|---|---|
 | T01 Proje iskeleti | bitti | `5443d1c` | ortam kurulumu dahil; cihazda `flutter run` beklemede |
-| T02 Drift şeması ve DAO'lar | bekliyor | | |
+| T02 Drift şeması ve DAO'lar | bitti | `b6dc7a5` | 75 test yeşil |
 | T03 Seed ve şablon birleştirme | bekliyor | | |
 | T04 StatusCalculator ve SnapshotBuilder | bekliyor | | |
 | T05 Platform köprüsü | bekliyor | | kontrol noktası |
@@ -226,5 +226,21 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   bölümü. Bunlar §10 token'ları ve mevcut satır düzeniyle üretilecek.
 - 01-spec §10 Material 3 için gereken birincil (seed) rengi vermiyor; `ColorScheme` §10
   token'larından elle kuruldu (`primary = ink`).
+
+### T02
+- **Şemaya iki sütun eklendi**: `check_items.source_note` ve `check_items.verified`.
+  02-mimari §3'te yoklar. Sebep: seed bu iki alanı taşıyor, T03 doğruluyor ve README
+  kullanıcıya ◐/❌ maddeleri kılavuzdan doğrulamasını söylüyor; ama uygulamanın hangi
+  maddenin ◐ olduğunu gösterebilmesi için değerin saklanması gerek (denetim md. 14).
+  `schemaVersion 1`'de eklemek bedava, sonradan eklemek migration demek. **Şu an hiçbir
+  ekranda gösterilmiyor**; gösterilip gösterilmeyeceği hâlâ açık karar (T08).
+- **`LogDao.deleteLog` spec'e birebir yazıldı**: son yapılış yalnız kalan loglardan
+  yeniden hesaplanıyor. Denetim md. 5'teki veri kaybı (elle girilen "Tarih/km düzelt"
+  değerinin silinmesi) bu hâliyle duruyor; T10'da karara bağlanacak. Test edildi ve
+  davranış belgelendi, sürpriz olmayacak.
+- `LogDao.deleteLog` ertelemeyi **temizlemiyor** (yalnız `addLog` temizliyor). Spec
+  §3.3 ertelemenin kayıtla temizlendiğini söylüyor, silme için bir şey demiyor.
+- Testte `package:drift/drift.dart`'tan `isNull`/`isNotNull` gizlendi; matcher'daki
+  aynı adlı sabitlerle çakışıyorlar.
 
 ## Bilinen sorunlar
