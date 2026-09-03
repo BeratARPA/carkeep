@@ -91,6 +91,50 @@ String longStatusText(String shortText, String intervalText) =>
     '$shortText. $intervalText.';
 
 // ---------------------------------------------------------------------------
+// Liste satırı alt metni (01-spec §3.2)
+// ---------------------------------------------------------------------------
+
+/// `Son: 12 Ağu, Orta` · km maddesinde `Son: 104.900 km, 12 Mar`
+/// · `both` maddede `Son: 12 Mar, 104.900 km`.
+///
+/// Son yapılış yoksa K-18 gereği [S.lastDoneMissing].
+String lastDoneText({
+  required String? day,
+  required int? km,
+  required String? value,
+  required bool showKm,
+  required bool kmFirst,
+  required int refYear,
+}) {
+  if (day == null && km == null) {
+    return S.lastDoneMissing;
+  }
+
+  final String? dayText = day == null
+      ? null
+      : formatDate(_parseDayOnly(day), refYear: refYear);
+  final String? kmText = (showKm && km != null)
+      ? '${formatKm(km)} ${S.unitKm}'
+      : null;
+
+  final List<String> parts = <String>[
+    if (kmFirst) ...<String>[?kmText, ?dayText] else ...<String>[
+      ?dayText,
+      ?kmText,
+    ],
+    if (value != null && value.isNotEmpty) value,
+  ];
+
+  return '${S.lastDonePrefix} ${parts.join(', ')}';
+}
+
+DateTime _parseDayOnly(String key) => DateTime(
+  int.parse(key.substring(0, 4)),
+  int.parse(key.substring(5, 7)),
+  int.parse(key.substring(8, 10)),
+);
+
+// ---------------------------------------------------------------------------
 // Aralık metinleri (01-spec §2.4)
 // ---------------------------------------------------------------------------
 

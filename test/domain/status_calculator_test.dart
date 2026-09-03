@@ -431,6 +431,50 @@ void main() {
       expect(plain.state, ItemState.overdue);
     });
 
+    test('K-22 proximityKey: gün maddesinde kalan gün', () {
+      final ItemStatus s = status(
+        item(schedule: Schedule.days(14), lastDoneDay: '2026-08-31'),
+      );
+      expect(s.proximityKey, 11);
+    });
+
+    test('K-22 proximityKey: km maddesi güne çevriliyor', () {
+      final ItemStatus s = status(
+        item(schedule: Schedule.km(30000), lastDoneKm: 100000),
+      );
+      expect(s.kmLeft, 11580);
+      expect(s.proximityKey, closeTo(11580 / 50, 1e-9));
+    });
+
+    test('K-22 proximityKey: both maddede bağlayıcı boyut belirliyor', () {
+      final ItemStatus kmBinds = status(
+        item(
+          schedule: Schedule.both(days: 365, km: 15000),
+          lastDoneDay: '2026-03-12',
+          lastDoneKm: 104900,
+        ),
+      );
+      expect(kmBinds.binding, BindingDim.km);
+      expect(kmBinds.proximityKey, closeTo(1480 / 50, 1e-9));
+
+      final ItemStatus daysBind = status(
+        item(
+          schedule: Schedule.both(days: 365, km: 15000),
+          lastDoneDay: '2025-09-10',
+          lastDoneKm: 110000,
+        ),
+      );
+      expect(daysBind.binding, BindingDim.days);
+      expect(daysBind.proximityKey, 7);
+    });
+
+    test('K-22 proximityKey: unknown sonsuz', () {
+      expect(
+        status(item(schedule: Schedule.km(30000))).proximityKey,
+        double.infinity,
+      );
+    });
+
     test('mevsimselde bölen 365', () {
       final ItemStatus s = status(
         item(

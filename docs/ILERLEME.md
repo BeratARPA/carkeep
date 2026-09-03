@@ -33,7 +33,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T04 StatusCalculator ve SnapshotBuilder | bitti | `feat(T04)` | 195 test yeşil; 06 §1'in 28 satırı ayrı test |
 | T05 Platform köprüsü | bitti | `feat(T05)` | cihaz testi geçti, 13/13 |
 | T06 Kurulum sihirbazı | bitti | `feat(T06)` | 268 test yeşil; cihazda uçtan uca doğrulandı |
-| T07 Kontroller ekranı | bekliyor | | |
+| T07 Kontroller ekranı | bitti | `feat(T07)` | 293 test yeşil; K-22 sıralama düzeltmesi dahil |
 | T08 Madde detayı | bekliyor | | |
 | T09 Km giriş | bekliyor | | |
 | T10 Geçmiş | bekliyor | | |
@@ -374,5 +374,31 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   02-mimari §10 T13/T15'te tamamlanacak.
 - **`SetupController.finish()` `finished` bayrağıyla korunuyor**: ikinci çağrı ikinci
   araç yazmıyor (tek araç, K-01). Testi var.
+
+### T07
+- **K-17'yi cihazda gördükten sonra düzelttik (K-22).** Kararı sunarken oranın
+  etkisini ters anlatmıştım: `kalan / aralık` oranında aynı gün kalan için küçük
+  aralık **büyük** oran verir, yani sık madde arkaya düşer. Cihazda ana ekranda
+  "Kışlık / yazlık lastik değişimi — 1 Kas" (59 gün), "Motor yağı seviyesi — 17 Eyl"
+  (14 gün) satırının üstüne çıktı. K-22 ile Yaklaşan ve Zamanında artık
+  `proximityKey` (kaç gün sonra) ile sıralanıyor; Gecikmiş spec'in emrettiği oranda
+  kaldı. Düzeltme sonrası cihazda sıra: 17 Eyl → 3 Eki → 1 Kas → 2 Ara.
+- **Testler gerçek bir hata yakaladı**: T06'da `PermissionsNotifier`'ın otomatik
+  yenilemesini dispose yarışı yüzünden kaldırmıştım; ana ekranda hiçbir şey
+  tazelemediği için uyarı şeritleri izinler verilmiş olsa da görünüyordu.
+  `HomeScreen.initState` artık izinleri ve Bluetooth durumunu tazeliyor
+  (`resume` bağlantısı T15'te).
+- **Widget testlerinde `ListView` tembelliği**: 29 açık maddeyle alttaki bölümler
+  ağaca hiç girmiyor ve `find` bulamıyor. Testlerde `keepOnly` yardımcısıyla
+  yalnız ilgili maddeler açık bırakılıyor. Bu bir kod hatası değil, test kurgusu.
+- **`lib/features/history/history_screen.dart` ve `settings/settings_screen.dart`
+  geçici yer tutucu** (T10 ve T11). Alt gezinme T07 kapsamında olduğu için üçü de
+  gerekliydi; `AppShell` `lib/app.dart` içinde (02-mimari §2'de ayrı dosya yok,
+  kök yönlendirme zaten app.dart'ın işi).
+- **Bildirim kanalı kapalıysa uyarı şeridi hâlâ yok.** 07 §8 bunu istiyor, 01-spec
+  §3.2 dört şerit sayıyor ve kanal durumunu saymıyor (denetim md. 32). Köprüde
+  `areNotificationsEnabled` hazır, `PermissionState` taşıyor; şerit T16'da eklenecek.
+- Satıra dokunma (madde detayı, T08) ve "Km gir" (T09) şu an boş; bağlanacakları
+  ticket'lar sırada.
 
 ## Bilinen sorunlar

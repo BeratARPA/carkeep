@@ -11,6 +11,7 @@ class ItemStatus {
     required this.shortText,
     required this.longText,
     required this.sortKey,
+    required this.proximityKey,
     this.dueDay,
     this.dueKm,
     this.daysLeft,
@@ -40,9 +41,15 @@ class ItemStatus {
   /// Detay sayfası: `{kısa metin}. {aralık}.`
   final String longText;
 
-  /// K-17: bölüm içi sıralama anahtarı = bağlayıcı kalan / bağlayıcı aralık,
-  /// artan. `unknown` maddelerde `double.infinity` (şablon sırası korunur).
+  /// Gecikmiş bölümünün sıralama anahtarı (01-spec §2.5, K-17):
+  /// bağlayıcı kalan / bağlayıcı aralık, artan. En negatif en önde.
+  /// `unknown` maddelerde `double.infinity`.
   final double sortKey;
+
+  /// Yaklaşan ve Zamanında bölümlerinin anahtarı (K-22): kaç gün sonra,
+  /// artan. Km maddelerinde `kmLeft / kAssumedKmPerDay` ile güne çevrilir.
+  /// `unknown` maddelerde `double.infinity`.
+  final double proximityKey;
 
   bool get isOverdue => state == ItemState.overdue;
   bool get isUnknown => state == ItemState.unknown;
@@ -51,5 +58,6 @@ class ItemStatus {
   String toString() =>
       'ItemStatus($state, dueDay: $dueDay, dueKm: $dueKm, '
       'daysLeft: $daysLeft, kmLeft: $kmLeft, binding: $binding, '
-      'short: "$shortText", sortKey: $sortKey)';
+      'short: "$shortText", sortKey: $sortKey, '
+      'proximityKey: $proximityKey)';
 }

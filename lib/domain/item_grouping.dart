@@ -29,8 +29,13 @@ class GroupedItems {
 
 /// Kapalı maddeler ana ekranda görünmez (01-spec §2.5).
 ///
-/// Sıralama (K-17): `overdue`, `soon` ve `ok` bölümlerinde artan `sortKey`
-/// (bağlayıcı kalan / bağlayıcı aralık). `unknown` şablon sırasında kalır.
+/// Sıralama iki anahtarlı:
+/// * `overdue` → artan [ItemStatus.sortKey] (bağlayıcı oran, K-17).
+///   01-spec §2.5'in emrettiği kural: en çok gecikmiş önce.
+/// * `soon` ve `ok` → artan [ItemStatus.proximityKey] (K-22).
+///   §2.5 "en yakın önce" diyor; oran bunu vermiyordu (seyrek aralıklı bir
+///   madde, yakın tarihli sık maddenin üstüne çıkıyordu).
+/// * `unknown` → şablon sırası.
 GroupedItems groupForHome(List<StatusedItem> all) {
   final List<StatusedItem> overdue = <StatusedItem>[];
   final List<StatusedItem> soon = <StatusedItem>[];
@@ -54,8 +59,8 @@ GroupedItems groupForHome(List<StatusedItem> all) {
   }
 
   overdue.sort(compareBySortKey);
-  soon.sort(compareBySortKey);
-  ok.sort(compareBySortKey);
+  soon.sort(compareByProximity);
+  ok.sort(compareByProximity);
   unknown.sort(compareBySortOrder);
 
   return GroupedItems(
@@ -66,9 +71,15 @@ GroupedItems groupForHome(List<StatusedItem> all) {
   );
 }
 
-/// Artan `sortKey`; eşitlikte şablon sırası (kararlı sonuç için).
+/// Artan `sortKey` (gecikmiş); eşitlikte şablon sırası (kararlı sonuç için).
 int compareBySortKey(StatusedItem a, StatusedItem b) {
   final int byKey = a.status.sortKey.compareTo(b.status.sortKey);
+  return byKey != 0 ? byKey : compareBySortOrder(a, b);
+}
+
+/// Artan `proximityKey` (yaklaşan, zamanında); eşitlikte şablon sırası.
+int compareByProximity(StatusedItem a, StatusedItem b) {
+  final int byKey = a.status.proximityKey.compareTo(b.status.proximityKey);
   return byKey != 0 ? byKey : compareBySortOrder(a, b);
 }
 

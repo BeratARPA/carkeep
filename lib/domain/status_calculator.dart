@@ -212,6 +212,8 @@ abstract final class StatusCalculator {
       shortText: short,
       longText: longStatusText(short, intervalLabel),
       sortKey: sortKey,
+      // K-22: gün bağlayıcıysa yakınlık doğrudan kalan gün.
+      proximityKey: daysLeft.toDouble(),
     );
   }
 
@@ -256,6 +258,8 @@ abstract final class StatusCalculator {
       shortText: short,
       longText: longStatusText(short, intervalLabel),
       sortKey: sortKey,
+      // K-22: km maddesi gün ölçeğine çevrilir; varsayım yalnız sıralamada.
+      proximityKey: kmLeft / kAssumedKmPerDay,
     );
   }
 
@@ -263,8 +267,9 @@ abstract final class StatusCalculator {
     state: ItemState.unknown,
     shortText: S.enterDate,
     longText: longStatusText(S.enterDate, intervalLabel),
-    // K-17: `unknown` şablon sırasını korur, orana girmez.
+    // `unknown` şablon sırasını korur, hiçbir sıralamaya girmez.
     sortKey: double.infinity,
+    proximityKey: double.infinity,
   );
 
   /// §2.3 md. 5: erteleme yalnız gecikmiş maddeyi etkiler ve yalnız

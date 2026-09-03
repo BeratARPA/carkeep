@@ -4,12 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/strings_tr.dart';
 import 'core/theme.dart';
 import 'domain/models/vehicle.dart';
+import 'features/history/history_screen.dart';
+import 'features/home/home_controller.dart';
 import 'features/home/home_screen.dart';
+import 'features/settings/settings_screen.dart';
 import 'features/setup/setup_screen.dart';
 import 'providers.dart';
 
-/// Kök widget. `vehicles` boşsa kurulum sihirbazı, doluysa ana ekran
-/// (01-spec §3.1).
+/// Kök widget. `vehicles` boşsa kurulum sihirbazı, doluysa üç sekmeli
+/// uygulama kabuğu (01-spec §3.1, §3.2).
 class CarKeepApp extends ConsumerWidget {
   const CarKeepApp({super.key});
 
@@ -32,18 +35,59 @@ class _Root extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final AsyncValue<Vehicle?> vehicle = ref.watch(vehicleProvider);
     return vehicle.when(
-      // İlk DB okuması; süresiz animasyon koymuyoruz (bkz. step_device).
+      // İlk DB okuması; süresiz animasyon koymuyoruz (widget testlerini kilitler).
       loading: () => const Scaffold(body: SizedBox.shrink()),
-      error: (Object e, StackTrace _) => const _FatalError(S.errDbOpen),
-      data: (Vehicle? v) =>
-          v == null ? const SetupScreen() : const HomeScreen(),
+      error: (Object e, StackTrace _) => const FatalErrorScreen(S.errDbOpen),
+      data: (Vehicle? v) => v == null ? const SetupScreen() : const AppShell(),
+    );
+  }
+}
+
+/// Üç sekme, `IndexedStack` ile durum korunur (01-spec §3.2).
+class AppShell extends ConsumerWidget {
+  const AppShell({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final HomeTab tab = ref.watch(homeTabProvider);
+
+    return Scaffold(
+      body: IndexedStack(
+        index: tab.index,
+        children: const <Widget>[
+          HomeScreen(),
+          HistoryScreen(),
+          SettingsScreen(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        key: const Key('bottom_nav'),
+        currentIndex: tab.index,
+        onTap: (int i) =>
+            ref.read(homeTabProvider.notifier).select(HomeTab.values[i]),
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.check_circle_outline),
+            activeIcon: Icon(Icons.check_circle),
+            label: S.tabHome,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.history),
+            label: S.tabHistory,
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.tune),
+            label: S.tabSettings,
+          ),
+        ],
+      ),
     );
   }
 }
 
 /// Tam ekran hata (01-spec §9).
-class _FatalError extends StatelessWidget {
-  const _FatalError(this.message);
+class FatalErrorScreen extends StatelessWidget {
+  const FatalErrorScreen(this.message, {super.key});
 
   final String message;
 

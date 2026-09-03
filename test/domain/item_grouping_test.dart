@@ -5,7 +5,8 @@ import 'package:carkeep/domain/models/schedule.dart';
 import 'package:carkeep/domain/status_calculator.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'status_calculator_test.dart' show item, kCurrentKm, kInstallDay, kToday;
+import 'status_calculator_test.dart'
+    show item, kCurrentKm, kInstallDay, kSeasonalDates, kToday;
 
 StatusedItem s(CheckItem i) => (
   item: i,
@@ -81,33 +82,84 @@ void main() {
     );
   });
 
-  test('yaklaşan: en yakın önce, gün ve km karışık', () {
+  test('yaklaşan: en yakın önce (K-22), gün ve km karışık', () {
     final GroupedItems g = groupForHome(<StatusedItem>[
-      // kmLeft 1000 / 30000 = 0,0333
+      // kmLeft 1000 → 1000/50 = 20 gün
       s(item(id: 1, schedule: Schedule.km(30000), lastDoneKm: 89420)),
-      // daysLeft 0 / 14 = 0
+      // daysLeft 0
       s(item(id: 2, schedule: Schedule.days(14), lastDoneDay: '2026-08-20')),
-      // daysLeft 1 / 30 = 0,0333 → id ile eşitlik bozulur
+      // daysLeft 1
       s(item(id: 3, schedule: Schedule.days(30), lastDoneDay: '2026-08-05')),
     ]);
-    expect(g.soon.first.item.id, 2);
-    expect(g.soon.length, 3);
+    expect(
+      g.soon.map((StatusedItem e) => e.item.id).toList(),
+      <int>[2, 3, 1],
+    );
     for (int i = 1; i < g.soon.length; i++) {
       expect(
-        g.soon[i - 1].status.sortKey <= g.soon[i].status.sortKey,
+        g.soon[i - 1].status.proximityKey <= g.soon[i].status.proximityKey,
         isTrue,
       );
     }
   });
 
-  test('zamanında: en yakın önce', () {
+  test('zamanında: takvimde yakın olan önce (K-22)', () {
     final GroupedItems g = groupForHome(<StatusedItem>[
-      // 11580 / 30000 = 0,386
+      // kmLeft 11.580 → 231,6 gün
       s(item(id: 1, schedule: Schedule.km(30000), lastDoneKm: 100000)),
-      // 11 / 14 = 0,786
+      // daysLeft 11
       s(item(id: 2, schedule: Schedule.days(14), lastDoneDay: '2026-08-31')),
     ]);
-    expect(g.ok.map((StatusedItem e) => e.item.id).toList(), <int>[1, 2]);
+    expect(g.ok.map((StatusedItem e) => e.item.id).toList(), <int>[2, 1]);
+  });
+
+  test('K-22: seyrek aralıklı uzak madde, sık aralıklı yakın maddenin '
+      'üstüne çıkmıyor', () {
+    // Cihazda görülen durum: mevsimsel 59 gün (oran 0,162) ile
+    // 14 günlük madde 14 gün (oran 1,0). Oranla mevsimsel öne geçiyordu.
+    final GroupedItems g = groupForHome(<StatusedItem>[
+      s(
+        item(
+          id: 1,
+          sortOrder: 33,
+          schedule: Schedule.seasonal(kSeasonalDates),
+          startsFromInstall: true,
+        ),
+      ),
+      s(
+        item(
+          id: 2,
+          sortOrder: 0,
+          schedule: Schedule.days(14),
+          lastDoneDay: '2026-08-20',
+          startsFromInstall: true,
+        ),
+      ),
+    ]);
+    // 14 günlük madde 2026-09-03'te vade → soon; mevsimsel 59 gün → ok.
+    expect(g.ok.single.item.id, 1);
+    expect(g.soon.single.item.id, 2);
+
+    // Aynı bölümde olsalardı da yakın olan önde olurdu:
+    final GroupedItems g2 = groupForHome(<StatusedItem>[
+      s(
+        item(
+          id: 1,
+          sortOrder: 33,
+          schedule: Schedule.seasonal(kSeasonalDates),
+          startsFromInstall: true,
+        ),
+      ),
+      s(
+        item(
+          id: 2,
+          sortOrder: 0,
+          schedule: Schedule.days(14),
+          lastDoneDay: '2026-08-31',
+        ),
+      ),
+    ]);
+    expect(g2.ok.map((StatusedItem e) => e.item.id).toList(), <int>[2, 1]);
   });
 
   test('bilinmiyor: şablon sırası korunuyor', () {

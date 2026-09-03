@@ -175,6 +175,42 @@ abstract final class S {
   static const String errDateInvalid = 'Geçerli bir tarih gir';
   static const String errDateFuture = 'İleri tarih olamaz';
 
+  // ------------------------------------------ ana ekran (01-spec §3.2)
+  static const String tabHome = 'Kontroller';
+  static const String tabHistory = 'Geçmiş';
+  static const String tabSettings = 'Ayarlar';
+
+  static const String kmEntryLink = 'Km gir';
+
+  /// `Uconnect bağlı değil`
+  static const String chipDisconnectedSuffix = 'bağlı değil';
+
+  /// `Uconnect bağlı, sürüşte`
+  static const String chipConnectedSuffix = 'bağlı, sürüşte';
+
+  /// Cihaz seçilmemişken chip.
+  static const String chipNoDevice = 'Araba seçilmedi';
+
+  static const String sectionOverdue = 'Gecikmiş';
+  static const String sectionSoon = 'Yaklaşan';
+  static const String sectionOk = 'Zamanında';
+  static const String sectionUnknown = 'Bilinmiyor';
+
+  static const String homeAllGood =
+      'Her şey zamanında. Bir sonraki sürüşten sonra gecikmiş bir şey olursa '
+      'haber veririm.';
+  static const String homeNoItems =
+      "Kontrol listesi boş. Ayarlar'dan madde aç.";
+
+  // ------------------------------------------------- uyarı şeritleri §3.2
+  static const String bannerNoBluetooth =
+      'Bluetooth izni yok, kopmayı yakalayamam.';
+  static const String bannerNoNotification = 'Bildirim izni yok.';
+  static const String bannerNoDevice = 'Araba seçilmedi.';
+  static const String bannerBattery =
+      'Pil optimizasyonu açık, bildirim gecikebilir.';
+  static const String bannerDismiss = 'Kapat';
+
   // ------------------------------------------------------------- hatalar
   static const String errSeedLoad = 'Şablon dosyası okunamadı.';
   static const String errDbOpen = 'Veriler açılamadı.';

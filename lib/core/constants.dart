@@ -73,6 +73,11 @@ const List<int> kIntervalKmPresets = <int>[
   120000,
 ];
 
+/// K-22: km maddelerini gün ölçeğine çevirmek için varsayılan günlük km.
+/// Gerçek km yalnız kullanıcıdan geldiği için (K-11) tahmin şart; yalnız
+/// sıralamada kullanılır, hiçbir vade hesabına girmez.
+const int kAssumedKmPerDay = 50;
+
 // ---------------------------------------------------------------------------
 // Ölçüm
 // ---------------------------------------------------------------------------

@@ -91,6 +91,9 @@ Aşağıdakiler T01 sonundaki doküman denetiminde bulunan boşluklar/hatalar i�
 onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Notlar → "Doküman denetimi".
 
 ## K-17 Sıralama anahtarı: her bölümde bağlayıcı oran
+> **Kısmen iptal, bkz. K-22.** Gecikmiş bölümü için geçerli; Yaklaşan ve
+> Zamanında bölümleri K-22'ye göre sıralanır.
+
 - Bağlam: 01-spec §2.5 yalnız Gecikmiş için formül veriyor ("bağlayıcı oran en negatif"). Yaklaşan ve Zamanında için sadece "en yakın önce" yazıyor; gün ve km maddeleri aynı listede karışık ve ortak ölçü tanımsız. 06-test-planı §1 "normalize km" diyor ama tanımlamıyor. Mockup üçüncü bir cevap veriyor (`kmLeft/100`) ve o da §2.5'in gecikmiş kuralıyla çelişiyor.
 - Karar: Dört bölümün hepsinde tek sıralama anahtarı `sortKey = bağlayıcı kalan / bağlayıcı aralık`, artan. `days` için `daysLeft / intervalDays`, `km` için `kmLeft / intervalKm`, `both` için §2.2'nin seçtiği bağlayıcı boyutun oranı, `seasonal` için `daysLeft / 365`. `unknown` bölümü şablon sırasında kalır (§2.5).
 - Gerekçe: Gecikmiş için spec'in yazdığı kuralın birebir kendisi; aynı anahtarı diğer bölümlere uzatmak ikinci bir sıralama mantığı yazmayı önler ve gün/km maddelerini karşılaştırılabilir kılar. Mockup burada spec ile çeliştiği için kullanılamaz (CLAUDE.md: spec kazanır).
@@ -119,3 +122,13 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: `lib/core/widgets/tr_date_field.dart` — gün / ay / yıl üçlüsü, ay açılır listede `format_tr` kısaltmalarıyla (Oca…Ara). Bugünden ileri tarih seçilemez. `showDatePicker` ve `flutter_localizations` kullanılmaz.
 - Gerekçe: Girilen tarihler tipik olarak aylar veya yıllar öncesi (triger 5 yıl, muayene 2 yıl, poliçe 1 yıl); takvimde geriye kaydırmaktan hızlı. Yeni bağımlılık yok, her metin `strings_tr`'de kalır.
 - Sonuç: T06 adım 5 ve T08 düzeltme diyaloğu bu bileşeni kullanır.
+
+## K-22 Yaklaşan ve Zamanında: gerçekten "en yakın önce"
+- Bağlam: K-17 üç bölümde de `kalan / aralık` oranını kullanıyordu. Kararı sunarken oranın etkisini **ters** anlatmıştım ("aynı gün kalanda sık olan öne geçer"); gerçekte küçük aralık *büyük* oran verir, yani sık madde arkaya düşer. Cihazda görüldü: kurulumun ardından ana ekranda "Kışlık / yazlık lastik değişimi — 1 Kas" (59 gün, oran 0,162), "Motor yağı seviyesi — 17 Eyl" (14 gün, oran 1,0) satırının üstünde çıktı. 01-spec §2.5 bu iki bölüm için "en yakın önce" diyor; oran bunu vermiyor.
+- Karar: İki anahtar.
+  - **Gecikmiş**: değişmedi — `ItemStatus.sortKey` = bağlayıcı kalan / bağlayıcı aralık, artan. §2.5'in emrettiği kural bu.
+  - **Yaklaşan ve Zamanında**: `ItemStatus.proximityKey` = kaç gün sonra, artan. Gün bağlayıcıysa `daysLeft`; km bağlayıcıysa `kmLeft / kAssumedKmPerDay` (50 km/gün) ile güne çevrilir.
+  - **Bilinmiyor**: şablon sırası (değişmedi).
+- Gerekçe: Kullanıcı bu iki bölümde "sırada ne var" diye bakar; ölçüt takvimdeki yakınlıktır, döngünün ne kadarının geçtiği değil. Gecikmişte ise "en çok gecikmiş" doğru ölçüt ve spec bunu yazıyor.
+- `kAssumedKmPerDay = 50` yalnız sıralamada kullanılır; hiçbir vade hesabına girmez (K-11: km yalnız kullanıcıdan). Gerçek ortalama bilinmediği için sabit; yanlış olsa bile yalnız iki km maddesinin görsel sırasını etkiler.
+- Sonuç: `ItemStatus.proximityKey`, `item_grouping.compareByProximity`, `constants.kAssumedKmPerDay`.
