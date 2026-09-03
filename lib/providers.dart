@@ -18,12 +18,14 @@ import 'data/repositories/item_list_repo.dart';
 import 'data/repositories/item_repo.dart';
 import 'data/repositories/log_repo.dart';
 import 'data/repositories/settings_repo.dart';
+import 'data/repositories/trip_repo.dart';
 import 'data/repositories/vehicle_repo.dart';
 import 'data/seed/seed_loader.dart';
 import 'domain/item_grouping.dart';
 import 'domain/models/check_item.dart';
 import 'domain/models/check_log.dart';
 import 'domain/models/rules.dart';
+import 'domain/models/trip.dart';
 import 'domain/models/vehicle.dart';
 import 'domain/snapshot_builder.dart';
 import 'domain/status_calculator.dart';
@@ -63,6 +65,10 @@ final Provider<SettingsRepo> settingsRepoProvider = Provider<SettingsRepo>(
 
 final Provider<LogRepo> logRepoProvider = Provider<LogRepo>(
   (Ref ref) => LogRepo(ref.watch(databaseProvider)),
+);
+
+final Provider<TripRepo> tripRepoProvider = Provider<TripRepo>(
+  (Ref ref) => TripRepo(ref.watch(databaseProvider)),
 );
 
 // ---------------------------------------------------------------- veri
@@ -218,6 +224,45 @@ permissionsProvider =
     NotifierProvider<PermissionsNotifier, PermissionState>(
       PermissionsNotifier.new,
     );
+
+/// Bluetooth durumu; `resume`'da ve açılışta tazelenir (02-mimari §9).
+class BluetoothStateNotifier extends Notifier<BluetoothState> {
+  bool _disposed = false;
+
+  @override
+  BluetoothState build() {
+    ref.onDispose(() => _disposed = true);
+    return BluetoothState.unknown;
+  }
+
+  Future<void> refresh() async {
+    if (_disposed) {
+      return;
+    }
+    try {
+      final BluetoothState next = await ref
+          .read(platformBridgeProvider)
+          .getBluetoothState();
+      if (!_disposed) {
+        state = next;
+      }
+    } on Object {
+      // Kanal yoksa (test) varsayılanda kal.
+    }
+  }
+}
+
+final NotifierProvider<BluetoothStateNotifier, BluetoothState>
+bluetoothStateProvider =
+    NotifierProvider<BluetoothStateNotifier, BluetoothState>(
+      BluetoothStateNotifier.new,
+    );
+
+/// Ayarlar tanı satırının kaynağı: prefs değil `trips` tablosu (01-spec §3.7,
+/// T13). Kotlin'in prefs'teki kopyası yalnız motor için.
+final StreamProvider<Trip?> lastTripProvider = StreamProvider<Trip?>(
+  (Ref ref) => ref.watch(tripRepoProvider).watchLastTrip(),
+);
 
 /// Bildirime dokunularak açıldıysa `overdue` (01-spec §3.8).
 final StateProvider<String?> launchActionProvider = StateProvider<String?>(

@@ -238,9 +238,16 @@ class MainActivity : FlutterActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        intent.getStringExtra(Notifications.EXTRA_ACTION)?.let {
-            channel?.invokeMethod("onLaunchAction", it)
+        val action = intent.getStringExtra(Notifications.EXTRA_ACTION) ?: return
+        val target = channel
+        if (target == null) {
+            // Dart heniz bagli degil; extra'yi birak, `getLaunchAction` alsin.
+            return
         }
+        // Tuketiliyor: aksi halde ardindan gelen `resume` ayni eylemi
+        // `getLaunchAction` ile ikinci kez okur.
+        intent.removeExtra(Notifications.EXTRA_ACTION)
+        target.invokeMethod("onLaunchAction", action)
     }
 
     override fun onRequestPermissionsResult(

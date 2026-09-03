@@ -39,7 +39,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T10 Geçmiş | bitti | `feat(T10)` | 357 test yeşil; K-23 ve şema v2 dahil |
 | T11 Ayarlar | bitti | `feat(T11)` | 425 test yeşil; cihazda doğrulandı |
 | T12 Receiver, motor, bildirim | bitti | `feat(T12)` | 436 Dart + 58 Kotlin testi; **kontrol noktası: gerçek araba protokolü bekliyor** |
-| T13 Pending events ve Bluetooth durumu | bekliyor | | |
+| T13 Pending events ve Bluetooth durumu | bitti | `feat(T13)` | 458 Dart + 58 Kotlin testi; cihazda doğrulandı |
 | T14 DailyCheckWorker | bekliyor | | |
 | T15 Snapshot senkronu ve yaşam döngüsü | bekliyor | | |
 | T16 Hata/boş durumlar, metin turu | bekliyor | | |
@@ -193,6 +193,7 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 18. **`fallback` pending event'i hangi tabloya yazılacak belli değil.** `trips.note`
     listesinde `fallback` var ama event `connected_at`/`duration_min`/`counted` gibi
     NOT NULL sütunları dolduramıyor.
+    → **T13'te kapandı, K-26.** `trips`'e yazılır, tanı satırından elenir.
 19. **`trips.note` izin verilen değer listesi `no_snapshot`'ı içermiyor** (02-mimari §3).
     → **T12'de kapandı, K-24.** Sözlük sekiz değer: `no_snapshot` ve `no_permission` eklendi.
     02-mimari §3'ün satırı düzeltilmedi (kit dokümanı); K-24 onu geçersiz kılıyor.
@@ -537,5 +538,30 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   T15'te `cancelNotification` bağlanınca birlikte ele alınacak (denetim md. 12).
 - **Açık kalan**: uygulama simgesi hâlâ Flutter varsayılanı (`ic_launcher`); bildirimin
   durum çubuğu simgesi kendi vektörümüz. Hiçbir ticket kapsamında değil, T18'de bakılmalı.
+
+### T13
+- **Tanı satırının kaynağı prefs'ten `trips` tablosuna geçti** (01-spec §3.7). Kotlin'in
+  `last_trip_json`'u yalnız motorun kendi işi; ekran drain edilmiş veriyi gösteriyor.
+- **K-26**: yedek bildirim (`fallback`) `trips`'e yazılıyor ama tanı satırından eleniyor —
+  "Son kopma:" diye bir kopma uydurmasın (denetim md. 18 kapandı).
+- **`note IS NULL` satırları sessizce eleniyordu.** `fallback` filtresi `note = 'fallback'`
+  karşılaştırmasıyla yazılmıştı; SQL'de `NULL = 'fallback'` → NULL, `NOT NULL` → NULL, yani
+  notu olmayan her sürüş tanı satırından düşüyordu. Test yakaladı; `note IS NULL OR ...`
+  oldu.
+- **`bluetoothStateProvider` `providers.dart`'a taşındı.** 02-mimari §9 onu çekirdek
+  sağlayıcılar arasında sayıyor; `features/home` altında kalınca yaşam döngüsü dosyası onu
+  okumak için features'a bağımlı olacaktı.
+- **`onNewIntent` artık eylemi tüketiyor.** Aksi halde bildirime dokunulduğunda önce
+  `onLaunchAction`, hemen ardından `resume`'daki `getLaunchAction` aynı eylemi ikinci kez
+  okuyordu. Kanal henüz bağlı değilse extra bırakılıyor, `getLaunchAction` alıyor.
+- **T12'nin "uygulama kapalıyken bildirimden açılma" kriteri aslında burada tamamlandı**:
+  `getLaunchAction` açılış sırasının 4. adımı (02-mimari §10) ve `main.dart`'ta değildi.
+  T12'de yalnız uygulama açıkken çalışan yol test edilmişti.
+- `main.dart` artık `ProviderContainer` kuruyor: açılışta 3. (drain) ve 4. (launch action)
+  adımlar `runApp`'ten önce çalışıyor.
+- Cihazda doğrulandı: 2 dk simülasyon → `pending_events_json` doldu; arka plana alıp geri
+  dönünce dizi `[]` oldu ve tanı satırı "Son kopma: 4 Eyl 01:22, 2 dk, sürüş sayılmadı"
+  yazdı; "Bağlanmayı simüle et" sonrası chip yeşil "bağlı, sürüşte".
+- **Açık kalan**: `todayProvider` `resume`'da tazelenmiyor (gece yarısı geçişi) — T15.
 
 ## Bilinen sorunlar

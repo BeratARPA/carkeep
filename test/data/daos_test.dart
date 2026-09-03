@@ -405,7 +405,7 @@ void main() {
         ),
       );
 
-      final TripRow last = (await db.tripDao.last())!;
+      final TripRow last = (await db.tripDao.lastTrip())!;
       expect(last.durationMin, 2);
       expect(last.counted, isFalse);
       expect(last.note, 'short_trip');
@@ -423,11 +423,11 @@ void main() {
           note: const Value<String?>('short_trip'),
         ),
       );
-      expect((await db.tripDao.last())!.connectedAt, isNull);
+      expect((await db.tripDao.lastTrip())!.connectedAt, isNull);
     });
 
     test('kayıt yokken last null', () async {
-      expect(await db.tripDao.last(), isNull);
+      expect(await db.tripDao.lastTrip(), isNull);
     });
   });
 

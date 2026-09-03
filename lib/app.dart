@@ -11,6 +11,7 @@ import 'features/home/home_controller.dart';
 import 'features/home/home_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/setup/setup_screen.dart';
+import 'lifecycle.dart';
 import 'providers.dart';
 
 /// Kök widget. `vehicles` boşsa kurulum sihirbazı, doluysa üç sekmeli
@@ -23,8 +24,10 @@ class CarKeepApp extends ConsumerStatefulWidget {
 }
 
 class _CarKeepAppState extends ConsumerState<CarKeepApp> {
-  /// `dispose` içinde `ref` okunamıyor; köprü açılışta yakalanıyor.
+  /// `dispose` içinde `ref` okunamıyor; ikisi de açılışta yakalanıyor.
   late final PlatformBridge _bridge = ref.read(platformBridgeProvider);
+  late final AppLifecycle _lifecycle = ref.read(appLifecycleProvider);
+  late final AppLifecycleListener _listener;
 
   @override
   void initState() {
@@ -32,12 +35,22 @@ class _CarKeepAppState extends ConsumerState<CarKeepApp> {
     // Uygulama açıkken bildirime dokunulursa Kotlin `onLaunchAction` çağırır:
     // Kontroller sekmesine geç ve Gecikmiş bölümünü vurgula (01-spec §3.8).
     _bridge.setLaunchActionHandler(_onLaunchAction);
+    // 02-mimari §10 adım 7: `resume`'da drain + platform durumu.
+    _listener = AppLifecycleListener(onResume: _onResume);
   }
 
   @override
   void dispose() {
+    _listener.dispose();
     _bridge.clearLaunchActionHandler();
     super.dispose();
+  }
+
+  void _onResume() {
+    if (!mounted) {
+      return;
+    }
+    _lifecycle.onResume();
   }
 
   void _onLaunchAction(String action) {

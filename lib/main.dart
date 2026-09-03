@@ -10,10 +10,10 @@ import 'data/repositories/settings_repo.dart';
 import 'data/repositories/vehicle_repo.dart';
 import 'data/seed/seed_loader.dart';
 import 'domain/models/vehicle.dart';
+import 'lifecycle.dart';
 import 'providers.dart';
 
-/// Açılış sırası 02-mimari §10. Bu ticket'ta 1–2 ve 5–6 var;
-/// drain (3), launch action (4) ve `resume` T13/T15'te ekleniyor.
+/// Açılış sırası 02-mimari §10. `scheduleDailyWorker` (5) T14'te.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -37,13 +37,22 @@ Future<void> main() async {
     await ItemRepo(db).upgradeTemplateIfNeeded(vehicle.id, seed);
   }
 
+  final ProviderContainer container = ProviderContainer(
+    overrides: <Override>[
+      databaseProvider.overrideWithValue(db),
+      seedProvider.overrideWithValue(seed),
+      installDayProvider.overrideWith((Ref ref) => installDay),
+    ],
+  );
+
+  // 3–4: Kotlin'in biriktirdiklerini DB'ye işle, bildirimden mi açıldık bak.
+  final AppLifecycle lifecycle = container.read(appLifecycleProvider);
+  await lifecycle.drainPendingEvents();
+  await lifecycle.readLaunchAction();
+
   runApp(
-    ProviderScope(
-      overrides: <Override>[
-        databaseProvider.overrideWithValue(db),
-        seedProvider.overrideWithValue(seed),
-        installDayProvider.overrideWith((Ref ref) => installDay),
-      ],
+    UncontrolledProviderScope(
+      container: container,
       child: const CarKeepApp(),
     ),
   );

@@ -152,3 +152,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: `showOverdue` (a) `areNotificationsEnabled` (uygulama + kanal) kontrolünden geçmeden basmaz ve `false` döner, (b) `notify`'dan hemen önce aynı id'yi `cancel` eder.
 - Gerekçe: §3.8'in iki isteği de korunuyor (id sabit, güncelleme sessiz); yalnız gerçekten yeni bir hatırlatma olayında bildirim sıfırdan basıldığı için uyarı çalışıyor. Kanal kontrolü olmadan §7.1 adım 8'in "bildirimi bas" adımı yalan söylüyor.
 - Sonuç: `Notifications.showOverdue`; not `no_permission` (K-24).
+
+## K-26 Yedek bildirim `trips`'e yazılır ama sürüş sayılmaz
+- Bağlam: `fallback` pending event'i (K-12) `connected_at`/`duration_min`/`counted` gibi NOT NULL sütunları dolduramıyor; 02-mimari §3 `trips.note` listesinde `fallback` var ama olayın hangi tabloya gideceği yazmıyor (denetim md. 18). Ayrıca yedek bildirim tanı satırına düşerse "Son kopma: …" diye bir kopma uydurmuş olur.
+- Karar: Yedek bildirim `trips`'e yazılır: `connected_at = null`, `duration_min = 0`, `counted = false`, `notified = true`, `note = 'fallback'`. Ayarlar tanı satırını besleyen sorgu (`TripDao.lastTrip/watchLastTrip`) `fallback` satırlarını **eler**.
+- Gerekçe: `note` listesinde `fallback` olması olayın bu tabloya ait olduğunu söylüyor; sürüş olmadığı için `counted=false`, bildirim basıldığı için `notified=true` tek tutarlı okuma. Tanı satırı "son kopma"yı anlatır, yedek bildirim kopma değildir.
+- Sonuç: `TripRepo.applyPendingEvents`, `TripDao._lastTripQuery`, `Trip.isFallback`.

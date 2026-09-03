@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/strings_tr.dart';
 import '../../core/theme.dart';
 import '../../providers.dart';
-import '../home/home_controller.dart';
 
 /// Ayarlar → Geliştirici (01-spec §3.7). Yalnız debug derlemede görünür;
 /// kanal tarafı da `BuildConfig.DEBUG` ile korunuyor.

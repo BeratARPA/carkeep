@@ -11,9 +11,9 @@ import '../../domain/interval_stepper.dart';
 import '../../domain/models/check_item.dart';
 import '../../domain/models/rules.dart';
 import '../../domain/models/schedule.dart';
+import '../../domain/models/trip.dart';
 import '../../domain/models/vehicle.dart';
 import '../../providers.dart';
-import '../home/home_controller.dart';
 import '../item_edit/item_edit_page.dart';
 import '../setup/steps/step_permissions.dart';
 import 'debug_controller.dart';
@@ -129,8 +129,9 @@ class _BluetoothSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final BluetoothState bt = ref.watch(bluetoothStateProvider);
-    final LastTripInfo? trip = bt.lastTrip;
+    // T13: kaynak Kotlin prefs değil `trips` tablosu. Prefs'teki kopya yalnız
+    // motorun kendi işi için; ekran drain edilmiş veriyi gösterir.
+    final Trip? trip = ref.watch(lastTripProvider).valueOrNull;
     final int refYear = ref.watch(todayProvider).year;
 
     return SettingsSection(

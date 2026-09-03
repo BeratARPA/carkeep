@@ -114,6 +114,9 @@ const String kTripNoteReconnect = 'reconnect';
 /// Bildirim izni yoktu; bildirim basılamadı (denetim md. 4).
 const String kTripNoteNoPermission = 'no_permission';
 
+/// Sürüşsüz dönem yedeği (K-12). Sürüş değil; tanı satırına girmez (K-26).
+const String kTripNoteFallback = 'fallback';
+
 // ---------------------------------------------------------------------------
 // Diğer
 // ---------------------------------------------------------------------------

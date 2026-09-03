@@ -47,6 +47,13 @@ class FakeBridge extends PlatformBridge {
       <({String event, int minutes})>[];
   Object? simulateThrows;
 
+  /// T13: Kotlin'in biriktirdikleri. `drain` oku+sil, tıpkı prefs gibi.
+  String pendingEventsJson = '[]';
+  int drainCalls = 0;
+
+  /// Bildirimden mi açıldı; okununca Kotlin temizler.
+  String? launchAction;
+
   @override
   Future<bool> hasBluetoothPermission() async => bluetooth;
 
@@ -108,6 +115,21 @@ class FakeBridge extends PlatformBridge {
   Future<void> clearEngine() async {
     clearEngineCalls++;
     snapshotJson = null;
+  }
+
+  @override
+  Future<List<PendingEvent>> drainPendingEvents() async {
+    drainCalls++;
+    final List<PendingEvent> events = PendingEvent.decodeAll(pendingEventsJson);
+    pendingEventsJson = '[]';
+    return events;
+  }
+
+  @override
+  Future<String?> getLaunchAction() async {
+    final String? action = launchAction;
+    launchAction = null;
+    return action;
   }
 
   @override

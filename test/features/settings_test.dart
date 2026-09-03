@@ -61,6 +61,27 @@ void main() {
     return id;
   }
 
+  Future<int> insertTrip({
+    required DateTime disconnectedAt,
+    required int durationMin,
+    required bool counted,
+    required bool notified,
+    String? note,
+    int overdueCount = 1,
+  }) => db.tripDao.insertTrip(
+    TripsCompanion.insert(
+      connectedAt: Value<DateTime?>(
+        disconnectedAt.subtract(Duration(minutes: durationMin)),
+      ),
+      disconnectedAt: disconnectedAt,
+      durationMin: durationMin,
+      counted: counted,
+      notified: notified,
+      overdueCount: Value<int>(overdueCount),
+      note: Value<String?>(note),
+    ),
+  );
+
   Future<CheckItemRow> item(int vehicleId, String templateKey) async =>
       (await db.itemDao.getAll(vehicleId))
           .firstWhere((CheckItemRow r) => r.templateKey == templateKey);
@@ -262,18 +283,12 @@ void main() {
     WidgetTester tester,
   ) async {
     await seedVehicle();
-    bridge.btState = BluetoothState(
-      connected: false,
-      since: null,
-      lastTrip: LastTripInfo(
-        connectedAt: DateTime(2026, 9, 3, 14, 5),
-        disconnectedAt: DateTime(2026, 9, 3, 14, 30),
-        durationMin: 25,
-        counted: true,
-        notified: true,
-        overdueCount: 2,
-        note: null,
-      ),
+    // T13: kaynak `trips` tablosu.
+    await insertTrip(
+      disconnectedAt: DateTime(2026, 9, 3, 14, 30),
+      durationMin: 25,
+      counted: true,
+      notified: true,
     );
     await pumpSettings(tester);
 
@@ -859,18 +874,12 @@ void main() {
     WidgetTester tester,
   ) async {
     await seedVehicle();
-    bridge.btState = BluetoothState(
-      connected: false,
-      since: null,
-      lastTrip: LastTripInfo(
-        connectedAt: DateTime(2026, 9, 3, 17, 57),
-        disconnectedAt: DateTime(2026, 9, 3, 18, 5),
-        durationMin: 8,
-        counted: true,
-        notified: false,
-        overdueCount: 2,
-        note: kTripNoteOncePerDay,
-      ),
+    await insertTrip(
+      disconnectedAt: DateTime(2026, 9, 3, 18, 5),
+      durationMin: 8,
+      counted: true,
+      notified: false,
+      note: kTripNoteOncePerDay,
     );
     await pumpSettings(tester);
 

@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/format_tr.dart';
 import '../../core/strings_tr.dart';
-import '../../data/platform/platform_bridge.dart';
 import '../../domain/models/check_item.dart';
 import '../../domain/models/item_status.dart';
 import '../../domain/models/schedule.dart';
@@ -103,39 +102,6 @@ String itemSubtitle(CheckItem item, {required int refYear}) {
     refYear: refYear,
   );
 }
-
-/// Bluetooth durumu; `resume`'da ve açılışta tazelenir (02-mimari §9).
-class BluetoothStateNotifier extends Notifier<BluetoothState> {
-  bool _disposed = false;
-
-  @override
-  BluetoothState build() {
-    ref.onDispose(() => _disposed = true);
-    return BluetoothState.unknown;
-  }
-
-  Future<void> refresh() async {
-    if (_disposed) {
-      return;
-    }
-    try {
-      final BluetoothState next = await ref
-          .read(platformBridgeProvider)
-          .getBluetoothState();
-      if (!_disposed) {
-        state = next;
-      }
-    } on Object {
-      // Kanal yoksa (test) varsayılanda kal.
-    }
-  }
-}
-
-final NotifierProvider<BluetoothStateNotifier, BluetoothState>
-bluetoothStateProvider =
-    NotifierProvider<BluetoothStateNotifier, BluetoothState>(
-      BluetoothStateNotifier.new,
-    );
 
 /// Bölüm başlığı metni ve sayısı.
 String sectionTitle(ItemState state, int count) {
