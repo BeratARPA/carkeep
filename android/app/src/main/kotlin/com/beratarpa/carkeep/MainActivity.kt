@@ -206,6 +206,16 @@ class MainActivity : FlutterActivity() {
                 result.success(null)
             }
 
+            // T14: yedek isi elle calistir (02-mimari 6, yalniz debug).
+            "debugRunDailyWorker" -> {
+                if (!BuildConfig.DEBUG) {
+                    result.error("NOT_DEBUG", "Yalniz debug derlemede", null)
+                    return
+                }
+                DailyCheckWorker.runOnce(this)
+                result.success(null)
+            }
+
             "clearEngine" -> {
                 prefs.clearAll()
                 Notifications.cancel(this)

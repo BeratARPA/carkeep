@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/strings_tr.dart';
 import '../../core/theme.dart';
+import '../../lifecycle.dart';
 import '../../providers.dart';
 
 /// Ayarlar → Geliştirici (01-spec §3.7). Yalnız debug derlemede görünür;
@@ -38,9 +39,28 @@ class DebugController {
       _toast(messenger, S.errGeneric);
       return;
     }
-    // Tanı satırı ve chip motorun yeni durumunu göstersin.
+    // Gerçek `resume` ne yapıyorsa: olayları DB'ye işle, chip'i tazele.
+    // Tanı satırı artık `trips`'ten okuduğu için drain olmadan güncellenmez.
+    await _ref.read(appLifecycleProvider).drainPendingEvents();
     await _ref.read(bluetoothStateProvider.notifier).refresh();
     _toast(messenger, S.debugDone);
+  }
+
+  /// 01-spec §7.2 koşullarını hemen çalıştırır (T14). Koşul sağlanmazsa
+  /// sessizdir; gerekçe `adb logcat -s CarKeep` çıktısında.
+  Future<void> runFallback(BuildContext context) async {
+    final ScaffoldMessengerState messenger = ScaffoldMessenger.of(context);
+    try {
+      await _ref.read(platformBridgeProvider).debugRunDailyWorker();
+    } on PlatformException {
+      _toast(messenger, S.errGeneric);
+      return;
+    } on MissingPluginException {
+      _toast(messenger, S.errGeneric);
+      return;
+    }
+    await _ref.read(appLifecycleProvider).drainPendingEvents();
+    _toast(messenger, S.debugFallbackRan);
   }
 
   /// Kotlin'e yazılmış snapshot'ı olduğu gibi gösterir.

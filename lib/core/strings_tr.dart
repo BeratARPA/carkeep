@@ -401,7 +401,8 @@ abstract final class S {
   static const String debugSimulateConnect = 'Bağlanmayı simüle et';
   static const String debugShowSnapshot = "Snapshot'ı göster";
   static const String debugRunFallback = 'Yedek işi şimdi çalıştır';
-  static const String debugPendingTicket = 'T14 ile gelecek.';
+  static const String debugFallbackRan =
+      'Yedek iş çalıştı. Koşul sağlandıysa bildirim gelir.';
   static const String debugDone = 'Simüle edildi';
   static const String debugNoCar = 'Araç Bluetooth cihazı seçilmedi';
   static const String debugSnapshotEmpty = 'Snapshot henüz yazılmadı';

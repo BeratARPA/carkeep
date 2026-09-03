@@ -365,4 +365,8 @@ class PlatformBridge {
         'event': event,
         'minutes': minutes,
       });
+
+  /// Yedek işi (`DailyCheckWorker.runOnce`) hemen çalıştırır; yalnız debug.
+  Future<void> debugRunDailyWorker() =>
+      channel.invokeMethod<void>('debugRunDailyWorker');
 }

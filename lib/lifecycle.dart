@@ -56,6 +56,16 @@ class AppLifecycle {
     _ref.read(launchActionSeqProvider.notifier).state++;
   }
 
+  /// 02-mimari §10 adım 5 (K-12). `REPLACE` olduğu için tekrar çağırmak
+  /// zararsız; hedef saat bir sonraki 19:00.
+  Future<void> scheduleDailyWorker() async {
+    try {
+      await _ref.read(platformBridgeProvider).scheduleDailyWorker();
+    } on Object {
+      // Kanal yoksa (test/masaüstü) sessiz.
+    }
+  }
+
   /// 02-mimari §10 adım 7.
   Future<void> onResume() async {
     await drainPendingEvents();

@@ -13,7 +13,7 @@ import 'domain/models/vehicle.dart';
 import 'lifecycle.dart';
 import 'providers.dart';
 
-/// Açılış sırası 02-mimari §10. `scheduleDailyWorker` (5) T14'te.
+/// Açılış sırası 02-mimari §10.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -49,6 +49,8 @@ Future<void> main() async {
   final AppLifecycle lifecycle = container.read(appLifecycleProvider);
   await lifecycle.drainPendingEvents();
   await lifecycle.readLaunchAction();
+  // 5: sürüşsüz dönem yedeği; `REPLACE` ile her açılışta yeniden planlanır.
+  await lifecycle.scheduleDailyWorker();
 
   runApp(
     UncontrolledProviderScope(

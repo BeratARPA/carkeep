@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:carkeep/core/date_utils.dart';
@@ -53,6 +54,11 @@ class FakeBridge extends PlatformBridge {
 
   /// Bildirimden mi açıldı; okununca Kotlin temizler.
   String? launchAction;
+
+  /// T14: `debugRunDailyWorker` kaç kez çağrıldı ve motor `fallback` olayı
+  /// yazdı mı (koşullar sağlandıysa yazar).
+  int dailyWorkerRuns = 0;
+  bool fallbackEventOnRun = false;
 
   @override
   Future<bool> hasBluetoothPermission() async => bluetooth;
@@ -130,6 +136,21 @@ class FakeBridge extends PlatformBridge {
     final String? action = launchAction;
     launchAction = null;
     return action;
+  }
+
+  @override
+  Future<void> debugRunDailyWorker() async {
+    dailyWorkerRuns++;
+    if (!fallbackEventOnRun) {
+      return;
+    }
+    pendingEventsJson = jsonEncode(<Map<String, Object?>>[
+      <String, Object?>{
+        'type': 'fallback',
+        'at': DateTime(2026, 9, 3, 19).millisecondsSinceEpoch,
+        'overdueCount': 1,
+      },
+    ]);
   }
 
   @override

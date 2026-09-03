@@ -40,7 +40,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T11 Ayarlar | bitti | `feat(T11)` | 425 test yeşil; cihazda doğrulandı |
 | T12 Receiver, motor, bildirim | bitti | `feat(T12)` | 436 Dart + 58 Kotlin testi; **kontrol noktası: gerçek araba protokolü bekliyor** |
 | T13 Pending events ve Bluetooth durumu | bitti | `feat(T13)` | 458 Dart + 58 Kotlin testi; cihazda doğrulandı |
-| T14 DailyCheckWorker | bekliyor | | |
+| T14 DailyCheckWorker | bitti | `feat(T14)` | 458 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T15 Snapshot senkronu ve yaşam döngüsü | bekliyor | | |
 | T16 Hata/boş durumlar, metin turu | bekliyor | | |
 | T17 Cihaz testi düzeltmeleri | bekliyor | | |
@@ -563,5 +563,29 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   dönünce dizi `[]` oldu ve tanı satırı "Son kopma: 4 Eyl 01:22, 2 dk, sürüş sayılmadı"
   yazdı; "Bağlanmayı simüle et" sonrası chip yeşil "bağlı, sürüşte".
 - **Açık kalan**: `todayProvider` `resume`'da tazelenmiyor (gece yarısı geçişi) — T15.
+
+### T14
+- **Karar yine saf**: `ReminderEngine.evaluateFallback(snapshot, state, today, lastTripDay)`
+  01-spec §7.2'nin koşullarını sırayla uyguluyor, `DailyCheckWorker` yalnız yan etkileri
+  yapıyor. 14 JVM testi (eşik dahil/hariç, km maddesi elenmesi, 3 gün sessizlik, sürüşsüz
+  gün sayısı).
+- **K-20 uygulandı**: yedek bildirim `last_notified_day` yazıyor, `last_notified_at`e
+  dokunmuyor. Cihazda prefs'te `last_notified_at` anahtarı hiç oluşmadı — doğrulandı.
+- **K-25 burada da geçerli**: `showOverdue` `false` dönerse durum yazılmıyor.
+- **Yedek bildirimin "basmadım" gerekçeleri `trips`'e yazılmıyor** (`fallback_off`,
+  `recently_notified`); yalnız `adb logcat -s CarKeep` çıktısına düşüyorlar. K-24 sözlüğüne
+  girmiyorlar çünkü hiçbir satıra yazılmıyorlar.
+- **Geliştirici satırı artık kanala gidiyor** ve ardından drain ediyor; "Kopmayı simüle et"
+  de öyle. Tanı satırı T13'ten beri `trips`'ten okuduğu için drain olmadan güncellenmiyordu.
+- **06 §4'ün jobscheduler komutu eksik.** Android 14+ iş ad alanı (namespace) istiyor;
+  `adb shell cmd jobscheduler run -f com.beratarpa.carkeep 1` "Could not find job" diyor.
+  Çalışan hâli: `adb shell cmd jobscheduler run -f -n androidx.work.systemjobscheduler com.beratarpa.carkeep 1`
+- Cihazda doğrulandı: açılışta `daily check scheduled in 1033 min` (01:47 + 1033 dk = 19:00);
+  `dumpsys jobscheduler` → `#DailyCheckWorker#` `RUNNABLE`, `RUN_ANY_IN_BACKGROUND allowed`,
+  `TIME=+17h12m`; `cmd jobscheduler run` ile tetiklendi → `fallback skipped: no_overdue` ve
+  kendini yeniden planladı; 65 gün gecikmiş madde varken "Yedek işi şimdi çalıştır" →
+  bildirim "1 kontrol gecikti / **Bir süredir sürüş yok.** Silecek suyu"; ikinci çalıştırma
+  → `fallback skipped: recently_notified`; `fallback` satırı `trips`'e yazıldı ama tanı
+  satırına girmedi (K-26). Test verisi geri alındı.
 
 ## Bilinen sorunlar

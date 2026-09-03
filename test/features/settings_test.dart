@@ -8,13 +8,14 @@ import 'package:carkeep/data/db/database.dart';
 import 'package:carkeep/data/db/daos/settings_dao.dart';
 import 'package:carkeep/data/platform/platform_bridge.dart';
 import 'package:carkeep/data/repositories/item_repo.dart';
+import 'package:carkeep/data/repositories/trip_repo.dart';
 import 'package:carkeep/data/seed/seed_loader.dart';
 import 'package:carkeep/domain/models/measure.dart';
 import 'package:carkeep/domain/models/rules.dart';
 import 'package:carkeep/domain/models/schedule.dart';
+import 'package:carkeep/domain/models/trip.dart';
 import 'package:carkeep/domain/models/vehicle.dart';
 import 'package:carkeep/features/settings/settings_screen.dart';
-import 'package:carkeep/features/settings/widgets/settings_widgets.dart';
 import 'package:carkeep/providers.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
@@ -855,18 +856,27 @@ void main() {
     await disposeTree(tester);
   });
 
-  testWidgets('yedek işi satırı T14 sonrası bağlanacak', (
+  testWidgets("yedek işi satırı kanala gidiyor ve olayı DB'ye işliyor", (
     WidgetTester tester,
   ) async {
     await seedVehicle();
+    // Motor yedek bildirimi bassaydı ne yazardı: `fallback` olayı.
+    bridge.fallbackEventOnRun = true;
     await pumpSettings(tester);
 
     await scrollTo(tester, find.byKey(const Key('debug_fallback')));
-    expect(find.text(S.debugPendingTicket), findsOneWidget);
-    expect(
-      tester.widget<SettingsRow>(find.byKey(const Key('debug_fallback'))).onTap,
-      isNull,
-    );
+    await tester.tap(find.byKey(const Key('debug_fallback')));
+    await tester.pumpAndSettle();
+
+    expect(bridge.dailyWorkerRuns, 1);
+    expect(find.text(S.debugFallbackRan), findsOneWidget);
+
+    // K-26: `trips`'e yazıldı ama tanı satırına girmedi.
+    final List<Trip> rows = await TripRepo(db).getAll();
+    expect(rows.single.isFallback, isTrue);
+    expect(await TripRepo(db).lastTrip(), isNull);
+
+    await flushToast(tester);
     await disposeTree(tester);
   });
 

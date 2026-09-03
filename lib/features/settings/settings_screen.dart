@@ -531,7 +531,7 @@ class _AppSection extends ConsumerWidget {
 
 // ------------------------------------------------------------ geliştirici
 
-/// Yalnız debug derlemede (01-spec §3.7). "Yedek işi şimdi çalıştır" T14'te.
+/// Yalnız debug derlemede (01-spec §3.7).
 class _DebugSection extends ConsumerWidget {
   const _DebugSection();
 
@@ -563,10 +563,10 @@ class _DebugSection extends ConsumerWidget {
           title: S.debugShowSnapshot,
           onTap: () => c.showSnapshot(context),
         ),
-        const SettingsRow(
-          key: Key('debug_fallback'),
+        SettingsRow(
+          key: const Key('debug_fallback'),
           title: S.debugRunFallback,
-          help: S.debugPendingTicket,
+          onTap: () => c.runFallback(context),
         ),
       ],
     );

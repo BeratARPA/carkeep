@@ -16,6 +16,9 @@ object ReminderEngine {
 
     private const val TAG = "CarKeep"
 
+    /** 01-spec 7.2: son bildirimden bu kadar gun gecmeden yedek basilmaz. */
+    const val FALLBACK_QUIET_DAYS = 3
+
     // `trips.note` degerleri. 02-mimari 3'teki liste yedi deger sayiyor;
     // `no_snapshot` (denetim md. 19) ve `no_permission` (denetim md. 4) K-24
     // ile eklendi. Dart karsiliklari `lib/core/constants.dart`.
@@ -29,6 +32,14 @@ object ReminderEngine {
 
     /** Bildirim izni yok: bildirim basilamadi, durum da yazilmadi (denetim md. 4). */
     const val NOTE_NO_PERMISSION = "no_permission"
+
+    /** Yedek bildirim satiri (K-12, K-26). */
+    const val NOTE_FALLBACK = "fallback"
+
+    // Yedek bildirimin "basmadim" gerekceleri. `trips`'e **yazilmaz**, yalniz
+    // loga dusulur; K-24 sozlugune girmezler.
+    const val SKIP_FALLBACK_OFF = "fallback_off"
+    const val SKIP_RECENTLY_NOTIFIED = "recently_notified"
 
     /** Motorun karar anindaki durumu; prefs'ten okunur, saf fonksiyona verilir. */
     data class State(
@@ -116,6 +127,57 @@ object ReminderEngine {
         }
         if (state.connectedAt >= 0) return ConnectDecision.Keep
         return ConnectDecision.Start(now)
+    }
+
+    sealed class FallbackDecision {
+        data class Notify(val names: List<String>, val daysNoDrive: Int) :
+            FallbackDecision()
+
+        data class Skip(val note: String) : FallbackDecision()
+    }
+
+    /**
+     * 01-spec 7.2 kosullari, sirayla. Saf.
+     *
+     * Yalniz **gun bazli** gecikme sayilir (K-12): araba durdukca km artmaz,
+     * dolayisiyla km maddesi surussuz donemde gecikmeye devam edemez.
+     *
+     * [lastTripDay] son kopmanin gunu (`yyyy-MM-dd`), hic kopma gorulmediyse
+     * null.
+     */
+    fun evaluateFallback(
+        snapshot: Snapshot?,
+        state: State,
+        today: String,
+        lastTripDay: String?,
+    ): FallbackDecision {
+        if (snapshot == null) return FallbackDecision.Skip(NOTE_NO_SNAPSHOT)
+
+        val afterDays = snapshot.rules.fallbackAfterDays
+        if (afterDays <= 0) return FallbackDecision.Skip(SKIP_FALLBACK_OFF)
+
+        state.globalSnoozeUntilDay?.let {
+            if (it > today) return FallbackDecision.Skip(NOTE_SNOOZED)
+        }
+
+        val overdue = snapshot.overdueItems(today).filter {
+            val due = it.dueDay ?: return@filter false
+            DayKey.daysBetween(due, today) >= afterDays
+        }
+        if (overdue.isEmpty()) return FallbackDecision.Skip(NOTE_NO_OVERDUE)
+
+        state.lastNotifiedDay?.let {
+            if (DayKey.daysBetween(it, today) < FALLBACK_QUIET_DAYS) {
+                return FallbackDecision.Skip(SKIP_RECENTLY_NOTIFIED)
+            }
+        }
+
+        val daysNoDrive = if (lastTripDay == null) {
+            -1
+        } else {
+            DayKey.daysBetween(lastTripDay, today)
+        }
+        return FallbackDecision.Notify(overdue.map { it.name }, daysNoDrive)
     }
 
     // ------------------------------------------------------------ yan etkiler

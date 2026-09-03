@@ -369,6 +369,205 @@ class ReminderEngineTest {
         assertFalse(ReminderEngine.addressMatches(car, ""))
     }
 
+    // -------------------------------------------------- evaluateFallback (7.2)
+
+    private fun fbSkip(d: ReminderEngine.FallbackDecision): String {
+        assertIs<ReminderEngine.FallbackDecision.Skip>(d)
+        return d.note
+    }
+
+    private fun fbNotify(
+        d: ReminderEngine.FallbackDecision,
+    ): ReminderEngine.FallbackDecision.Notify {
+        assertIs<ReminderEngine.FallbackDecision.Notify>(d)
+        return d
+    }
+
+    /** A 30 gun once gecikti, B km bazli gecikmis, C ileride. */
+    private fun fallbackItems() = listOf(
+        item(1, "A", dueDay = "2026-08-04"),
+        item(2, "B", dueKm = 118_000),
+        item(3, "C", dueDay = "2026-09-10"),
+    )
+
+    @Test
+    fun f1_snapshotYokDurur() {
+        assertEquals(
+            ReminderEngine.NOTE_NO_SNAPSHOT,
+            fbSkip(ReminderEngine.evaluateFallback(null, state(), today, null)),
+        )
+    }
+
+    @Test
+    fun f2_kapaliysaDurur() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(fallbackAfterDays = 0, items = fallbackItems()),
+            state(),
+            today,
+            null,
+        )
+        assertEquals(ReminderEngine.SKIP_FALLBACK_OFF, fbSkip(d))
+    }
+
+    @Test
+    fun f3_genelErtelemeDurur() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = fallbackItems()),
+            state(globalSnoozeUntilDay = "2026-09-04"),
+            today,
+            null,
+        )
+        assertEquals(ReminderEngine.NOTE_SNOOZED, fbSkip(d))
+    }
+
+    @Test
+    fun f4_yeterinceEskiGecikmeVarsaBildirir() {
+        // A 30 gundur gecikmis, esik 7.
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = fallbackItems()),
+            state(),
+            today,
+            null,
+        )
+        assertEquals(listOf("A"), fbNotify(d).names)
+    }
+
+    @Test
+    fun f5_kmMaddesiYedegeGirmez() {
+        // K-12: araba durdukca km artmaz; yalniz gun bazli gecikme sayilir.
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = listOf(item(2, "B", dueKm = 118_000))),
+            state(),
+            today,
+            null,
+        )
+        assertEquals(ReminderEngine.NOTE_NO_OVERDUE, fbSkip(d))
+    }
+
+    @Test
+    fun f6_gecikmeEsigeYetmezseDurur() {
+        // 5 gun gecikmis, esik 7.
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = listOf(item(1, "A", dueDay = "2026-08-29"))),
+            state(),
+            today,
+            null,
+        )
+        assertEquals(ReminderEngine.NOTE_NO_OVERDUE, fbSkip(d))
+    }
+
+    @Test
+    fun f7_esikDahil() {
+        // Tam 7 gun: 2026-08-27 -> 2026-09-03.
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = listOf(item(1, "A", dueDay = "2026-08-27"))),
+            state(),
+            today,
+            null,
+        )
+        assertEquals(listOf("A"), fbNotify(d).names)
+    }
+
+    @Test
+    fun f8_sonUcGunBildirimVarsaDurur() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = fallbackItems()),
+            state(lastNotifiedDay = "2026-09-01"),
+            today,
+            null,
+        )
+        assertEquals(ReminderEngine.SKIP_RECENTLY_NOTIFIED, fbSkip(d))
+    }
+
+    @Test
+    fun f9_ucGunGectiyseBildirir() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = fallbackItems()),
+            state(lastNotifiedDay = "2026-08-31"),
+            today,
+            null,
+        )
+        assertEquals(listOf("A"), fbNotify(d).names)
+    }
+
+    @Test
+    fun f10_surussuzGunSayisi() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = fallbackItems()),
+            state(),
+            today,
+            "2026-08-25",
+        )
+        assertEquals(9, fbNotify(d).daysNoDrive)
+        assertEquals("9 gündür sürüş yok. ", NotificationText.prefix(9))
+    }
+
+    @Test
+    fun f11_hicKopmaYoksaGunSayisiBilinmiyor() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = fallbackItems()),
+            state(),
+            today,
+            null,
+        )
+        assertEquals(-1, fbNotify(d).daysNoDrive)
+        assertEquals("Bir süredir sürüş yok. ", NotificationText.prefix(-1))
+    }
+
+    @Test
+    fun f12_ertelemeGecmisseDurdurmaz() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(items = fallbackItems()),
+            state(globalSnoozeUntilDay = today),
+            today,
+            null,
+        )
+        assertEquals(listOf("A"), fbNotify(d).names)
+    }
+
+    @Test
+    fun f13_maddeErtelemesiYedegiDeDurdurur() {
+        val d = ReminderEngine.evaluateFallback(
+            snapshot(
+                items = listOf(
+                    item(1, "A", dueDay = "2026-08-04", snoozeUntilDay = "2026-09-05"),
+                ),
+            ),
+            state(),
+            today,
+            null,
+        )
+        assertEquals(ReminderEngine.NOTE_NO_OVERDUE, fbSkip(d))
+    }
+
+    @Test
+    fun f14_esikDegistiginde() {
+        // fallbackAfterDays 14: 9 gunluk gecikme yetmez, 30 gunluk yeter.
+        val nineDays = listOf(item(1, "A", dueDay = "2026-08-25"))
+        assertEquals(
+            ReminderEngine.NOTE_NO_OVERDUE,
+            fbSkip(
+                ReminderEngine.evaluateFallback(
+                    snapshot(fallbackAfterDays = 14, items = nineDays),
+                    state(),
+                    today,
+                    null,
+                ),
+            ),
+        )
+        assertEquals(
+            listOf("A"),
+            fbNotify(
+                ReminderEngine.evaluateFallback(
+                    snapshot(fallbackAfterDays = 14, items = fallbackItems()),
+                    state(),
+                    today,
+                    null,
+                ),
+            ).names,
+        )
+    }
+
     // ------------------------------------------------------------ not listesi
 
     @Test
@@ -388,6 +587,7 @@ class ReminderEngineTest {
             ReminderEngine.NOTE_ONCE_PER_DAY,
             ReminderEngine.NOTE_RECONNECT,
             ReminderEngine.NOTE_NO_PERMISSION,
+            ReminderEngine.NOTE_FALLBACK,
         )
         assertTrue(documented.containsAll(produced), "beklenmeyen not: ${produced - documented}")
     }
