@@ -83,4 +83,100 @@ abstract final class S {
   // ------------------------------------------------------------- birimler
   static const String unitKm = 'km';
   static const String unitBar = 'bar';
+
+  // ------------------------------------------------------- ortak eylemler
+  static const String next = 'İleri';
+  static const String back = 'Geri';
+  static const String start = 'Başla';
+  static const String save = 'Kaydet';
+  static const String cancel = 'İptal';
+  static const String refresh = 'Yenile';
+  static const String allow = 'İzin ver';
+  static const String open = 'Aç';
+  static const String granted = 'Verildi';
+  static const String notGranted = 'Verilmedi';
+  static const String optional = 'İsteğe bağlı';
+  static const String skipForNow = 'Sonra seçerim';
+
+  // ------------------------------------------ kurulum (01-spec §3.1)
+  /// 1. adım
+  static const String setupVehicleTitle = 'Aracın';
+  static const String setupVehicleHelp = 'Bir kere gir, bir daha sorulmaz.';
+  static const String fieldBrand = 'Marka';
+  static const String fieldModel = 'Model';
+  static const String fieldYear = 'Yıl';
+  static const String errBrandRequired = 'Marka gir';
+
+  /// 2. adım
+  static const String setupKmTitle = "Kaç km'de?";
+  static const String setupKmHelp =
+      "Gösterge km'si. Km'ye bağlı bakımlar bundan sayılır; sonra yakıt "
+      'alırken güncellersin.';
+  static const String fieldKm = 'Km';
+  static const String errKmRequired = 'Km gir';
+
+  /// 3. adım
+  static const String setupPermissionsTitle = 'İzinler';
+  static const String permBluetooth = 'Bluetooth';
+  static const String permBluetoothWhy =
+      "Arabanın Bluetooth'unu görmem ve kopmayı yakalamam için.";
+  static const String permNotification = 'Bildirim';
+  static const String permNotificationWhy =
+      'Gecikmiş kontrolü söyleyebilmem için.';
+  static const String permBattery = 'Pil optimizasyonu';
+  static const String permBatteryWhy =
+      'Telefon uygulamayı uyutursa kopmayı kaçırabilirim.';
+  static const String permBatteryOff = 'Kapatıldı';
+  static const String permBatteryOn = 'Açık';
+  static const String permDeniedPermanently = 'İzin kapalı. Ayarlardan aç.';
+  static const String openSettings = 'Ayarları aç';
+
+  /// 4. adım
+  static const String setupDeviceTitle = "Arabanın Bluetooth'u hangisi?";
+  static const String setupDeviceHelp =
+      'Telefon bu cihazdan koptuğunda arabadan indiğini anlar ve o anda '
+      'hatırlatır. Android Auto kullanıyorsan da aynı cihaz.';
+  static const String deviceListEmpty =
+      'Eşleşmiş cihaz yok. Telefonu önce arabayla eşleştir.';
+
+  /// T05 cihaz testinde bulundu: adaptör kapalıyken liste boş gelir, ama
+  /// bu "eşleşmiş cihaz yok" demek değildir.
+  static const String deviceListBluetoothOff =
+      'Bluetooth kapalı. Eşleşmiş cihazları görebilmem için aç.';
+  static const String deviceListNoPermission =
+      'Cihazları listeleyebilmem için Bluetooth izni gerek.';
+
+  /// 5. adım
+  static const String setupLastServiceTitle = 'Son servis';
+  static const String setupLastServiceQuestion =
+      'Son yağ değişimi ne zaman ve kaç km\'de yapıldı?';
+  static const String setupLastServiceHelp =
+      'İsteğe bağlı. Boş bırakırsan yağ ve polen filtresi "Bilinmiyor" '
+      'olarak bekler, sonra girebilirsin.';
+  static const String fieldServiceDate = 'Tarih';
+  static const String fieldServiceKm = 'Km';
+  static const String errServiceIncomplete =
+      'Tarihi ve km\'yi birlikte gir ya da ikisini de boş bırak';
+
+  /// 6. adım
+  static const String setupChecklistTitle = 'Kontrol listesi';
+  static const String setupChecklistHelp =
+      "Aralıklar hazır. İstemediğini kapat; sonra Ayarlar'dan "
+      'değiştirebilirsin.';
+
+  /// "Başla" sonrası
+  static const String setupDoneToast =
+      'Hazır. Bir sonraki sürüşten sonra hatırlatırım.';
+
+  // ------------------------------------------------- tarih alanı (K-21)
+  static const String dateDay = 'Gün';
+  static const String dateMonth = 'Ay';
+  static const String dateYear = 'Yıl';
+  static const String errDateInvalid = 'Geçerli bir tarih gir';
+  static const String errDateFuture = 'İleri tarih olamaz';
+
+  // ------------------------------------------------------------- hatalar
+  static const String errSeedLoad = 'Şablon dosyası okunamadı.';
+  static const String errDbOpen = 'Veriler açılamadı.';
+  static const String errGeneric = 'Bir şey ters gitti.';
 }

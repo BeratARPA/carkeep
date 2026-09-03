@@ -32,7 +32,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T03 Seed ve şablon birleştirme | bitti | `feat(T03)` | 125 test yeşil |
 | T04 StatusCalculator ve SnapshotBuilder | bitti | `feat(T04)` | 195 test yeşil; 06 §1'in 28 satırı ayrı test |
 | T05 Platform köprüsü | bitti | `feat(T05)` | cihaz testi geçti, 13/13 |
-| T06 Kurulum sihirbazı | bekliyor | | |
+| T06 Kurulum sihirbazı | bitti | `feat(T06)` | 268 test yeşil; cihazda uçtan uca doğrulandı |
 | T07 Kontroller ekranı | bekliyor | | |
 | T08 Madde detayı | bekliyor | | |
 | T09 Km giriş | bekliyor | | |
@@ -339,5 +339,40 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   araba eşleşmiş olduğu halde yanlış yönlendirme. Yeni kanal metodu bu iki durumu
   ayırmayı mümkün kılıyor; **ayrı metin T06'da yazılacak** (`strings_tr`).
   Testte gerçekten yaşandı: Bluetooth kapalıyken 0 cihaz, açıkken 6 cihaz.
+
+### T06
+- **`lib/dev/bridge_check_screen.dart` silindi** (T05'te geçici konmuştu); `app.dart`
+  artık `vehicles` boşsa kurulum, doluysa ana ekran gösteriyor.
+- **Drift + `flutter_test` tuzağı, bir saat kaybettirdi, çözümü not ediyorum.**
+  Drift bir sorgu akışı iptal edilince `StreamQueryStore.markAsClosed` içinde
+  **sıfır süreli bir `Timer`** kurar. Widget testinde `ProviderScope` test sonunda
+  dispose olduğunda bu zamanlayıcı asılı kalıyor; `flutter_test` "A Timer is still
+  pending even after the widget tree was disposed" diyor **ve koşucu kilitleniyor**
+  (10 dk timeout, çıktı yok). Çözüm: her widget testinin sonunda ağacı söküp
+  **süre vererek** bir frame çevirmek:
+  ```dart
+  await tester.pumpWidget(const SizedBox.shrink());
+  await tester.pump(const Duration(milliseconds: 10));
+  ```
+  `tester.pump()` süresiz çağrıldığında sahte saati ilerletmediği için sıfır süreli
+  zamanlayıcıyı tetiklemez — süre vermek şart. `test/features/setup_widget_test.dart`
+  içindeki `disposeTree` yardımcısı bu; sonraki widget testleri de kullanmalı.
+- **Süresiz animasyon (`CircularProgressIndicator`) `pumpAndSettle`'ı sonsuza kilitler.**
+  Cihaz listesi yükleniyor durumunda spinner vardı, kaldırıldı. Kod tabanında hiç
+  `CircularProgressIndicator` yok; ekleyen olursa widget testleri asılır.
+- **SnackBar'ın 4 sn'lik zamanlayıcısı** da test sonunda asılı kalıyor; uyarı
+  doğrulayan testler `tester.pump(const Duration(seconds: 5))` ile süresini doldurmalı.
+- **`lib/features/home/home_screen.dart` geçici yer tutucu.** Gerçek Kontroller ekranı
+  T07'de; şu an yalnız araç adı, km ve bölüm sayıları var. T06'nın "Başla sonrası ana
+  ekrana geçilir" kriteri için gerekliydi.
+- **`lib/core/widgets/tr_date_field.dart` eklendi** (02-mimari §2'de yok), K-21 gereği.
+  Ayrıştırma (`parseTrDateParts`) saf tutuldu, widget olmadan test ediliyor.
+- **`lib/data/repositories/item_list_repo.dart` ve `settings_repo.dart`, `vehicle_repo.dart`
+  eklendi** — denetim md. 29 (repository katmanı ticket'sızdı). `providers.dart` da
+  02-mimari §9'a göre kuruldu.
+- `main.dart` açılış sırasının 3. (drain) ve 4. (launch action) adımları hâlâ yok;
+  02-mimari §10 T13/T15'te tamamlanacak.
+- **`SetupController.finish()` `finished` bayrağıyla korunuyor**: ikinci çağrı ikinci
+  araç yazmıyor (tek araç, K-01). Testi var.
 
 ## Bilinen sorunlar

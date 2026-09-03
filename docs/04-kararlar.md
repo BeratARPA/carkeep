@@ -113,3 +113,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: Yedek bildirim yalnız `last_notified_day` (ve `prev_last_notified_day`) yazar; `last_notified_at`'e dokunmaz. Bu alan yalnız gerçek kopma bildirimlerinde set edilir.
 - Gerekçe: `last_notified_at`'in tek işi K-06'nın grace penceresini ölçmek; yedek bildirimin bir kopmayla ilgisi yok, dolayısıyla pencere açmamalı. "Günde en fazla bir" kuralı `last_notified_day` üzerinden çalıştığı için bozulmaz.
 - Sonuç: 01-spec §7.2 ve 07 §5 `runOnce` buna göre uygulanır (T14).
+
+## K-21 Tarih girişi kendi bileşenimiz, `flutter_localizations` yok
+- Bağlam: Kurulum 5. adımı ve "Tarih/km düzelt" (01-spec §3.4) geçmiş bir tarih ister. Flutter'ın `showDatePicker`'ı Türkçe görünmek için `flutter_localizations` ister; o da `intl`'i dolaylı bağımlılık olarak getirir (K-09 `intl` kullanmıyor).
+- Karar: `lib/core/widgets/tr_date_field.dart` — gün / ay / yıl üçlüsü, ay açılır listede `format_tr` kısaltmalarıyla (Oca…Ara). Bugünden ileri tarih seçilemez. `showDatePicker` ve `flutter_localizations` kullanılmaz.
+- Gerekçe: Girilen tarihler tipik olarak aylar veya yıllar öncesi (triger 5 yıl, muayene 2 yıl, poliçe 1 yıl); takvimde geriye kaydırmaktan hızlı. Yeni bağımlılık yok, her metin `strings_tr`'de kalır.
+- Sonuç: T06 adım 5 ve T08 düzeltme diyaloğu bu bileşeni kullanır.
