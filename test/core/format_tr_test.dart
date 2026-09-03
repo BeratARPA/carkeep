@@ -1,3 +1,4 @@
+import 'package:carkeep/core/constants.dart';
 import 'package:carkeep/core/format_tr.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -246,6 +247,57 @@ void main() {
           refYear: 2026,
         ),
         'Henüz kopma görülmedi',
+      );
+    });
+  });
+
+  group('lastTripReason (K-24)', () {
+    String r(String? note, {bool counted = true, bool notified = false}) =>
+        lastTripReason(note: note, counted: counted, notified: notified);
+
+    test('motorun ürettiği yedi not karşılığını buluyor', () {
+      expect(r(kTripNoteOk), 'bildirim gönderildi');
+      expect(r(kTripNoteShortTrip, counted: false), 'sürüş sayılmadı');
+      expect(r(kTripNoteOncePerDay), 'bugün zaten hatırlatıldı');
+      expect(r(kTripNoteNoOverdue), 'gecikmiş yoktu');
+      expect(r(kTripNoteSnoozed), 'ertelenmişti');
+      expect(r(kTripNoteReconnect, counted: false), 'geri bağlandı, sürüş sürüyor');
+      expect(r(kTripNoteNoSnapshot), 'veri hazır değildi');
+      expect(r(kTripNoteNoPermission), 'bildirim izni yok');
+    });
+
+    test('not yoksa bayraklara düşüyor', () {
+      expect(r(null, counted: false), 'sürüş sayılmadı');
+      expect(r(null, notified: true), 'bildirim gönderildi');
+      expect(r(null), 'bildirim yok');
+      expect(r('bilinmeyen_not'), 'bildirim yok');
+    });
+
+    test('06 §3 adım 4 metni', () {
+      expect(
+        lastTripText(
+          disconnectedAt: DateTime(2026, 9, 3, 18, 5),
+          durationMin: 8,
+          counted: true,
+          notified: false,
+          refYear: 2026,
+          note: kTripNoteOncePerDay,
+        ),
+        'Son kopma: 3 Eyl 18:05, 8 dk sürüş, bugün zaten hatırlatıldı',
+      );
+    });
+
+    test('06 §3 adım 6 metni (reconnect)', () {
+      expect(
+        lastTripText(
+          disconnectedAt: DateTime(2026, 9, 3, 18, 5),
+          durationMin: 8,
+          counted: false,
+          notified: false,
+          refYear: 2026,
+          note: kTripNoteReconnect,
+        ),
+        'Son kopma: 3 Eyl 18:05, 8 dk, geri bağlandı, sürüş sürüyor',
       );
     });
   });

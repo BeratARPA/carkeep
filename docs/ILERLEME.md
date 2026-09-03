@@ -38,7 +38,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T09 Km giriş | bitti | `feat(T09)` | 341 test yeşil |
 | T10 Geçmiş | bitti | `feat(T10)` | 357 test yeşil; K-23 ve şema v2 dahil |
 | T11 Ayarlar | bitti | `feat(T11)` | 425 test yeşil; cihazda doğrulandı |
-| T12 Receiver, motor, bildirim | bekliyor | | kontrol noktası |
+| T12 Receiver, motor, bildirim | bitti | `feat(T12)` | 436 Dart + 58 Kotlin testi; **kontrol noktası: gerçek araba protokolü bekliyor** |
 | T13 Pending events ve Bluetooth durumu | bekliyor | | |
 | T14 DailyCheckWorker | bekliyor | | |
 | T15 Snapshot senkronu ve yaşam döngüsü | bekliyor | | |
@@ -69,6 +69,22 @@ sürüldü, sonuçlar hem ekrandan hem `dumpsys`/`shared_prefs`'ten doğrulandı
 | 13 | `scheduleDailyWorker` | Log: `daily check scheduled in 34 min` (18:25 + 34 = **19:00**, hedef saat doğru). `dumpsys jobscheduler`: `#DailyCheckWorker#` `RUNNABLE`, `RUN_ANY_IN_BACKGROUND allowed` ✓ |
 | + | `onNewIntent` → `onLaunchAction` | Uygulama açıkken `--es carkeep_action overdue` → Dart'a `overdue` ulaştı ✓ |
 | + | Soğuk başlatma | `force-stop` sonrası aynı intent → `getLaunchAction: overdue` ✓ |
+
+### T12 motor kontrolü (debug simülasyonu) — 2026-09-03, SM-A556E / Android 16
+Gerçek araba protokolünden önce, Ayarlar → Geliştirici üzerinden. Test için
+"Silecek suyu" geçici gecikmiş yapıldı (1 Tem 2026), sonra düzeltme kaydı Geçmiş'ten
+silinerek eski hâline döndürüldü.
+
+| # | Adım | Sonuç |
+|---|---|---|
+| 1 | Kopmayı simüle et (2 dk) | `Skip(short_trip)`, bildirim yok; tanı satırı "3 Eyl 23:04, 2 dk, sürüş sayılmadı" ✓ |
+| 2 | Kopmayı simüle et (25 dk) | Heads-up ≤1 sn. `dumpsys`: `channel=reminders importance=4 category=reminder flags=ONLY_ALERT_ONCE\|AUTO_CANCEL actions=2`, başlık "1 kontrol gecikti", metin "Silecek suyu", simge kendi drawable'ımız ✓ |
+| 3 | Aynı gün ikinci 25 dk | `Skip(once_per_day)`, bildirim yok; tanı "25 dk sürüş, bugün zaten hatırlatıldı" (06 §3 adım 4 metni) ✓ |
+| 4 | Bildirime dokunma (uygulama Ayarlar'da açık) | **İlk denemede sekme değişmedi** → `onLaunchAction` dinleyicisi eklendi; sonra Kontroller'e geçip Gecikmiş vurgulandı ✓ |
+| 5 | "Yarın" | `global_snooze_until_day=2026-09-04`, `last_notified_at=-1`, bildirim kapandı, pending `snooze` yazıldı ✓ |
+| 6 | Ertelemeden sonra 25 dk | `Skip(snoozed)` ✓ |
+| 7 | Tepside bildirim varken yeni bildirim | K-25 öncesi sessiz güncelleme olurdu; iptal-önce-bas ile heads-up tekrar çıktı ✓ |
+| 8 | `pending_events_json` | Üç trip olayı doğru alanlarla (`counted`/`notified`/`note`/`overdueCount`) sırayla birikti ✓ |
 
 ### T12 gerçek araba protokolü (06 §3)
 | Tarih | Adım | Sonuç | Kopma → bildirim (sn) | Not |
@@ -173,10 +189,13 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
     üretiyor (`short_trip`, `no_snapshot`, `snoozed`, `no_overdue`, `once_per_day`,
     `reconnect`, `ok`). 06 §3 adım 4 spec'te olmayan bir metin bekliyor ("Bugün zaten
     hatırlatıldı"). Ayrıca kaynağı §3.7'de Kotlin prefs, T13'te Drift `trips` tablosu.
+    → **T12'de kapandı, K-24.** Sekiz nota sekiz metin; kaynak T13'te `trips`'e geçecek.
 18. **`fallback` pending event'i hangi tabloya yazılacak belli değil.** `trips.note`
     listesinde `fallback` var ama event `connected_at`/`duration_min`/`counted` gibi
     NOT NULL sütunları dolduramıyor.
 19. **`trips.note` izin verilen değer listesi `no_snapshot`'ı içermiyor** (02-mimari §3).
+    → **T12'de kapandı, K-24.** Sözlük sekiz değer: `no_snapshot` ve `no_permission` eklendi.
+    02-mimari §3'ün satırı düzeltilmedi (kit dokümanı); K-24 onu geçersiz kılıyor.
 
 #### Çelişki — öncelik kuralı çözmüyor
 20. **`openBatteryOptimizationSettings` iki farklı Intent.** 02 §6:
@@ -189,8 +208,9 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 22. **06 §2 R1–R3 testleri JVM'de Robolectric'siz yazılamaz.** Test ettikleri `onConnected`
     `Context`, `SharedPreferences` ve `NotificationManager` kullanıyor; 07 §9 yalnız
     `evaluateDisconnect` ve `Snapshot.parse`'ın saf kalacağını söylüyor.
-    → **Karar gerekiyor** (öneri: `onConnected` mantığı da saf bir `evaluateConnect(...)
-    → ConnectDecision` fonksiyonuna ayrılsın, yan etkiler ayrı kalsın).
+    → **T12'de kapandı.** `evaluateConnect(state, graceMinutes, now, previousTripConnectedAt)
+    → ConnectDecision` saf; R1–R3 ve grace sınır durumları JVM testinde. Yan etkiler
+    `onConnected`'ta kaldı.
 23. **Şablon önceliği ters yazılmış.** 03-kontrol-listesi "çelişki olursa JSON düzeltilir,
     doküman değil" diyor (doküman kazanır); CLAUDE.md "Kontrol şablonu **yalnız**
     `checklist_seed.json`" diyor (JSON kazanır). Bugün içerik eşleşiyor, tek fark 24. madde.
@@ -477,5 +497,45 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   bağlanır"). `kDebugMode` altında görünüyorlar ama `onTap` null; T12'de bağlanacak.
 - Şablon maddesinde ölçüm tipi kilitli ve "Sil" yok; kullanıcı maddesi tam
   düzenlenebiliyor ve onayla siliniyor (kayıtları FK cascade ile gidiyor).
+
+### T12
+- **Denetim md. 4 kapandı, iki yarısıyla.** `showOverdue` artık `Boolean` dönüyor ve durum
+  (`last_notified_*`, `trip.notified`) yalnız bildirim gerçekten basıldıysa yazılıyor.
+  İkinci yarısı bağımsız denetimde çıktı: çalışma zamanı izni verili olsa da **kanal
+  kapalıysa** `notify` sessizce düşüyor ve hata atmıyordu; `showOverdue` `true` dönüp o günü
+  `once_per_day` ile yakıyordu. `areNotificationsEnabled` kontrolü eklendi (K-25).
+- **K-25: bildirim basılmadan önce iptal ediliyor.** Sabit id 1001 + `setOnlyAlertOnce`
+  birlikte, tepside duran eski bildirim varken yenisini "güncelleme" yapıyor ve Android
+  heads-up'ı, sesi, titreşimi bastırıyor. Kullanıcı dünkü bildirimi silmediyse bugünkü
+  hatırlatma sessizce düşerdi — ürünün tek vaadi bu. Cihazda doğrulandı.
+- **K-24: not sözlüğü sekiz değere çıktı** (`no_snapshot` denetim md. 19, `no_permission`
+  yeni) ve tanı satırı sekizini de karşılıyor (denetim md. 17). 06 §3 adım 4'ün beklediği
+  "bugün zaten hatırlatıldı" metni cihazda göründü.
+- **Denetim md. 22 kapandı.** `onConnected`'ın kararı saf `evaluateConnect`'e ayrıldı; 06 §2
+  R1–R3 artık Robolectric'siz JVM testi. Aynı şekilde araç filtresi `addressMatches` olarak
+  saflaştırıldı.
+- **`onLaunchAction` dinleyicisi yoktu.** Kotlin uygulama açıkken bildirime dokunulduğunda
+  kanaldan çağırıyordu ama Dart tarafında dinleyen kimse yoktu: cihazda bildirime dokununca
+  uygulama öne geliyor, ama sekme değişmiyordu (T12 kabul kriteri). `CarKeepApp` artık
+  dinliyor; vurgu anahtarı `launchActionSeqProvider` ile sayaçlı, böylece ikinci dokunuşta
+  animasyon tekrar oynuyor.
+- **Tarih alanında iki hata (T11'den, cihaz testinde çıktı).** (1) Yıl yalnız *ipucuydu*:
+  kutu "2026" yazdığı için dolu görünüyor, alan boş olduğundan gün+ay girmek "Tarih gir"
+  hatası veriyordu — hangi alanın eksik olduğu anlaşılmıyordu. Yıl artık gerçek değerle
+  açılıyor. (2) Ay açılır kutusu dar diyalogda "Tem"i "Te" diye kırpıyordu.
+- **`buildFeatures { buildConfig = true }`** eklendi; AGP 8+ `BuildConfig.DEBUG`i açıkça
+  istemeden üretmiyor, `debugSimulate` buna dayanıyor.
+- **Bağımsız denetim** (3 boyut + 3 karşı-denetçi, 13 aday bulgu → 5 doğrulandı). Kalan
+  üç doğrulanmış bulgu bu notlarla kapandı; iki tanesi (K-24/K-25 kayıtları) belge eksiğiydi.
+- Cihazda doğrulandı (SM-A556E, Android 16): 2 dk → `short_trip`, bildirim yok; 25 dk →
+  heads-up ≤1 sn; ikinci 25 dk → `once_per_day`; bildirime dokunma → Kontroller'de vurgu;
+  "Yarın" → `global_snooze_until_day` yazıldı, bildirim kapandı, sonraki simülasyon
+  `snoozed`. Test için "Silecek suyu" geçici olarak gecikmiş yapıldı, sonra düzeltme kaydı
+  Geçmiş'ten silinip eski hâline döndürüldü.
+- **Açık kalan**: "Aç" eylem düğmesi bildirimi tepsiden düşürmüyor (gövdeye dokunmak
+  `setAutoCancel` ile düşürüyor). K-25'in iptal-önce-bas düzeltmesi sonucu zararsız;
+  T15'te `cancelNotification` bağlanınca birlikte ele alınacak (denetim md. 12).
+- **Açık kalan**: uygulama simgesi hâlâ Flutter varsayılanı (`ic_launcher`); bildirimin
+  durum çubuğu simgesi kendi vektörümüz. Hiçbir ticket kapsamında değil, T18'de bakılmalı.
 
 ## Bilinen sorunlar

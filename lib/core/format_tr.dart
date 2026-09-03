@@ -2,6 +2,7 @@
 /// Metin parçaları `strings_tr.dart` içindedir; bu dosya yalnız birleştirir.
 library;
 
+import 'constants.dart';
 import 'strings_tr.dart';
 
 // ---------------------------------------------------------------------------
@@ -221,6 +222,7 @@ String intervalText({
 
 /// `Son kopma: 3 Eyl 14:30, 25 dk sürüş, bildirim gönderildi`
 /// `Son kopma: 3 Eyl 14:30, 2 dk, sürüş sayılmadı`
+/// `Son kopma: 3 Eyl 14:30, 25 dk sürüş, bugün zaten hatırlatıldı`
 /// `Henüz kopma görülmedi`
 String lastTripText({
   required DateTime? disconnectedAt,
@@ -228,6 +230,7 @@ String lastTripText({
   required bool counted,
   required bool notified,
   required int refYear,
+  String? note,
 }) {
   if (disconnectedAt == null) {
     return S.lastTripNone;
@@ -235,13 +238,42 @@ String lastTripText({
   final String when =
       '${formatDate(disconnectedAt, refYear: refYear)} '
       '${formatTime(disconnectedAt)}';
-  if (!counted) {
-    return '${S.lastTripPrefix} $when, $durationMin ${S.unitMinutesShort}, '
-        '${S.lastTripNotCounted}';
+  final String duration = counted
+      ? '$durationMin ${S.lastTripMinutesSuffix}'
+      : '$durationMin ${S.unitMinutesShort}';
+  return '${S.lastTripPrefix} $when, $duration, '
+      '${lastTripReason(note: note, counted: counted, notified: notified)}';
+}
+
+/// Tanı satırının son parçası (K-24: sekiz `note`, sekiz metin). Motorun
+/// yazdığı `note` bilinmiyorsa `counted`/`notified` bayraklarına düşer.
+String lastTripReason({
+  required String? note,
+  required bool counted,
+  required bool notified,
+}) {
+  switch (note) {
+    case kTripNoteOk:
+      return S.lastTripNotified;
+    case kTripNoteShortTrip:
+      return S.lastTripNotCounted;
+    case kTripNoteOncePerDay:
+      return S.lastTripOncePerDay;
+    case kTripNoteNoOverdue:
+      return S.lastTripNoOverdue;
+    case kTripNoteSnoozed:
+      return S.lastTripSnoozed;
+    case kTripNoteReconnect:
+      return S.lastTripReconnect;
+    case kTripNoteNoSnapshot:
+      return S.lastTripNoSnapshot;
+    case kTripNoteNoPermission:
+      return S.lastTripNoPermission;
   }
-  final String tail = notified ? S.lastTripNotified : S.lastTripNoNotification;
-  return '${S.lastTripPrefix} $when, $durationMin '
-      '${S.lastTripMinutesSuffix}, $tail';
+  if (!counted) {
+    return S.lastTripNotCounted;
+  }
+  return notified ? S.lastTripNotified : S.lastTripNoNotification;
 }
 
 /// `5 dk`

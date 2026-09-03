@@ -44,7 +44,12 @@ class _TrDateFieldState extends State<TrDateField> {
   void initState() {
     super.initState();
     _day = TextEditingController(text: widget.value?.day.toString() ?? '');
-    _year = TextEditingController(text: widget.value?.year.toString() ?? '');
+    // Yıl gerçek bir değerle açılır. Önceden yalnız ipucuydu: kutu doluymuş
+    // gibi görünüyor, alan boş kaldığı için "Tarih gir" hatası veriyordu ve
+    // hangi alanın eksik olduğu anlaşılmıyordu (cihaz testi bulgusu).
+    _year = TextEditingController(
+      text: (widget.value?.year ?? widget.today.year).toString(),
+    );
     _month = widget.value?.month;
   }
 
@@ -68,7 +73,6 @@ class _TrDateFieldState extends State<TrDateField> {
 
   @override
   Widget build(BuildContext context) {
-    final int currentYear = widget.today.year;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
@@ -101,12 +105,19 @@ class _TrDateFieldState extends State<TrDateField> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              flex: 4,
+              // Dar diyalogda "Tem" → "Te" kırpılıyordu: açılır kutu ok
+              // simgesine ve varsayılan yatay boşluğa yer ayırıyor.
+              flex: 5,
               child: DropdownButtonFormField<int>(
                 key: const Key('date_month'),
                 initialValue: _month,
                 isExpanded: true,
-                decoration: const InputDecoration(),
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                ),
                 hint: const Text(S.dateMonth),
                 items: <DropdownMenuItem<int>>[
                   for (int m = 1; m <= 12; m++)
@@ -132,7 +143,12 @@ class _TrDateFieldState extends State<TrDateField> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(4),
                 ],
-                decoration: InputDecoration(hintText: '$currentYear'),
+                decoration: const InputDecoration(
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 12,
+                  ),
+                ),
                 onChanged: (_) => _emit(),
               ),
             ),

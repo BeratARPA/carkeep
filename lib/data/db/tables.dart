@@ -106,7 +106,8 @@ class Trips extends Table {
   IntColumn get overdueCount =>
       integer().withDefault(const Constant<int>(0))();
 
-  /// `short_trip|no_snapshot|no_overdue|once_per_day|snoozed|reconnect|fallback|ok`
+  /// K-24: `short_trip|no_snapshot|no_permission|no_overdue|once_per_day|`
+  /// `snoozed|reconnect|fallback|ok`
   TextColumn get note => text().nullable()();
 }
 

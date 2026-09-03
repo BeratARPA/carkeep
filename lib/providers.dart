@@ -224,6 +224,12 @@ final StateProvider<String?> launchActionProvider = StateProvider<String?>(
   (Ref ref) => null,
 );
 
+/// Her bildirim dokunuşunda artar. Vurgu animasyonu tek seferlik olduğu için
+/// aynı değer ikinci kez gelince tekrar oynaması bu sayaçla sağlanıyor.
+final StateProvider<int> launchActionSeqProvider = StateProvider<int>(
+  (Ref ref) => 0,
+);
+
 // ------------------------------------------------------------ snapshot
 
 /// Debounce süresi; test bunu `Duration.zero` ile override eder.

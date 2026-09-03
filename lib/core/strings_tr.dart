@@ -97,6 +97,7 @@ abstract final class S {
   static const String notGranted = 'Verilmedi';
   static const String optional = 'İsteğe bağlı';
   static const String skipForNow = 'Sonra seçerim';
+  static const String close = 'Kapat';
 
   // ------------------------------------------ kurulum (01-spec §3.1)
   /// 1. adım
@@ -309,6 +310,15 @@ abstract final class S {
   static const String lastTripNotCounted = 'sürüş sayılmadı';
   static const String lastTripNoNotification = 'bildirim yok';
 
+  /// K-24: motor sekiz ayrı `note` üretiyor, 01-spec §3.7 yalnız üçünü
+  /// örnekliyor; 06 §3 adım 4 "Bugün zaten hatırlatıldı" bekliyor.
+  static const String lastTripOncePerDay = 'bugün zaten hatırlatıldı';
+  static const String lastTripNoOverdue = 'gecikmiş yoktu';
+  static const String lastTripSnoozed = 'ertelenmişti';
+  static const String lastTripReconnect = 'geri bağlandı, sürüş sürüyor';
+  static const String lastTripNoSnapshot = 'veri hazır değildi';
+  static const String lastTripNoPermission = 'bildirim izni yok';
+
   // --------------------------------------------------------- hatırlatma
   static const String settingsSectionRules = 'Hatırlatma';
   static const String ruleOnlyOverdue = 'Sadece gecikmiş varsa';
@@ -391,6 +401,10 @@ abstract final class S {
   static const String debugSimulateConnect = 'Bağlanmayı simüle et';
   static const String debugShowSnapshot = "Snapshot'ı göster";
   static const String debugRunFallback = 'Yedek işi şimdi çalıştır';
+  static const String debugPendingTicket = 'T14 ile gelecek.';
+  static const String debugDone = 'Simüle edildi';
+  static const String debugNoCar = 'Araç Bluetooth cihazı seçilmedi';
+  static const String debugSnapshotEmpty = 'Snapshot henüz yazılmadı';
 
   // ------------------------------------------------------------- hatalar
   static const String errSeedLoad = 'Şablon dosyası okunamadı.';

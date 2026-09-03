@@ -18,7 +18,6 @@ import io.flutter.plugin.common.MethodChannel
 
 /**
  * Tek `MethodChannel` (K-05). Metot listesi 02-mimari 6.
- * `debug*` metotlari T12'de eklenir.
  */
 class MainActivity : FlutterActivity() {
 
@@ -172,6 +171,38 @@ class MainActivity : FlutterActivity() {
 
             "cancelNotification" -> {
                 Notifications.cancel(this)
+                result.success(null)
+            }
+
+            // 02-mimari 6: yalniz debug derlemede. Receiver'i atladigi icin
+            // arac adresi kontrolunu burada kendisi yapar (01-spec 7.1 adim 3).
+            "debugSimulate" -> {
+                if (!BuildConfig.DEBUG) {
+                    result.error("NOT_DEBUG", "Yalniz debug derlemede", null)
+                    return
+                }
+                val event = call.argument<String>("event")
+                val minutes = call.argument<Int>("minutes") ?: 0
+                val address = prefs.carAddress
+                if (address == null || !ReminderEngine.matchesCar(prefs, address)) {
+                    result.error("NO_CAR", "Arac Bluetooth cihazi secilmedi", null)
+                    return
+                }
+                val now = System.currentTimeMillis()
+                when (event) {
+                    "connect" -> ReminderEngine.onConnected(this, prefs, now)
+                    "disconnect" -> {
+                        if (minutes > 0) {
+                            prefs.connectedAt = now - minutes * 60_000L
+                        }
+                        ReminderEngine.onDisconnected(this, prefs, now)
+                    }
+                    else -> {
+                        result.error("BAD_ARGS", "event: connect|disconnect", null)
+                        return
+                    }
+                }
+                Log.d(TAG, "debugSimulate $event ${minutes}dk")
                 result.success(null)
             }
 

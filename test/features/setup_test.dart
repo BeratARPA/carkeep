@@ -42,6 +42,11 @@ class FakeBridge extends PlatformBridge {
   BluetoothState btState = BluetoothState.unknown;
   String? snapshotJson;
 
+  /// Geliştirici bölümü testleri için.
+  final List<({String event, int minutes})> simulations =
+      <({String event, int minutes})>[];
+  Object? simulateThrows;
+
   @override
   Future<bool> hasBluetoothPermission() async => bluetooth;
 
@@ -103,6 +108,15 @@ class FakeBridge extends PlatformBridge {
   Future<void> clearEngine() async {
     clearEngineCalls++;
     snapshotJson = null;
+  }
+
+  @override
+  Future<void> debugSimulate({required String event, int minutes = 0}) async {
+    final Object? err = simulateThrows;
+    if (err != null) {
+      throw err;
+    }
+    simulations.add((event: event, minutes: minutes));
   }
 }
 

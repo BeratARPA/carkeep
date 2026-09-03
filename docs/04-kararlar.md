@@ -138,3 +138,17 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: Düzeltme de bir `check_logs` satırı yazar, ama `kind = 'fix'` ile işaretlenir; Geçmiş ekranında "düzeltme" olarak görünür. "Yaptım" kayıtları `kind = 'done'`.
 - Gerekçe: Silme mantığı hiç değişmeden her zaman doğru çalışır (tek doğruluk kaynağı loglar). Kullanıcı girdiği bilgiyi Geçmiş'te görür ve geri alabilir; bugün göremiyor. §3.4'ün "log satırı oluşturulmaz" cümlesinden bilinçli sapma.
 - Sonuç: `check_logs.kind` sütunu eklendi ve `check_logs.km` **nullable** yapıldı (gün bazlı bir maddenin düzeltmesinde km yoktur; uydurmak yerine boş bırakılır). `schemaVersion` 1 → 2, `MigrationStrategy.onUpgrade` ile `TableMigration`.
+
+## K-24 Sürüş kaydı notları sekiz değere çıktı, tanı satırı hepsini karşılıyor
+- Bağlam: 02-mimari §3 `trips.note` için yedi değer sayıyor (`short_trip|no_overdue|once_per_day|snoozed|reconnect|fallback|ok`); motorun ürettiği `no_snapshot` listede yok (denetim md. 19). 01-spec §3.7 tanı satırı için üç örnek veriyor, ama motor yedi farklı `note` üretiyor ve 06 §3 adım 4 spec'te olmayan bir metin bekliyor: "Bugün zaten hatırlatıldı" (denetim md. 17).
+- Karar:
+  - `trips.note` sözlüğü **sekiz** değer: yedi belgeli değere `no_snapshot` (denetim md. 19) ve `no_permission` eklenir. `no_permission` yeni: bildirim izni yokken ya da kanal kapalıyken bildirim basılamadığını, dolayısıyla durumun yazılmadığını gösterir (denetim md. 4).
+  - Tanı satırının son parçası `note`'a bakar; `note` yoksa `counted`/`notified` bayraklarına düşer. Metinler: `ok` → "bildirim gönderildi", `short_trip` → "sürüş sayılmadı", `once_per_day` → "bugün zaten hatırlatıldı", `no_overdue` → "gecikmiş yoktu", `snoozed` → "ertelenmişti", `reconnect` → "geri bağlandı, sürüş sürüyor", `no_snapshot` → "veri hazır değildi", `no_permission` → "bildirim izni yok".
+- Gerekçe: §3.7'nin üç satırı örnek, tam liste değil; 06 §3 adım 4 zaten dördüncüsünü isteyerek bunu doğruluyor. Kullanıcı "neden bildirim gelmedi" sorusunun cevabını tek satırda görmeli, yoksa tanı satırının işi kalmaz.
+- Sonuç: Kotlin `ReminderEngine.NOTE_*`, Dart `constants.kTripNote*`, `format_tr.lastTripReason`, `strings_tr.lastTrip*`.
+
+## K-25 Bildirim basılmadan önce iptal edilir; kanal kapalıysa "basıldı" sayılmaz
+- Bağlam: 01-spec §3.8 hem sabit id 1001 ("yenisi eskisini değiştirir") hem `setOnlyAlertOnce(true)` istiyor. İkisi birlikte, tepside duran eski bildirim varken yeni bildirimi **güncelleme** yapar: Android sesi, titreşimi ve heads-up'ı bastırır. Kullanıcı dünkü bildirimi silmediyse bugün arabadan indiğinde hatırlatma sessizce tepsiye düşer — ürünün tek vaadi olan "iniş anında heads-up" kaybolur (06 §3 adım 11). Ayrıca `notify` kanal kapalıyken sessizce düşüyor ve hata atmıyor; `showOverdue` yine `true` dönüyordu, motor da basılmamış bildirimi basılmış sayıp `once_per_day` ile o günü yakıyordu (denetim md. 4'ün ikinci yarısı, 07 §8).
+- Karar: `showOverdue` (a) `areNotificationsEnabled` (uygulama + kanal) kontrolünden geçmeden basmaz ve `false` döner, (b) `notify`'dan hemen önce aynı id'yi `cancel` eder.
+- Gerekçe: §3.8'in iki isteği de korunuyor (id sabit, güncelleme sessiz); yalnız gerçekten yeni bir hatırlatma olayında bildirim sıfırdan basıldığı için uyarı çalışıyor. Kanal kontrolü olmadan §7.1 adım 8'in "bildirimi bas" adımı yalan söylüyor.
+- Sonuç: `Notifications.showOverdue`; not `no_permission` (K-24).

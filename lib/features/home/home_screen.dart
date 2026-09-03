@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/constants.dart';
 import '../../core/strings_tr.dart';
 import '../../core/theme.dart';
 import '../../data/platform/platform_bridge.dart';
@@ -59,7 +60,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final BluetoothState bt = ref.watch(bluetoothStateProvider);
     final int refYear = ref.watch(todayProvider).year;
     final String? launchAction = ref.watch(launchActionProvider);
-    final bool highlightOverdue = launchAction == 'overdue';
+    final bool highlightOverdue = launchAction == kLaunchActionOverdue;
+    // Aynı eylem ikinci kez gelince vurgu tekrar oynasın diye anahtar sayaçlı.
+    final int highlightSeq = ref.watch(launchActionSeqProvider);
 
     return Scaffold(
       body: SafeArea(
@@ -87,7 +90,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ref.read(batteryBannerDismissedProvider.notifier).dismiss()
                     : null,
               ),
-            ..._sections(context, grouped, refYear, highlightOverdue),
+            ..._sections(
+              context,
+              grouped,
+              refYear,
+              highlightOverdue,
+              highlightSeq,
+            ),
           ],
         ),
       ),
@@ -99,6 +108,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     GroupedItems grouped,
     int refYear,
     bool highlightOverdue,
+    int highlightSeq,
   ) {
     final List<Widget> out = <Widget>[];
 
@@ -125,7 +135,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
       out.add(
         highlight
-            ? _OverdueHighlight(key: const Key('overdue_highlight'), child: block)
+            ? _OverdueHighlight(
+                key: Key('overdue_highlight_$highlightSeq'),
+                child: block,
+              )
             : block,
       );
     }

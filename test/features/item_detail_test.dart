@@ -657,6 +657,45 @@ void main() {
       await disposeTree(tester);
     });
 
+    testWidgets('yıl alanı bugünün yılıyla dolu açılıyor', (
+      WidgetTester tester,
+    ) async {
+      // Cihaz testi bulgusu: yıl yalnız ipucuydu; kutu dolu görünüyor ama alan
+      // boş olduğu için gün+ay girmek "Tarih gir" hatası veriyordu.
+      final int v = await seedVehicle();
+      final int id = await itemId(v, 'oil_level');
+      await openDetail(tester, v, 'oil_level');
+
+      await tester.tap(find.byKey(const Key('detail_fix')));
+      await tester.pumpAndSettle();
+
+      expect(
+        tester
+            .widget<TextField>(find.byKey(const Key('date_year')))
+            .controller!
+            .text,
+        '${today.year}',
+      );
+
+      // Ay açılır listesine dokunmadan: madde tarihsiz, ay boş; yalnız gün
+      // girip kaydetmek hâlâ eksik tarih. Ayı da seçince kayıt geçiyor.
+      await tester.enterText(find.byKey(const Key('date_day')), '2');
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('date_month')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Eyl').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('fix_save')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('fix_error')), findsNothing);
+      expect((await db.itemDao.getById(id))!.lastDoneDay, '2026-09-02');
+
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpAndSettle();
+      await disposeTree(tester);
+    });
+
     testWidgets('düzeltme diyaloğu ileri tarih kabul etmiyor', (
       WidgetTester tester,
     ) async {

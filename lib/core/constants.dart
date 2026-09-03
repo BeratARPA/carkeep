@@ -87,8 +87,43 @@ const int kAssumedKmPerDay = 50;
 const double kTirePressureDeviationBar = 0.3;
 
 // ---------------------------------------------------------------------------
+// Sürüş kaydı notları (K-24; Kotlin `ReminderEngine.NOTE_*` ile aynı)
+// ---------------------------------------------------------------------------
+
+/// Bildirim basıldı.
+const String kTripNoteOk = 'ok';
+
+/// Sürüş `minTripMinutes`'ten kısaydı; sürüş sayılmadı.
+const String kTripNoteShortTrip = 'short_trip';
+
+/// Snapshot yoktu (kurulum bitmemiş veya veri yazılmamış).
+const String kTripNoteNoSnapshot = 'no_snapshot';
+
+/// "Yarın" ile genel erteleme açıktı.
+const String kTripNoteSnoozed = 'snoozed';
+
+/// Gecikmiş madde yoktu (`onlyOverdue` açıkken).
+const String kTripNoteNoOverdue = 'no_overdue';
+
+/// O gün zaten bildirilmişti.
+const String kTripNoteOncePerDay = 'once_per_day';
+
+/// K-06: grace içinde geri bağlanıldı, sürüş devam ediyor sayıldı.
+const String kTripNoteReconnect = 'reconnect';
+
+/// Bildirim izni yoktu; bildirim basılamadı (denetim md. 4).
+const String kTripNoteNoPermission = 'no_permission';
+
+// ---------------------------------------------------------------------------
 // Diğer
 // ---------------------------------------------------------------------------
+
+/// Bildirime dokununca Kotlin'in gönderdiği eylem (01-spec §3.8).
+const String kLaunchActionOverdue = 'overdue';
+
+/// Geliştirici bölümündeki iki simülasyon (01-spec §3.7).
+const int kDebugLongTripMin = 25;
+const int kDebugShortTripMin = 2;
 
 /// Snapshot yazımı için debounce süresi (02-mimari §9).
 const Duration kSnapshotDebounce = Duration(milliseconds: 300);

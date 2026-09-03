@@ -10,6 +10,12 @@ android {
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
+    // `debugSimulate` yalniz debug derlemede calisir (02-mimari §6); AGP 8+'da
+    // BuildConfig ureticisi acikca istenmeli.
+    buildFeatures {
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17

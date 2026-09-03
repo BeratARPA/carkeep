@@ -16,6 +16,7 @@ import 'package:carkeep/providers.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -92,6 +93,17 @@ void main() {
         ],
         child: const CarKeepApp(),
       ),
+    );
+    await tester.pumpAndSettle();
+  }
+
+  /// Kotlin'in `onLaunchAction` çağrısını taklit eder.
+  Future<void> sendLaunchAction(WidgetTester tester, String action) async {
+    const StandardMethodCodec codec = StandardMethodCodec();
+    await tester.binding.defaultBinaryMessenger.handlePlatformMessage(
+      bridge.channel.name,
+      codec.encodeMethodCall(MethodCall('onLaunchAction', action)),
+      (ByteData? _) {},
     );
     await tester.pumpAndSettle();
   }
@@ -414,7 +426,35 @@ void main() {
     await setLastDone(v, 'oil_level', day: '2026-08-12');
     await pumpHome(tester, launchAction: 'overdue');
 
-    expect(find.byKey(const Key('overdue_highlight')), findsOneWidget);
+    // Anahtar sayaçlı: aynı eylem ikinci kez gelince vurgu tekrar oynasın.
+    expect(find.byKey(const Key('overdue_highlight_0')), findsOneWidget);
+    await disposeTree(tester);
+  });
+
+  testWidgets('uygulama açıkken bildirime dokununca sekme değişip vurgulanıyor', (
+    WidgetTester tester,
+  ) async {
+    // Cihaz testi bulgusu: Kotlin `onLaunchAction` gönderiyordu ama Dart
+    // tarafında dinleyen yoktu; uygulama açıkken sekme değişmiyordu.
+    final int v = await seedVehicle();
+    await keepOnly(v, <String>{'oil_level'});
+    await setLastDone(v, 'oil_level', day: '2026-08-12');
+    await pumpHome(tester);
+
+    // Başka sekmedeyken bildirime dokunuluyor.
+    await tester.tap(find.text(S.tabSettings));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('overdue_highlight_0')), findsNothing);
+
+    await sendLaunchAction(tester, 'overdue');
+
+    expect(find.byKey(const Key('overdue_highlight_1')), findsOneWidget);
+
+    // İkinci dokunuş yeni anahtarla yeni animasyon başlatıyor.
+    await sendLaunchAction(tester, 'overdue');
+    expect(find.byKey(const Key('overdue_highlight_2')), findsOneWidget);
+    expect(find.byKey(const Key('overdue_highlight_1')), findsNothing);
+
     await disposeTree(tester);
   });
 
@@ -424,7 +464,7 @@ void main() {
     await setLastDone(v, 'oil_level', day: '2026-08-12');
     await pumpHome(tester);
 
-    expect(find.byKey(const Key('overdue_highlight')), findsNothing);
+    expect(find.byKey(const Key('overdue_highlight_0')), findsNothing);
     await disposeTree(tester);
   });
 

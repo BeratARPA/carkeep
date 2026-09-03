@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/constants.dart';
 import 'core/strings_tr.dart';
 import 'core/theme.dart';
+import 'data/platform/platform_bridge.dart';
 import 'domain/models/vehicle.dart';
 import 'features/history/history_screen.dart';
 import 'features/home/home_controller.dart';
@@ -13,11 +15,44 @@ import 'providers.dart';
 
 /// Kök widget. `vehicles` boşsa kurulum sihirbazı, doluysa üç sekmeli
 /// uygulama kabuğu (01-spec §3.1, §3.2).
-class CarKeepApp extends ConsumerWidget {
+class CarKeepApp extends ConsumerStatefulWidget {
   const CarKeepApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CarKeepApp> createState() => _CarKeepAppState();
+}
+
+class _CarKeepAppState extends ConsumerState<CarKeepApp> {
+  /// `dispose` içinde `ref` okunamıyor; köprü açılışta yakalanıyor.
+  late final PlatformBridge _bridge = ref.read(platformBridgeProvider);
+
+  @override
+  void initState() {
+    super.initState();
+    // Uygulama açıkken bildirime dokunulursa Kotlin `onLaunchAction` çağırır:
+    // Kontroller sekmesine geç ve Gecikmiş bölümünü vurgula (01-spec §3.8).
+    _bridge.setLaunchActionHandler(_onLaunchAction);
+  }
+
+  @override
+  void dispose() {
+    _bridge.clearLaunchActionHandler();
+    super.dispose();
+  }
+
+  void _onLaunchAction(String action) {
+    if (!mounted) {
+      return;
+    }
+    ref.read(launchActionProvider.notifier).state = action;
+    ref.read(launchActionSeqProvider.notifier).state++;
+    if (action == kLaunchActionOverdue) {
+      ref.read(homeTabProvider.notifier).select(HomeTab.home);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Snapshot senkronu uygulama yaşadığı sürece ayakta (02-mimari §9).
     // Burada okunuyor ki `main.dart` kablolaması olmadan da (testler) çalışsın.
     ref.watch(snapshotSyncProvider);

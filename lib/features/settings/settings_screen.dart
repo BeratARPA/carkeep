@@ -16,6 +16,7 @@ import '../../providers.dart';
 import '../home/home_controller.dart';
 import '../item_edit/item_edit_page.dart';
 import '../setup/steps/step_permissions.dart';
+import 'debug_controller.dart';
 import 'device_picker_sheet.dart';
 import 'settings_controller.dart';
 import 'vehicle_sheets.dart';
@@ -145,6 +146,7 @@ class _BluetoothSection extends ConsumerWidget {
             counted: trip?.counted ?? false,
             notified: trip?.notified ?? false,
             refYear: refYear,
+            note: trip?.note,
           ),
           onTap: () => showDevicePickerSheet(context),
         ),
@@ -528,26 +530,43 @@ class _AppSection extends ConsumerWidget {
 
 // ------------------------------------------------------------ geliştirici
 
-/// Yalnız debug derlemede. Eylemler T12'de bağlanır (01-spec §3.7).
-class _DebugSection extends StatelessWidget {
+/// Yalnız debug derlemede (01-spec §3.7). "Yedek işi şimdi çalıştır" T14'te.
+class _DebugSection extends ConsumerWidget {
   const _DebugSection();
 
   @override
-  Widget build(BuildContext context) {
-    return const SettingsSection(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final DebugController c = ref.read(debugControllerProvider);
+
+    return SettingsSection(
       title: S.settingsSectionDebug,
       children: <Widget>[
         SettingsRow(
-          key: Key('debug_long_trip'),
+          key: const Key('debug_long_trip'),
           title: S.debugSimulateLongTrip,
+          onTap: () => c.simulateDisconnect(context, minutes: kDebugLongTripMin),
         ),
         SettingsRow(
-          key: Key('debug_short_trip'),
+          key: const Key('debug_short_trip'),
           title: S.debugSimulateShortTrip,
+          onTap: () =>
+              c.simulateDisconnect(context, minutes: kDebugShortTripMin),
         ),
-        SettingsRow(key: Key('debug_connect'), title: S.debugSimulateConnect),
-        SettingsRow(key: Key('debug_snapshot'), title: S.debugShowSnapshot),
-        SettingsRow(key: Key('debug_fallback'), title: S.debugRunFallback),
+        SettingsRow(
+          key: const Key('debug_connect'),
+          title: S.debugSimulateConnect,
+          onTap: () => c.simulateConnect(context),
+        ),
+        SettingsRow(
+          key: const Key('debug_snapshot'),
+          title: S.debugShowSnapshot,
+          onTap: () => c.showSnapshot(context),
+        ),
+        const SettingsRow(
+          key: Key('debug_fallback'),
+          title: S.debugRunFallback,
+          help: S.debugPendingTicket,
+        ),
       ],
     );
   }

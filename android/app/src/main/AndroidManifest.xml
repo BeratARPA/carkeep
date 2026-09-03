@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- 07-android-notlar §2. Receiver kayıtları T12'de eklenir. -->
+    <!-- 07-android-notlar §2. -->
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
@@ -31,6 +31,22 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Sistem broadcast'i; korumalı action, sahte gönderilemez.
+             exported=true şart (07 §2). Uygulama ölüyken de çalışır. -->
+        <receiver
+            android:name=".BtReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.bluetooth.device.action.ACL_CONNECTED"/>
+                <action android:name="android.bluetooth.device.action.ACL_DISCONNECTED"/>
+            </intent-filter>
+        </receiver>
+
+        <!-- Yalnız kendi bildirimimizin "Yarın" eylemi tetikler. -->
+        <receiver
+            android:name=".NotifActionReceiver"
+            android:exported="false"/>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

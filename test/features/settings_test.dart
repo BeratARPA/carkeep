@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:carkeep/app.dart';
+import 'package:carkeep/core/constants.dart';
 import 'package:carkeep/core/strings_tr.dart';
 import 'package:carkeep/data/db/database.dart';
 import 'package:carkeep/data/db/daos/settings_dao.dart';
@@ -13,10 +14,12 @@ import 'package:carkeep/domain/models/rules.dart';
 import 'package:carkeep/domain/models/schedule.dart';
 import 'package:carkeep/domain/models/vehicle.dart';
 import 'package:carkeep/features/settings/settings_screen.dart';
+import 'package:carkeep/features/settings/widgets/settings_widgets.dart';
 import 'package:carkeep/providers.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -764,6 +767,117 @@ void main() {
     expect(find.text(S.setupVehicleTitle), findsOneWidget);
 
     await flushToast(tester);
+    await disposeTree(tester);
+  });
+
+  // ------------------------------------------------------- geliştirici (T12)
+
+  testWidgets('simülasyon satırları kanala doğru argümanla gidiyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('debug_long_trip')));
+    await tester.tap(find.byKey(const Key('debug_long_trip')));
+    await tester.pumpAndSettle();
+    expect(bridge.simulations.last.event, 'disconnect');
+    expect(bridge.simulations.last.minutes, kDebugLongTripMin);
+    expect(find.text(S.debugDone), findsOneWidget);
+    await flushToast(tester);
+
+    await scrollTo(tester, find.byKey(const Key('debug_short_trip')));
+    await tester.tap(find.byKey(const Key('debug_short_trip')));
+    await tester.pumpAndSettle();
+    expect(bridge.simulations.last.event, 'disconnect');
+    expect(bridge.simulations.last.minutes, kDebugShortTripMin);
+    await flushToast(tester);
+
+    await scrollTo(tester, find.byKey(const Key('debug_connect')));
+    await tester.tap(find.byKey(const Key('debug_connect')));
+    await tester.pumpAndSettle();
+    expect(bridge.simulations.last.event, 'connect');
+    expect(bridge.simulations.last.minutes, 0);
+
+    await flushToast(tester);
+    await disposeTree(tester);
+  });
+
+  testWidgets('araç cihazı seçilmemişse simülasyon uyarı veriyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    bridge.simulateThrows = PlatformException(code: 'NO_CAR');
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('debug_long_trip')));
+    await tester.tap(find.byKey(const Key('debug_long_trip')));
+    await tester.pumpAndSettle();
+
+    expect(find.text(S.debugNoCar), findsOneWidget);
+    expect(bridge.simulations, isEmpty);
+    await flushToast(tester);
+    await disposeTree(tester);
+  });
+
+  testWidgets("snapshot'ı göster yazılmış snapshot'ı açıyor", (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    await pumpSettings(tester);
+
+    // Snapshot senkronu ilk karede yazdı.
+    expect(await bridge.readSnapshot(), isNotNull);
+
+    await scrollTo(tester, find.byKey(const Key('debug_snapshot')));
+    await tester.tap(find.byKey(const Key('debug_snapshot')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('debug_snapshot_dialog')), findsOneWidget);
+    expect(find.textContaining('"rules"'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('debug_snapshot_close')));
+    await tester.pumpAndSettle();
+    await disposeTree(tester);
+  });
+
+  testWidgets('yedek işi satırı T14 sonrası bağlanacak', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('debug_fallback')));
+    expect(find.text(S.debugPendingTicket), findsOneWidget);
+    expect(
+      tester.widget<SettingsRow>(find.byKey(const Key('debug_fallback'))).onTap,
+      isNull,
+    );
+    await disposeTree(tester);
+  });
+
+  testWidgets('tanı satırı motorun notunu kullanıyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    bridge.btState = BluetoothState(
+      connected: false,
+      since: null,
+      lastTrip: LastTripInfo(
+        connectedAt: DateTime(2026, 9, 3, 17, 57),
+        disconnectedAt: DateTime(2026, 9, 3, 18, 5),
+        durationMin: 8,
+        counted: true,
+        notified: false,
+        overdueCount: 2,
+        note: kTripNoteOncePerDay,
+      ),
+    );
+    await pumpSettings(tester);
+
+    expect(
+      find.text('Son kopma: 3 Eyl 18:05, 8 dk sürüş, bugün zaten hatırlatıldı'),
+      findsOneWidget,
+    );
     await disposeTree(tester);
   });
 }

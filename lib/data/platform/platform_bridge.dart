@@ -355,4 +355,14 @@ class PlatformBridge {
 
   /// "Verileri sıfırla": prefs temizlenir, bildirim iptal edilir.
   Future<void> clearEngine() => channel.invokeMethod<void>('clearEngine');
+
+  // ----------------------------------------------------------- geliştirici
+
+  /// Yalnız debug derlemede (02-mimari §6). Araç Bluetooth cihazı seçilmemişse
+  /// `NO_CAR` ile hata verir — gerçek motor da o durumda çalışmaz.
+  Future<void> debugSimulate({required String event, int minutes = 0}) =>
+      channel.invokeMethod<void>('debugSimulate', <String, Object?>{
+        'event': event,
+        'minutes': minutes,
+      });
 }
