@@ -22,10 +22,10 @@ Kullanıcı ortam değişkenleri (`HKCU:\Environment`) ayarlandı:
 Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor).
 
 ## Ticket durumu
-| Ticket | Durum | Commit | Not |
+| Ticket | Durum | Commit (`git log --grep`) | Not |
 |---|---|---|---|
-| T01 Proje iskeleti | bitti | `5443d1c` | ortam kurulumu dahil; cihazda `flutter run` beklemede |
-| T02 Drift şeması ve DAO'lar | bitti | `b6dc7a5` | 75 test yeşil |
+| T01 Proje iskeleti | bitti | `feat(T01)` | ortam kurulumu dahil; cihazda `flutter run` beklemede |
+| T02 Drift şeması ve DAO'lar | bitti | `feat(T02)` | 75 test yeşil |
 | T03 Seed ve şablon birleştirme | bekliyor | | |
 | T04 StatusCalculator ve SnapshotBuilder | bekliyor | | |
 | T05 Platform köprüsü | bekliyor | | kontrol noktası |
