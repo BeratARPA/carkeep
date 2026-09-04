@@ -8,6 +8,7 @@ import '../../domain/template_merge.dart';
 import '../db/daos/item_dao.dart';
 import '../db/daos/settings_dao.dart';
 import '../db/database.dart';
+import 'settings_repo.dart';
 import '../seed/seed_loader.dart';
 
 /// Şablon yükseltmesinin sonucu (01-spec §5 toast'ı için).
@@ -68,8 +69,14 @@ class ItemRepo {
     }
 
     final List<CheckItemRow> rows = await _items.getAll(vehicleId);
+    // K-31: kullanıcının sildiği şablon maddeleri geri gelmez. Silinmiş anahtar
+    // "DB'de yok" göründüğü için birleştirme onu yeniden eklerdi.
+    final Set<String> deleted = await SettingsRepo(_db).deletedTemplateKeys();
     final MergePlan plan = TemplateMerge.plan(
-      seed.items,
+      <SeedItem>[
+        for (final SeedItem i in seed.items)
+          if (!deleted.contains(i.id)) i,
+      ],
       <ExistingItem>[
         for (final CheckItemRow r in rows)
           ExistingItem(templateKey: r.templateKey, sortOrder: r.sortOrder),

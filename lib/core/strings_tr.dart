@@ -369,8 +369,6 @@ abstract final class S {
   static const String itemEditIntervalKm = "Kaç km'de bir";
   static const String itemEditSeasonalDates = 'Tarihler';
   static const String itemEditMeasure = 'Ölçüm';
-  static const String itemEditMeasureLocked =
-      'Şablon maddesinde ölçüm tipi değişmez.';
   static const String measureTypeNone = 'Yok';
   static const String measureTypeLevel = 'Seviye';
   static const String measureTypeTires = 'Dört lastik (bar)';
@@ -378,6 +376,11 @@ abstract final class S {
   static const String itemEditDelete = 'Sil';
   static const String itemEditDeleteConfirm =
       'Bu madde ve kayıtları silinsin mi?';
+
+  /// K-31: şablon maddesi silinince şablon yükseltmesi onu geri getirmez.
+  static const String itemEditDeleteTemplateConfirm =
+      'Bu madde ve kayıtları silinsin mi? Şablon maddesi; silersen şablon '
+      'güncellense de geri gelmez.';
   static const String itemDeletedToast = 'Madde silindi';
   static const String errNameRequired = 'Ad gir';
   static const String errIntervalDaysRequired = 'Gün gir (1–3650)';

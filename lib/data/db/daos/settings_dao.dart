@@ -18,6 +18,10 @@ abstract final class SettingKeys {
   static const String globalSnoozeUntilDay = 'global_snooze_until_day';
   static const String batteryBannerDismissed = 'battery_banner_dismissed';
 
+  /// K-31: kullanıcının sildiği şablon maddelerinin anahtarları (JSON dizi).
+  /// Şablon yükseltmesi bunları geri eklemez.
+  static const String deletedTemplateKeys = 'deleted_template_keys';
+
   /// Kalıcı ret ayrımı için: izin bir kez soruldu mu (01-spec §9).
   static const String askedBluetooth = 'asked_bluetooth';
   static const String askedNotification = 'asked_notification';

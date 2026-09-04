@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../core/date_utils.dart';
 import '../../domain/models/rules.dart';
 import '../db/daos/settings_dao.dart';
@@ -39,6 +41,36 @@ class SettingsRepo {
 
   Future<void> setGlobalSnoozeUntilDay(String? day) =>
       _dao.set(SettingKeys.globalSnoozeUntilDay, day);
+
+  // --------------------------------------------- silinen şablon maddeleri
+
+  /// K-31. Şablon yükseltmesi bu anahtarları geri eklemez.
+  Future<Set<String>> deletedTemplateKeys() async {
+    final String? raw = await _dao.get(SettingKeys.deletedTemplateKeys);
+    if (raw == null || raw.isEmpty) {
+      return <String>{};
+    }
+    try {
+      final Object? decoded = jsonDecode(raw);
+      if (decoded is! List<Object?>) {
+        return <String>{};
+      }
+      return <String>{
+        for (final Object? e in decoded)
+          if (e is String) e,
+      };
+    } on FormatException {
+      return <String>{};
+    }
+  }
+
+  Future<void> markTemplateKeyDeleted(String key) async {
+    final Set<String> keys = await deletedTemplateKeys()..add(key);
+    await _dao.set(
+      SettingKeys.deletedTemplateKeys,
+      jsonEncode(keys.toList()..sort()),
+    );
+  }
 
   // -------------------------------------------------------- izin soruldu mu
 

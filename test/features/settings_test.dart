@@ -8,6 +8,7 @@ import 'package:carkeep/data/db/database.dart';
 import 'package:carkeep/data/db/daos/settings_dao.dart';
 import 'package:carkeep/data/platform/platform_bridge.dart';
 import 'package:carkeep/data/repositories/item_repo.dart';
+import 'package:carkeep/data/repositories/settings_repo.dart';
 import 'package:carkeep/data/repositories/trip_repo.dart';
 import 'package:carkeep/data/seed/seed_loader.dart';
 import 'package:carkeep/domain/models/measure.dart';
@@ -558,7 +559,7 @@ void main() {
     await disposeTree(tester);
   });
 
-  testWidgets('şablon maddesinde ölçüm tipi kilitli ve Sil yok', (
+  testWidgets('K-31: şablon maddesinde ölçüm tipi serbest ve Sil var', (
     WidgetTester tester,
   ) async {
     final int v = await seedVehicle();
@@ -576,12 +577,40 @@ void main() {
             find.byKey(const Key('item_measure')),
           )
           .onChanged,
-      isNull,
+      isNotNull,
     );
-    expect(find.text(S.itemEditMeasureLocked), findsOneWidget);
-    expect(find.byKey(const Key('item_edit_delete')), findsNothing);
+    await scrollTo(tester, find.byKey(const Key('item_edit_delete')));
+    expect(find.byKey(const Key('item_edit_delete')), findsOneWidget);
     // "Tarih/km düzelt" şablon maddesinde de var.
     expect(find.byKey(const Key('item_edit_fix')), findsOneWidget);
+
+    await disposeTree(tester);
+  });
+
+  testWidgets('K-31: şablon maddesi silinince anahtarı kaydediliyor', (
+    WidgetTester tester,
+  ) async {
+    final int v = await seedVehicle();
+    final CheckItemRow oil = await item(v, 'oil_level');
+
+    await pumpSettings(tester);
+    await scrollTo(tester, find.byKey(Key('setting_item_${oil.id}')));
+    await tester.tap(find.byKey(Key('setting_item_${oil.id}')));
+    await tester.pumpAndSettle();
+
+    // Uyarı metni şablona özel.
+    await scrollTo(tester, find.byKey(const Key('item_edit_delete')));
+    await tester.tap(find.byKey(const Key('item_edit_delete')));
+    await tester.pumpAndSettle();
+    expect(find.text(S.itemEditDeleteTemplateConfirm), findsOneWidget);
+    await tester.tap(find.byKey(const Key('item_delete_confirm')));
+    await tester.pumpAndSettle();
+
+    expect(await db.itemDao.getById(oil.id), isNull);
+    expect(
+      await SettingsRepo(db).deletedTemplateKeys(),
+      contains('oil_level'),
+    );
 
     await disposeTree(tester);
   });
@@ -672,7 +701,6 @@ void main() {
     await tester.tap(find.byKey(Key('setting_item_$id')));
     await tester.pumpAndSettle();
 
-    expect(find.text(S.itemEditMeasureLocked), findsNothing);
     await tester.tap(find.byKey(const Key('item_measure')));
     await tester.pumpAndSettle();
     await tester.tap(find.text(S.measureTypeTires).last);

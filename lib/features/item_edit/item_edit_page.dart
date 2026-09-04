@@ -78,9 +78,6 @@ class _ItemEditPageState extends ConsumerState<ItemEditPage> {
 
   bool get _isNew => _item == null;
 
-  /// Şablon maddesinde ölçüm tipi kilitli (01-spec §3.7).
-  bool get _measureLocked => _item?.isTemplateItem ?? false;
-
   @override
   void dispose() {
     _name.dispose();
@@ -148,7 +145,11 @@ class _ItemEditPageState extends ConsumerState<ItemEditPage> {
     final bool? ok = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
-        content: const Text(S.itemEditDeleteConfirm),
+        content: Text(
+          (_item?.isTemplateItem ?? false)
+              ? S.itemEditDeleteTemplateConfirm
+              : S.itemEditDeleteConfirm,
+        ),
         actions: <Widget>[
           TextButton(
             key: const Key('item_delete_cancel'),
@@ -285,15 +286,9 @@ class _ItemEditPageState extends ConsumerState<ItemEditPage> {
                 child: Text(S.measureTypeNumber),
               ),
             ],
-            onChanged: _measureLocked
-                ? null
-                : (MeasureType? v) =>
-                      setState(() => _measureType = v ?? _measureType),
+            onChanged: (MeasureType? v) =>
+                setState(() => _measureType = v ?? _measureType),
           ),
-          if (_measureLocked) ...<Widget>[
-            const SizedBox(height: 4),
-            Text(S.itemEditMeasureLocked, style: text.bodySmall),
-          ],
           const SizedBox(height: 12),
           if (_measureType == MeasureType.level)
             _LabeledField(
@@ -330,7 +325,8 @@ class _ItemEditPageState extends ConsumerState<ItemEditPage> {
               child: const Text(S.detailFixDate),
             ),
           ],
-          if (item != null && !item.isTemplateItem) ...<Widget>[
+          // K-31: şablon maddesi de silinebiliyor.
+          if (item != null) ...<Widget>[
             const SizedBox(height: 12),
             OutlinedButton(
               key: const Key('item_edit_delete'),

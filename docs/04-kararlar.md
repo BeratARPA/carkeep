@@ -41,6 +41,7 @@
 - Karar: `assets/seed/checklist_seed.json` `version` taşır; kurulumda satırlar `check_items`'a kopyalanır; yükseltmede yalnız yeni maddeler eklenir, kullanıcı değişikliği ezilmez.
 - Gerekçe: Kullanıcı aralıkları düzenler; şablonu her açılışta yeniden okumak bu düzenlemeleri kaybettirir. DB'de kopya = kullanıcının verisi.
 - Sonuç: `TemplateMerge` domain fonksiyonu + test.
+- **K-31 ile gevşetildi**: şablon maddesi silinebiliyor; silinen anahtarlar yükseltmede seed'den düşülüyor.
 
 ## K-08 Riverpod codegen yok; Drift codegen var
 - Karar: `flutter_riverpod` ile `Notifier`/`AsyncNotifier`/`StreamProvider` elle; `riverpod_generator` yok. Drift için `build_runner` zorunlu.
@@ -177,3 +178,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - "Daha yakın" karşılaştırması sonradan eklendi (bağımsız denetim bulgusu). İlk hâlde yalnız eşiğe bakılıyordu; tarihler birbirine yakınsa — kullanıcı Ayarlar'dan mevsimsel tarih ekleyebiliyor, ör. `[1 Kas, 10 Kas]` — 1 Kas'ta yapılan tek bir iş 10 Kas'ı da yutuyor ve o iş hiç gösterilmiyordu. `nextSeasonalDate` zaten üstünde bulunulan tarihi tükettiği için ikinci atlama fazlaydı.
 - Gerekçe: Eşik zaten "yaklaşan" eşiği — madde 14 gün kala kullanıcıya gösterilmeye başlıyor. Gösterilmeye başladıktan sonra yapılan iş, gösterilen iştir. 14 günden önce yapılmışsa muhtemelen başka bir sebeple yapılmıştır ve bir sonraki mevsim değişimi hâlâ duruyordur.
 - Sonuç: `StatusCalculator._seasonal`, `previousSeasonalDate`. **06 §1 satır 24 değişti**: son yapılış 2025-10-20 için vade artık 2025-11-01 (−306 gün) değil **2026-04-01** (−155 gün). Eski cevap kullanıcıya zaten yaptığı kasım değişimini gösteriyordu; yeni cevap gerçekten kaçırdığı nisan değişimini gösteriyor. Diğer mevsimsel satırlar (23, 25, 26, 27, 28) değişmedi. 06 §1'e 29–36 satırları, 01-spec §2.1'e sapma notu eklendi.
+
+## K-31 Şablon maddesi de silinebilir; silinen anahtar kalıcı olarak hatırlanır
+- Bağlam: K-07 şablon maddesini silmeyi yasaklıyor, yalnız kapatmaya (`enabled=false`) izin veriyordu; gerekçesi şablon yükseltmesinin silineni geri eklemesiydi. `TemplateMerge` "DB'de olmayan anahtar = yeni madde" diye çalışıyor, silinen anahtar da DB'de yok. 01-spec §3.7 aynı gerekçeyle şablon maddesinde ölçüm tipini de kilitliyordu. Kullanıcı isteği: "insanlar silebilir düzenleyebilir ekleyebilir olsun".
+- Karar: Her madde silinebilir. Şablon maddesi silinince `templateKey` `settings.deleted_template_keys` içine (JSON dizi) yazılır; `upgradeTemplateIfNeeded` birleştirmeden önce bu anahtarları seed'den düşürür. Ölçüm tipi kilidi kalktı. Onay metni şablon maddesinde farklı: silmenin kalıcı olduğunu söylüyor.
+- Gerekçe: Kapatmak yetmiyordu — kapalı madde Ayarlar listesinde durmaya devam ediyor. Silmeyi mümkün kılan tek şey "geri gelmesin" garantisiydi; onu tek bir ayar satırı veriyor. Ölçüm kilidi, madde tamamen silinip elle yeniden eklenebildiği için yalnız sürtünme ekliyordu. Anahtar listesi "verileri sıfırla"da DB ile birlikte gidiyor; sıfırlama zaten şablonu baştan kuruyor.
+- Sonuç: `SettingKeys.deletedTemplateKeys`, `SettingsRepo.deletedTemplateKeys/markTemplateKeyDeleted`, `ItemListRepo.deleteItem`, `ItemRepo.upgradeTemplateIfNeeded`, `strings_tr.itemEditDeleteTemplateConfirm`. **K-07 gevşetildi**, 01-spec §3.7'deki ölçüm kilidi kalktı.

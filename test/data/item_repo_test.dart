@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:carkeep/data/db/daos/settings_dao.dart';
 import 'package:carkeep/data/db/database.dart';
+import 'package:carkeep/data/repositories/item_list_repo.dart';
 import 'package:carkeep/data/repositories/item_repo.dart';
 import 'package:carkeep/data/seed/seed_loader.dart';
 import 'package:carkeep/domain/models/measure.dart';
@@ -309,6 +310,78 @@ void main() {
       final List<CheckItemRow> rows = await db.itemDao.getAll(vehicleId);
       expect(rows.last.templateKey, 'yeni_madde');
       expect(rows.last.sortOrder, 101);
+    });
+    test('K-31: silinen şablon maddesi yükseltmede geri gelmiyor', () async {
+      await repo.installSeed(vehicleId, seed);
+      final CheckItemRow oil = (await db.itemDao.getAll(vehicleId)).firstWhere(
+        (CheckItemRow r) => r.templateKey == 'oil_level',
+      );
+      await ItemListRepo(db).deleteItem(oil.id);
+      expect(await db.itemDao.getById(oil.id), isNull);
+
+      // Sadece sürümü artıran, içeriği aynı bir şablon.
+      final Seed v2 = Seed(
+        version: 2,
+        targetVehicle: seed.targetVehicle,
+        groups: seed.groups,
+        items: seed.items,
+      );
+      final TemplateUpgradeResult r = await repo.upgradeTemplateIfNeeded(
+        vehicleId,
+        v2,
+      );
+
+      expect(r.addedCount, 0);
+      expect(
+        (await db.itemDao.getAll(
+          vehicleId,
+        )).where((CheckItemRow e) => e.templateKey == 'oil_level'),
+        isEmpty,
+      );
+      // Sürüm yine de ilerliyor; her açılışta tekrar denenmesin.
+      expect(await db.settingsDao.getInt(SettingKeys.templateVersion), 2);
+    });
+
+    test('K-31: silinmeyen yeni madde hâlâ ekleniyor', () async {
+      await repo.installSeed(vehicleId, seed);
+      final CheckItemRow oil = (await db.itemDao.getAll(vehicleId)).firstWhere(
+        (CheckItemRow r) => r.templateKey == 'oil_level',
+      );
+      await ItemListRepo(db).deleteItem(oil.id);
+
+      final Seed v2 = Seed(
+        version: 2,
+        targetVehicle: seed.targetVehicle,
+        groups: seed.groups,
+        items: <SeedItem>[
+          ...seed.items,
+          SeedItem(
+            id: 'yeni_madde',
+            group: 'monthly',
+            name: 'Yeni madde',
+            schedule: Schedule.days(30),
+            measure: const Measure.none(),
+            why: 'neden',
+            how: const <String>['nasıl'],
+            warn: null,
+            startsFromInstall: true,
+            appliesLastService: false,
+            enabledByDefault: true,
+            verified: 'true',
+            sourceNote: null,
+          ),
+        ],
+      );
+      final TemplateUpgradeResult r = await repo.upgradeTemplateIfNeeded(
+        vehicleId,
+        v2,
+      );
+
+      expect(r.addedCount, 1);
+      expect(
+        (await db.itemDao.getAll(vehicleId)).last.templateKey,
+        'yeni_madde',
+      );
     });
   });
 }

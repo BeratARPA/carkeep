@@ -4,6 +4,7 @@ import '../../domain/models/check_item.dart';
 import '../../domain/models/measure.dart';
 import '../../domain/models/schedule.dart';
 import '../db/database.dart';
+import 'settings_repo.dart';
 
 /// `check_items` satırlarını domain modeline çevirir.
 ///
@@ -89,8 +90,20 @@ class ItemListRepo {
     });
   }
 
-  /// Yalnız kullanıcı maddesi silinebilir; kayıtları FK ile birlikte gider.
-  Future<void> deleteItem(int id) => _db.itemDao.deleteItem(id);
+  /// Madde silme; kayıtları FK ile birlikte gider.
+  ///
+  /// K-31: şablon maddesi de silinebiliyor. Silinen şablon anahtarı
+  /// `settings`'e yazılıyor, yoksa bir sonraki şablon sürümü onu geri ekler.
+  Future<void> deleteItem(int id) async {
+    final CheckItemRow? row = await _db.itemDao.getById(id);
+    final String? templateKey = row?.templateKey;
+    await _db.transaction(() async {
+      await _db.itemDao.deleteItem(id);
+      if (templateKey != null) {
+        await SettingsRepo(_db).markTemplateKeyDeleted(templateKey);
+      }
+    });
+  }
 
   static List<CheckItem> toModels(List<CheckItemRow> rows) =>
       <CheckItem>[for (final CheckItemRow r in rows) toModel(r)];
