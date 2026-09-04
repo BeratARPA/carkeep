@@ -105,7 +105,8 @@ Her adımda `adb logcat -s CarKeep` çıktısı `docs/ILERLEME.md` "Cihaz testi"
 | 14 | Kural açıkken **arabaya binmeden** Bluetooth'a bağlan, 6 dk bekle, kop. | Bildirim **yok**. Tanı satırı: "hareket görülmedi, bildirim yok". `logcat`'te `no_motion`. |
 | 15 | Kural açıkken gerçekten 6 dk sür, kontağı kapat. | Bildirim var. `logcat`'te `IN_VEHICLE transition at ...` satırı kopmadan önce görünmüş olmalı. |
 | 16 | Ayarlar → Uygulama izinleri → "Fiziksel aktivite" iznini geri al, sonra 6 dk sür ve kop. | Bildirim **yine gelir** (K-33: motor karar anında izni de sorar). `logcat`'te `motion permission revoked: updates marked inactive`. Uygulamayı açınca anahtar da kendiliğinden kapanmış olmalı. |
-| 17 | Telefonu yeniden başlat, uygulamayı bir kez aç, sür ve kop. | Bildirim var; abonelik `resume`'da yeniden kurulmuş olmalı. |
+| 17 | Telefonu yeniden başlat, uygulamayı **açmadan** sür ve kop. | Bildirim **var** (K-34: motor boot damgasının tutmadığını görüp doğrulamayı atlar). `logcat`: `device rebooted since registration`. |
+| 17b | Sonra uygulamayı bir kez aç. | `logcat`: `motion updates registered` — abonelik açılışta kendini onarıyor. |
 | 18 | Ayarlar → herhangi bir şablon maddesi → "Sil". | Onay metni "şablon güncellense de geri gelmez" diyor; silinince madde listeden ve Kontroller'den kayboluyor. |
 | 19 | Uygulamayı kapat/aç. | Silinen madde geri gelmiyor. |
 

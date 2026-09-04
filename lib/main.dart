@@ -59,6 +59,9 @@ Future<void> main() async {
   await lifecycle.readLaunchAction();
   // 5: sürüşsüz dönem yedeği; `REPLACE` ile her açılışta yeniden planlanır.
   await lifecycle.scheduleDailyWorker();
+  // K-34: `resume` soğuk açılışta tetiklenmiyor; hareket aboneliği yeniden
+  // başlatmada düştüğü için burada da kuruluyor.
+  await lifecycle.syncMotionRule();
 
   runApp(
     UncontrolledProviderScope(

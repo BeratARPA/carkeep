@@ -61,6 +61,11 @@ class EnginePrefs(context: Context) {
         get() = sp.getLong(KEY_LAST_IN_VEHICLE_AT, -1L)
         set(v) = putLong(KEY_LAST_IN_VEHICLE_AT, v)
 
+    /** K-34: aboneligin kuruldugu acilisin damgasi (boot wall-clock). */
+    var motionRegisteredBootAt: Long
+        get() = sp.getLong(KEY_MOTION_BOOT_AT, -1L)
+        set(v) = putLong(KEY_MOTION_BOOT_AT, v)
+
     /**
      * K-30: gecis aboneligi gercekten kurulu mu. Kural acik ama abonelik yoksa
      * motor hareket kontrolunu **atlar**; aksi halde bildirim hic gelmezdi.
@@ -136,5 +141,6 @@ class EnginePrefs(context: Context) {
         const val KEY_LAST_TRIP = "last_trip_json"
         const val KEY_LAST_IN_VEHICLE_AT = "last_in_vehicle_at"
         const val KEY_MOTION_ACTIVE = "motion_updates_active"
+        const val KEY_MOTION_BOOT_AT = "motion_registered_boot_at"
     }
 }

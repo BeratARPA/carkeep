@@ -43,6 +43,23 @@ object ReminderEngine {
      */
     const val MOTION_LEAD_MINUTES = 10
 
+    /**
+     * K-34: acilis damgasi karsilastirma toleransi. `currentTimeMillis -
+     * elapsedRealtime` NTP duzeltmesiyle birkac saniye oynayabilir; yeniden
+     * baslatma ise damgayi en az dakikalarca ileri atar.
+     */
+    const val BOOT_TOLERANCE_MS = 60_000L
+
+    /**
+     * K-34: abonelik kaydedildiginden beri cihaz yeniden baslatildi mi.
+     * Play Services gecis aboneliklerini boot'ta dusuruyor; bayrak ise
+     * prefs'te `true` kaliyor ve izin de duruyor, yani K-33'un izin kontrolu
+     * bunu yakalayamaz. Saf; JVM testi bunu hedefler.
+     */
+    fun sameBoot(registeredBootAt: Long, currentBootAt: Long): Boolean =
+        registeredBootAt > 0L &&
+            kotlin.math.abs(currentBootAt - registeredBootAt) <= BOOT_TOLERANCE_MS
+
     /** Yedek bildirim satiri (K-12, K-26). */
     const val NOTE_FALLBACK = "fallback"
 

@@ -76,7 +76,10 @@ object MotionTracker {
                     pendingIntent(ctx),
                 )
                 .addOnSuccessListener {
-                    EnginePrefs(ctx).motionUpdatesActive = true
+                    EnginePrefs(ctx).apply {
+                        motionUpdatesActive = true
+                        motionRegisteredBootAt = bootAt()
+                    }
                     Log.d(TAG, "motion updates registered")
                 }
                 .addOnFailureListener { e ->
@@ -106,11 +109,23 @@ object MotionTracker {
     fun isActive(ctx: Context): Boolean {
         val prefs = EnginePrefs(ctx)
         if (!prefs.motionUpdatesActive) return false
-        if (hasPermission(ctx)) return true
-        prefs.motionUpdatesActive = false
-        Log.d(TAG, "motion permission revoked: updates marked inactive")
-        return false
+        if (!hasPermission(ctx)) {
+            prefs.motionUpdatesActive = false
+            Log.d(TAG, "motion permission revoked: updates marked inactive")
+            return false
+        }
+        // K-34: Play Services abonelikleri yeniden baslatmada dusuyor.
+        if (!ReminderEngine.sameBoot(prefs.motionRegisteredBootAt, bootAt())) {
+            prefs.motionUpdatesActive = false
+            Log.d(TAG, "device rebooted since registration: updates marked inactive")
+            return false
+        }
+        return true
     }
+
+    /** Acilis aninin duvar saati karsiligi. */
+    private fun bootAt(): Long =
+        System.currentTimeMillis() - android.os.SystemClock.elapsedRealtime()
 
     fun stop(ctx: Context) {
         val prefs = EnginePrefs(ctx)

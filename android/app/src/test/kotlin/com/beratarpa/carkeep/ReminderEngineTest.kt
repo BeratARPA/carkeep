@@ -774,4 +774,36 @@ class ReminderEngineTest {
         )
         assertFalse(motion.seenInTrip())
     }
+    // ------------------------------------------------------------- K-34 boot
+
+    /** Ayni acilis: abonelik gecerli sayilir. */
+    @Test
+    fun `sameBoot accepts the same boot instant`() {
+        assertTrue(ReminderEngine.sameBoot(1_700_000_000_000L, 1_700_000_000_000L))
+    }
+
+    /** NTP duzeltmesi damgayi birkac saniye oynatabilir; tolerans icinde. */
+    @Test
+    fun `sameBoot tolerates small clock drift`() {
+        val boot = 1_700_000_000_000L
+        assertTrue(ReminderEngine.sameBoot(boot, boot + 30_000L))
+        assertTrue(ReminderEngine.sameBoot(boot, boot - 30_000L))
+    }
+
+    /** Yeniden baslatma damgayi ileri atar: abonelik dusmus sayilir. */
+    @Test
+    fun `sameBoot rejects a later boot`() {
+        val boot = 1_700_000_000_000L
+        assertFalse(ReminderEngine.sameBoot(boot, boot + 6 * 60 * 60_000L))
+        assertFalse(
+            ReminderEngine.sameBoot(boot, boot + ReminderEngine.BOOT_TOLERANCE_MS + 1),
+        )
+    }
+
+    /** Hic kaydedilmemis damga (eski kurulum) gecerli sayilmaz. */
+    @Test
+    fun `sameBoot rejects a missing stamp`() {
+        assertFalse(ReminderEngine.sameBoot(-1L, 1_700_000_000_000L))
+        assertFalse(ReminderEngine.sameBoot(0L, 0L))
+    }
 }

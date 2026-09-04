@@ -86,16 +86,17 @@ class AppLifecycle {
     await readLaunchAction();
     await _ref.read(bluetoothStateProvider.notifier).refresh();
     await _ref.read(permissionsProvider.notifier).refresh();
-    await _syncMotionRule();
+    await syncMotionRule();
     // 01-spec §6: `resume` de bir snapshot tetikleyicisi.
     await _ref.read(snapshotSyncProvider).write();
   }
 
-  /// K-30: yeniden başlatma ve "force stop" geçiş aboneliğini düşürüyor;
-  /// kural açıkken her `resume`'da yeniden kuruluyor. İzin sistem
-  /// ayarlarından geri alınmışsa kural da kapanıyor: motor o durumda
-  /// doğrulamayı atlıyor, açık kalan anahtar yalan söylerdi.
-  Future<void> _syncMotionRule() async {
+  /// K-30/K-34: yeniden başlatma ve "force stop" geçiş aboneliğini
+  /// düşürüyor; kural açıkken hem açılışta hem her `resume`'da yeniden
+  /// kuruluyor. İzin sistem ayarlarından geri alınmışsa kural da kapanıyor
+  /// (K-33): motor o durumda doğrulamayı atlıyor, açık kalan anahtar yalan
+  /// söylerdi.
+  Future<void> syncMotionRule() async {
     final Rules? rules = _ref.read(rulesProvider).valueOrNull;
     if (rules == null || !rules.requireMotion) {
       return;
