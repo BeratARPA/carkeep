@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Uygulama ikonu ön planı (T18). 108x108 tuval, güvenli alan ortadaki 72x72
-  (18..90). Geometrik işaret: açık halka (bakım döngüsü / gösterge) ve
-  içinde onay işareti. Ayrıntılı çizim yok; 48 dp'de de okunuyor.
+  (18..90).
+
+  İşaret: yuvarlatılmış kare (kontrol kutusu) ve içinde onay. Uygulamanın
+  yaptığı iş bu — arabanın bakım listesindeki maddeyi işaretlemek. Çizim yok,
+  yalnız geometri; 48 dp'de de okunuyor.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -10,18 +13,18 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Altı açık halka: merkez (54,54), yarıçap 27, boşluk aşağıda. -->
+    <!-- Kontrol kutusu. -->
     <path
-        android:pathData="M41.3,77.8 A27,27 0 1 1 66.7,77.8"
+        android:pathData="M44,32 H64 A12,12 0 0 1 76,44 V64 A12,12 0 0 1 64,76 H44 A12,12 0 0 1 32,64 V44 A12,12 0 0 1 44,32 Z"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="9"
-        android:strokeLineCap="round" />
+        android:strokeWidth="7.5"
+        android:strokeLineJoin="round" />
 
     <!-- Onay işareti. -->
     <path
-        android:pathData="M41,55.5 L49,63.5 L66,43.5"
+        android:pathData="M43,54 L51,62 L66,44"
         android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="9"
+        android:strokeWidth="7.5"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 </vector>

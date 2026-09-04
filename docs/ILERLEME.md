@@ -641,15 +641,17 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 
 ### T18
 - **Uygulama ikonu uyarlanabilir (adaptive) ikon.** `minSdk 26` olduğu için PNG mipmap'lere
-  gerek yok; `mipmap-anydpi-v26/ic_launcher.xml` her cihazda kullanılıyor. Arka plan koyu
-  eğim (`ink` #232F40 → #0D1219), ön plan geometrik işaret: altı hafif açık halka (bakım
-  döngüsü) ve içinde onay işareti. Aynı çizim temalı ikon (Android 13+) olarak da kullanılıyor
-  — tek renk olduğu için sorun çıkarmıyor. Flutter'ın varsayılan logosu hem çekmecede hem
-  bildirimin büyük simgesinde görünüyordu (T12 notu), ikisi de düzeldi. Eski PNG mipmap'ler
-  dosyada duruyor ama API 26+'da hiç kullanılmıyor.
-  **İki tasarım reddedildi**: (1) arabanın üstüne binen kocaman onay işareti, (2) araba
-  silueti + köşede onay rozeti. İkisi de "clip-art araba" olduğu için; üçüncüde çizim
-  bırakılıp geometrik işarete geçildi.
+  gerek yok; `mipmap-anydpi-v26/ic_launcher.xml` her cihazda kullanılıyor. Arka plan
+  01-spec §10'un `green`i etrafında hafif eğim (#2E9E5B → #13603A) — uygulamanın "zamanında"
+  rengi. Ön plan beyaz kontrol kutusu ve içinde onay: uygulamanın yaptığı iş bu. Aynı çizim
+  temalı ikon (Android 13+) olarak da kullanılıyor, tek renk olduğu için sorun çıkarmıyor.
+  Flutter'ın varsayılan logosu hem çekmecede hem bildirimin büyük simgesinde görünüyordu
+  (T12 notu), ikisi de düzeldi. Eski PNG mipmap'ler dosyada duruyor ama API 26+'da hiç
+  kullanılmıyor.
+  **Dört tasarım denendi**: (1) arabanın üstüne binen kocaman onay, (2) araba silueti +
+  köşede onay rozeti, (3) açık halka + onay, (4) kontrol kutusu + onay. İlk ikisi
+  "clip-art araba" olduğu için, üçüncüsü yeterince ayırt edici olmadığı için elendi.
+  Dördüncüde işaret küçültülüp kenar boşluğu verildi; ilk hâli maskeye yapışıyordu.
 - **İmzalama**: `~/carkeep-upload-keystore.jks` (repo dışı), `android/key.properties` ile
   gösteriliyor, ikisi de `.gitignore`'da. Anahtar bulunamazsa release derlemesi debug
   imzasına düşüyor — temiz klonda derleme kırılmasın diye.
