@@ -43,8 +43,8 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T14 DailyCheckWorker | bitti | `feat(T14)` | 458 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T15 Snapshot senkronu ve yaşam döngüsü | bitti | `feat(T15)` | 477 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T16 Hata/boş durumlar, metin turu | bitti | `feat(T16)` | 494 Dart + 72 Kotlin testi; cihazda doğrulandı |
-| T17 Cihaz testi düzeltmeleri | bekliyor | | |
-| T18 Release | bekliyor | | kontrol noktası |
+| T17 Cihaz testi düzeltmeleri | atlandı | | gerçek araba protokolünün sonuçlarına dayanıyor; sonuçlar gelince açılacak |
+| T18 Release | bitti | `feat(T18)` | 494 Dart + 72 Kotlin testi; **kontrol noktası: release APK cihaza kurulmadı** |
 
 ## Cihaz testi
 
@@ -639,4 +639,51 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 - Simge düğmelerinin hepsinin `tooltip`u var (ekran okuyucu etiketi); dokunma alanlarının
   hepsi ≥48 dp. İkisi de test edildi.
 
+### T18
+- **Uygulama ikonu uyarlanabilir (adaptive) ikon.** `minSdk 26` olduğu için PNG mipmap'lere
+  gerek yok; `mipmap-anydpi-v26/ic_launcher.xml` her cihazda kullanılıyor. Ön plan: bildirim
+  simgesiyle aynı araba silueti + sağ altta beyaz daire içinde onay rozeti; arka plan `ink`
+  (#141A24). Flutter'ın varsayılan logosu hem çekmecede hem bildirimin büyük simgesinde
+  görünüyordu (T12 notu), ikisi de düzeldi. Eski PNG'ler dosyada duruyor ama API 26+'da hiç
+  kullanılmıyor.
+  İlk deneme (arabanın üstüne binen kocaman onay işareti) kullanıcı tarafından reddedildi;
+  rozet ayrı bir daireye alınıp araba ile çakışması kaldırıldı. Temalı ikon (Android 13+)
+  tek renk olmak zorunda olduğu için ayrı bir `ic_launcher_monochrome` var: yalnız araba.
+- **İmzalama**: `~/carkeep-upload-keystore.jks` (repo dışı), `android/key.properties` ile
+  gösteriliyor, ikisi de `.gitignore`'da. Anahtar bulunamazsa release derlemesi debug
+  imzasına düşüyor — temiz klonda derleme kırılmasın diye.
+- **R8 açık** (`isMinifyEnabled` + `isShrinkResources`). Manifest'te adıyla yazılı bileşenler
+  zaten korunuyor ama `proguard-rules.pro`'da açıkça tutuluyorlar: biri yeniden adlandırılırsa
+  bildirim motoru sessizce ölür ve bunu ancak arabada fark ederiz.
+- **Doğrulama, APK'nın kendi içinden**: `apkanalyzer dex packages` çıktısında
+  `MainActivity`, `BtReceiver`, `NotifActionReceiver`, `DailyCheckWorker` özgün adlarıyla
+  duruyor; `aapt2 dump xmltree` manifest kayıtlarını doğruluyor. Kalan sınıflar (motor,
+  bildirim metinleri) beklendiği gibi karartıldı.
+- **Boyut**: `app-release.apk` 56,4 MB (üç ABI birden), `app-arm64-v8a-release.apk` 19,7 MB,
+  `app-armeabi-v7a-release.apk` 17,2 MB, `app-x86_64-release.apk` 21,0 MB.
+- **Kullanıcının verisi yedeklendi**: `~/carkeep-veri-yedegi-2026-09-04/carkeep.sqlite` (57 KB)
+  ve `carkeep_engine.xml`. Release APK farklı anahtarla imzalı olduğu için debug sürümünün
+  üstüne kurulamıyor; kurmak için önce kaldırmak, kaldırmak da veriyi silmek demek. Bu yüzden
+  release cihaza **kurulmadı**; karar kullanıcının.
+- **Açık kalan**: başlangıç süresi ölçümü (`am start -W`) release kurulmadığı için yapılmadı.
+
 ## Bilinen sorunlar
+Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
+
+- **Gerçek araba protokolü (06 §3) çalıştırılmadı.** Motor debug simülasyonuyla uçtan uca
+  doğrulandı (T12–T15 cihaz notları), ama gerçek `ACL_DISCONNECTED` yayınıyla, gerçek Doze
+  koşullarında ve arka arkaya üç günde hiç denenmedi. T17 bu sonuçlara göre açılacak.
+- **Release APK cihaza kurulmadı** (yukarıda). Kurulunca 06 §3 adım 8 (yeniden başlatma
+  sonrası receiver) ve başlangıç süresi de ölçülmeli.
+- **Bildirimdeki "Aç" düğmesi bildirimi tepsiden düşürmüyor**; gövdeye dokunmak düşürüyor
+  (`setAutoCancel` yalnız içerik niyetinde çalışıyor). K-25'in iptal-önce-bas düzeltmesi
+  sonucu zararsız kıldı.
+- **`onlyOverdue=false` modunda** ("Kontroller zamanında" bildirimi) K-27 gecikmiş sayısı
+  sıfır olduğu için uygulamayı açınca bildirimi iptal ediyor. Mod zaten motorun çalıştığını
+  görmek için; kayıt için not.
+- **Hızlı geri bağlanma düzeltmesi drain'den sonra ulaşamıyor.** Kotlin son trip olayını
+  yerinde düzeltiyor; Dart o olayı çoktan `trips`'e yazdıysa satır eski hâliyle kalıyor.
+  Pencere birkaç saniye (kopma ile geri bağlanma arasında uygulamayı açmak gerekir) ve
+  01-spec §7.3 bu sınıf kaybı v1 için kabul ediyor.
+- **`DayKey.daysBetween` negatif farkta doğru ama hiç çağrılmıyor** — kayıt için.
+- Eski PNG mipmap'ler (Flutter logosu) APK'da duruyor, API 26+'da kullanılmıyor.

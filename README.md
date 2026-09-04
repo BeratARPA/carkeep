@@ -2,6 +2,32 @@
 
 Tek araç için rutin bakım hatırlatıcısı (Flutter, Android). Arabanın Bluetooth'undan kopunca gecikmiş kontrolleri bildirir. Bu klasör kodu değil, kodu yazacak olan Claude Code'un ihtiyaç duyduğu her şeyi içerir.
 
+## Kurulum (APK)
+Uygulama derlendi; telefona yüklemek için Play Store gerekmez.
+
+1. **APK'yı telefona kopyala.** Samsung SM-A556E ve bugünkü Android telefonların hemen hepsi arm64:
+   `build/app/outputs/flutter-apk/app-arm64-v8a-release.apk` (19,7 MB).
+   Hangi mimari olduğundan emin değilsen `app-release.apk` (56,4 MB) her cihazda çalışır.
+2. **Bilinmeyen kaynaklara izin ver.** Dosya yöneticisinden APK'ya dokun; Android
+   "Bu kaynaktan yüklemeye izin ver" derse aç. USB ile: `adb install app-arm64-v8a-release.apk`.
+3. **Kurulum sihirbazını bitir** (6 adım): marka/model, güncel km, izinler, arabanın
+   Bluetooth cihazı, son servis (isteğe bağlı), kontrol listesi.
+4. **Üç izni ver** — sihirbazın 3. adımında sorulur, sonradan Ayarlar → Uygulama'dan da:
+   - **Bluetooth** (zorunlu): kopmayı duymak için. Bu izin olmadan motor hiç çalışmaz.
+   - **Bildirim** (zorunlu): hatırlatmayı göstermek için.
+   - **Pil optimizasyonu** (önerilir): "Kısıtlanmamış" olmalı, yoksa telefon uygulamayı
+     uyutup kopmayı kaçırabilir.
+5. **Marka ayarı.** Samsung'da: Pil → "Kısıtlanmamış"; "Kullanılmayan uygulamaları uyku
+   moduna al" kapalı. Diğer markalar `docs/07-android-notlar.md` §7'de.
+6. **Doğrula.** Arabaya bin, en az 6 dk sür, kontağı kapat. Gecikmiş bir madde varsa
+   30 saniye içinde bildirim gelmeli.
+
+Uygulamayı **"Durmaya zorla"** yaparsan Android hatırlatmayı kapatır; bir kez açman yeter.
+
+Yeniden derlemek için: `flutter build apk --release --split-per-abi`. İmzalama anahtarı
+repo dışında (`android/key.properties` ile gösterilir, `.gitignore`'da); anahtar yoksa
+release derlemesi debug imzasıyla çıkar.
+
 ## İçerik
 ```
 CLAUDE.md                 Claude Code'un her oturumda okuduğu proje anayasası
