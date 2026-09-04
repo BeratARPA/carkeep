@@ -29,11 +29,27 @@ Sabitler: `today = 2026-09-03`, `currentKm = 118.420`, `installDay = 2026-08-20`
 | 21 | days 14 | 2026-08-12 | snoozeUntilDay 2026-09-03 | overdue (bugün > today değil) | `8 gün gecikti` | |
 | 22 | days 14 | 2026-08-31 | snoozeUntilDay 2026-09-04 | ok (erteleme yalnız overdue'yu etkiler) | `14 Eyl` | |
 | 23 | seasonal | 2026-04-05 | – | ok, dueDay 2026-11-01, daysLeft 59 | `1 Kas` | `1 Kas. Her yıl 1 Kas ve 1 Nis.` |
-| 24 | seasonal | 2025-10-20 | – | overdue, dueDay 2025-11-01, daysLeft −306 | `306 gün gecikti` | |
+| 24 | seasonal | 2025-10-20 | – | **K-29 ile değişti:** overdue, dueDay 2026-04-01, daysLeft −155 | `155 gün gecikti` | K-29 öncesi 2025-11-01 / −306 idi; 20 Eki yapılışı 1 Kas 2025 değişimi sayılıyor |
 | 25 | seasonal | 2026-04-05 | today = 2026-10-20 | soon, daysLeft 12 | `12 gün kaldı` | |
 | 26 | seasonal | null | startsFromInstall=true | ok, dueDay 2026-11-01 | `1 Kas` | |
 | 27 | seasonal | 2026-11-02 | – | ok, dueDay 2027-04-01, daysLeft 210 | `1 Nis 2027` | |
 | 28 | seasonal | 2026-11-01 | – | ok, dueDay 2027-04-01 (aynı gün "sonraki" sayılmaz) | `1 Nis 2027` | |
+
+Mevsimsel erken yapılış (K-29). Son yapılış vadeye `soonSeasonalDays` (14 gün) **veya
+daha yakınsa ve geçmiş tarihten daha yakınsa** o tarih yapılmış sayılır, vade sıradaki
+tarihe geçer. 29–31 varsayılan `[1 Kas, 1 Nis]` şablonuyla; 32–34 kullanıcının
+ekleyebildiği yakın tarihli `[1 Kas, 10 Kas]` ile.
+
+| # | Takvim | Son yapılış | Bağlam | Beklenen |
+|---|---|---|---|---|
+| 29 | seasonal | 2026-10-20 | 1 Kas'a 12 gün | dueDay 2027-04-01 (1 Kas yapılmış sayılır) |
+| 30 | seasonal | 2026-10-18 | tam 14 gün, eşik dahil | dueDay 2027-04-01 |
+| 31 | seasonal | 2026-10-17 | 15 gün, eşik dışı | dueDay 2026-11-01 |
+| 32 | seasonal [1 Kas, 10 Kas] | 2026-11-01 | today 2026-11-01 | dueDay 2026-11-10 — tek yapılış iki tarihi yutmaz |
+| 33 | seasonal [1 Kas, 10 Kas] | 2026-11-02 | today 2026-11-02 | dueDay 2026-11-10 |
+| 34 | seasonal [1 Kas, 10 Kas] | 2026-11-06 | today 2026-11-06; 10 Kas'a 4, 1 Kas'a 5 gün | dueDay 2027-11-01 — yakın olan yapılmış sayılır |
+| 35 | seasonal [1 Kas] | 2026-10-25 | tek tarihli madde | dueDay 2027-11-01 |
+| 36 | seasonal | null | startsFromInstall, installDay 2026-10-25, today 2026-10-26 | dueDay 2026-11-01 — kurulum günü yedeği K-29'u tetiklemez |
 
 Sıralama testleri: gecikmişler oran sırasında (#16 `−14/365 = −0,038` önce, #17 `−420/15000 = −0,028` sonra → #16 daha gecikmiş); yaklaşanlar `daysLeft` / normalize km ile artan.
 

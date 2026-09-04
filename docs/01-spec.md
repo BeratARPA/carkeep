@@ -23,7 +23,7 @@ Girdi: madde (takvim, son yapılış, `snoozeUntilDay`, `startsFromInstall`), ar
 - `days`: `dueDay = lastDoneDay + intervalDays`. Son yapılış null ise: `startsFromInstall=true` → `lastDoneDay := installDay`; değilse durum `unknown`.
 - `km`: `dueKm = lastDoneKm + intervalKm`. Son yapılış null → `unknown` (servis geçmişi bilinmeden hesap yok).
 - `both`: ikisi de hesaplanır. Son yapılış null → `unknown`.
-- `seasonal`: `dates = [{month,day}...]`. `dueDay` = son yapılıştan (null ise `installDay - 1`) **sonraki ilk** tarih. Yıl sınırını geçer.
+- `seasonal`: `dates = [{month,day}...]`. `dueDay` = son yapılıştan (null ise `installDay - 1`) **sonraki ilk** tarih. Yıl sınırını geçer. **K-29 ile değişti:** gerçek bir son yapılış, hesaplanan vadeye `soonSeasonalDays` içindeyse ve geçmiş tarihten daha yakınsa, o tarih yapılmış sayılır ve vade bir sonraki tarihe geçer (mevsimsel iş tarihinden birkaç gün önce yapılır).
 
 ### 2.2 Kalan
 - `daysLeft = dueDay - today` (takvim günü farkı, saat yok).

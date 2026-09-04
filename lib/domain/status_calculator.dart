@@ -156,13 +156,28 @@ abstract final class StatusCalculator {
 
     // K-29: mevsimsel işi tarihinden birkaç gün önce yapmak normaldir (20 Eki'de
     // kışlık lastik). Ham kural o tarihi hâlâ "yaklaşan" gösterip kullanıcıyı
-    // yaptığı işe tekrar çağırıyordu. Son yapılış, vadeye `kSoonSeasonalDays`
-    // içindeyse o tarih yapılmış sayılır ve sıradaki tarihe geçilir.
+    // yaptığı işe tekrar çağırıyordu.
+    //
+    // Kural: yapılan iş **en yakın** mevsimsel tarihe aittir. Sıradaki tarih
+    // hem eşiğin içinde hem de geçmiş tarihten daha yakınsa, iş o sıradaki
+    // tarih içindir → o tarih yapılmış sayılır. Değilse iş geçmiş bir tarihe
+    // aittir ve `nextSeasonalDate` onu zaten tüketmiştir.
+    //
+    // "Daha yakın" karşılaştırması şart: tarihler birbirine yakınsa (kullanıcı
+    // Ayarlar'dan ekleyebiliyor, ör. 1 ve 10 Kas) tek bir yapılış iki ayrı
+    // tarihi birden yutuyordu.
     //
     // Yalnız gerçek son yapılışta: kurulum günü yedeği bir iş yapıldığı anlamına
     // gelmez (25 Eki'de kurulan uygulama 1 Kas'ı atlamamalı).
-    if (lastDone != null && daysBetween(lastDone, due) <= kSoonSeasonalDays) {
-      due = nextSeasonalDate(item.schedule.dates, due);
+    if (lastDone != null) {
+      final int toNext = daysBetween(lastDone, due);
+      final int fromPrevious = daysBetween(
+        previousSeasonalDate(item.schedule.dates, lastDone),
+        lastDone,
+      );
+      if (toNext <= kSoonSeasonalDays && toNext < fromPrevious) {
+        due = nextSeasonalDate(item.schedule.dates, due);
+      }
     }
 
     final int daysLeft = daysBetween(today, due);
@@ -307,6 +322,23 @@ DateTime nextSeasonalDate(List<SeasonalDate> dates, DateTime after) {
   }
   // `dates` boş olamaz (Schedule.seasonal doğruluyor); yine de savunmacı.
   return best ?? addDays(a, 1);
+}
+
+/// [dates] içinden [onOrBefore] gününde **veya öncesindeki** son tarih.
+/// K-29'un "iş en yakın tarihe aittir" karşılaştırması için.
+DateTime previousSeasonalDate(List<SeasonalDate> dates, DateTime onOrBefore) {
+  final DateTime a = dateOnly(onOrBefore);
+  DateTime? best;
+  for (int yearOffset = 0; yearOffset >= -1; yearOffset--) {
+    for (final SeasonalDate d in dates) {
+      final DateTime candidate = DateTime(a.year + yearOffset, d.month, d.day);
+      if (!candidate.isAfter(a) && (best == null || candidate.isAfter(best))) {
+        best = candidate;
+      }
+    }
+  }
+  // `dates` boş olamaz (Schedule.seasonal doğruluyor); yine de savunmacı.
+  return best ?? addDays(a, -1);
 }
 
 /// Maddenin aralık metni (01-spec §2.4).

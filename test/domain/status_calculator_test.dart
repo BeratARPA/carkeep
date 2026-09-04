@@ -351,7 +351,7 @@ void main() {
 
     // ------------------------------------------------------------------ K-29
 
-    test('tarihinden 12 gün önce yapılırsa sıradaki tarihe geçer', () {
+    test('#29 son 2026-10-20 → 1 Kas yapılmış sayılır, vade 2027-04-01', () {
       // 20 Eki'de kışlık lastik takıldı; vade 1 Kas değil, 1 Nis olmalı.
       final ItemStatus s = status(
         item(schedule: seasonal(), lastDoneDay: '2026-10-20'),
@@ -359,36 +359,63 @@ void main() {
       expect(s.dueDay, '2027-04-01');
     });
 
-    test('eşik dahil: tam 14 gün önce', () {
+    test('#30 tam 14 gün önce, eşik dahil', () {
       final ItemStatus s = status(
         item(schedule: seasonal(), lastDoneDay: '2026-10-18'),
       );
       expect(s.dueDay, '2027-04-01');
     });
 
-    test('eşiğin dışında: 15 gün önce vadeyi ilerletmez', () {
+    test('#31 15 gün önce, eşik dışı → vade değişmez', () {
       final ItemStatus s = status(
         item(schedule: seasonal(), lastDoneDay: '2026-10-17'),
       );
       expect(s.dueDay, '2026-11-01');
     });
 
-    test('tarihin kendisinde yapılırsa değişmez', () {
-      // `nextSeasonalDate` zaten "sonraki"ni veriyor; K-29 tekrar atlamamalı.
+    // Aşağıdaki üç vaka birbirine yakın iki tarihle kurulu (1 ve 10 Kas).
+    // Kullanıcı Ayarlar'dan mevsimsel tarih ekleyebiliyor; şablonun 151 günlük
+    // aralığıyla K-29 dalı hiç sınanmıyordu ve tek bir yapılış iki ayrı tarihi
+    // birden yutuyordu.
+    Schedule closePair() => Schedule.seasonal(
+      const <SeasonalDate>[SeasonalDate(11, 1), SeasonalDate(11, 10)],
+    );
+
+    test('#32 yakın tarihli takvimde tarihin kendisinde → sıradaki yutulmaz', () {
+      // 1 Kas'ta yapıldı; 10 Kas hâlâ yapılacak. `nextSeasonalDate` 1 Kas'ı
+      // zaten tüketti, K-29 üstüne bir daha atlamamalı.
+      final ItemStatus s = status(
+        item(schedule: closePair(), lastDoneDay: '2026-11-01'),
+        today: DateTime(2026, 11, 1),
+      );
+      expect(s.dueDay, '2026-11-10');
+    });
+
+    test('#33 yakın tarihli takvimde bir gün sonra → sıradaki yutulmaz', () {
+      final ItemStatus s = status(
+        item(schedule: closePair(), lastDoneDay: '2026-11-02'),
+        today: DateTime(2026, 11, 2),
+      );
+      expect(s.dueDay, '2026-11-10');
+    });
+
+    test('#34 iki tarihin ortasında → yakın olan yapılmış sayılır', () {
+      // 6 Kas: 10 Kas'a 4 gün, 1 Kas'a 5 gün → 10 Kas için yapılmış sayılır.
+      final ItemStatus s = status(
+        item(schedule: closePair(), lastDoneDay: '2026-11-06'),
+        today: DateTime(2026, 11, 6),
+      );
+      expect(s.dueDay, '2027-11-01');
+    });
+
+    test('şablon aralığında tarihin kendisinde yapılırsa değişmez', () {
       final ItemStatus s = status(
         item(schedule: seasonal(), lastDoneDay: '2026-11-01'),
       );
       expect(s.dueDay, '2027-04-01');
     });
 
-    test('tarihten sonra yapılırsa değişmez', () {
-      final ItemStatus s = status(
-        item(schedule: seasonal(), lastDoneDay: '2026-11-02'),
-      );
-      expect(s.dueDay, '2027-04-01');
-    });
-
-    test("kurulum günü yedeği K-29'u tetiklemez", () {
+    test("#36 kurulum günü yedeği K-29'u tetiklemez", () {
       // 25 Eki'de kurulan uygulama 1 Kas'ı "yapılmış" saymamalı.
       final ItemStatus s = status(
         item(schedule: seasonal(), startsFromInstall: true),
@@ -398,7 +425,7 @@ void main() {
       expect(s.dueDay, '2026-11-01');
     });
 
-    test('tek tarihli maddede bir yıl sonraya geçer', () {
+    test('#35 tek tarihli madde → bir yıl sonraya geçer', () {
       final ItemStatus s = status(
         item(
           schedule: Schedule.seasonal(const <SeasonalDate>[SeasonalDate(11, 1)]),

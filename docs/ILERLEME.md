@@ -677,6 +677,27 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   satır "Verilmedi" kalıyor, "İzin ver"e basınca (sistem diyaloğu açılmadan) tazeleniyor.
   Normal akışta görünmez; kayıt için.
 
+### K-29 sonrası bağımsız denetim
+3 boyut (tarih aritmetiği, aşağı akış, doküman tutarlılığı) + bir karşı-denetçi; 10 aday
+bulgunun 5'i doğrulandı, 5'i elendi. Hepsi kapatıldı:
+
+- **Gerçek hata (major).** K-29'un ilk hâli yalnız eşiğe bakıyordu. Son yapılış bir mevsimsel
+  tarihin **üstündeyse** `nextSeasonalDate` o tarihi zaten tüketmiş oluyor; K-29 üstüne bir
+  daha atlayınca tek yapılış iki ayrı tarihi yutuyordu. `[1 Kas, 10 Kas]` ve son yapılış
+  1 Kas → vade 2026-11-10 yerine 2027-11-01 çıkıyor, 10 Kas işi hiç görünmüyordu. Böyle bir
+  takvim erişilebilir: madde düzenleme sayfası mevsimsel tarih eklemeye izin veriyor.
+  Düzeltme: iş **en yakın** tarihe aittir; sıradaki tarih geçmiş tarihten daha yakın değilse
+  atlama yapılmıyor (`previousSeasonalDate`).
+- **İki testim boşa geçiyordu.** "tarihin kendisinde" ve "tarihten sonra" vakaları şablonun
+  151 gün aralıklı tarihleriyle K-29 dalına hiç girmiyordu; ikisi de #27/#28'in kopyasıydı ve
+  biri var olmayan bir korumayı test ettiğini iddia ediyordu — hatayı gizleyen tam olarak o
+  yorumdu. Yakın tarihli takvimle yeniden yazıldı; mutasyon testiyle iki yönde de doğrulandı
+  (eski koşulla yeni testler patlıyor, K-29 tamamen kapalıyken özellik testleri patlıyor).
+- **`docs/06-test-plani.md` hiç düzenlenmemişti.** K-29 "satır 24 değişti" diyordu ama tabloya
+  dokunulmamıştı; CLAUDE.md o tabloyu normatif sayıyor (her satır bir test). Satır 24
+  güncellendi, K-29 vakaları için 29–36 satırları eklendi, testler bu numaralarla eşleştirildi.
+- **`docs/01-spec.md` §2.1** hâlâ koşulsuz "sonraki ilk tarih" diyordu; sapma notu eklendi.
+
 ## Bilinen sorunlar
 Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
 
