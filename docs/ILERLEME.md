@@ -730,6 +730,28 @@ Yapılanlar ve sonuçlar. Gerçek araba protokolü (§3) hâlâ çalıştırılm
 | İzin `pm revoke` ile geri alındı | `motion permission revoked: updates marked inactive`; uygulama açılınca **anahtar kendiliğinden kapandı**. K-33'ün iki yarısı da doğrulandı. |
 | Sürüm derlemesi | arm64 19,9 MB; `mapping.txt` gerekli `ActivityTransition*` sınıflarının korunduğunu gösteriyor. |
 
+#### Uçtan uca çalıştırılan zincir (yedek bildirim yolu)
+`cmd jobscheduler run -f -n androidx.work.systemjobscheduler com.beratarpa.carkeep <id>` ile
+**gerçek** WorkManager işi tetiklendi (release APK'da `debugRunDailyWorker` yok). Kalıcı iz
+bırakmamak için geçici bir kullanıcı maddesi açılıp sonunda silindi; şablonun 16 maddesine
+dokunulmadı.
+
+| Halka | Sonuç |
+|---|---|
+| DB → durum hesabı | Son yapılış 1 Ağu 2026, aralık 1 gün → "33 gün gecikti", Gecikmiş (1) |
+| Dart → snapshot → Kotlin | İş `evaluateFallback`'i çalıştırdı: `notification shown: 1 overdue`, `fallback shown: 1 overdue` |
+| Bildirim | Tepside: "1 kontrol gecikti / Bir süredir sürüş yok. ZZ-TEST-silinecek", `channel=reminders`, importance 4, `AUTO_CANCEL`, iki eylem (Aç, Yarın) |
+| Bildirime dokunma | Uygulama Kontroller'de açıldı, Gecikmiş bölümü üstte; bildirim tepsiden düştü (aktif liste boş, yalnız arşivde) |
+| K-26 | Yedek olayı Geçmiş'te sürüş olarak görünmedi (yalnız "düzeltme" satırı) |
+| İşin kendini planlaması | `daily check scheduled in 1337 min` |
+| Temizlik | Madde silindi → Zamanında (16), Geçmiş boş (kayıt FK ile gitti) |
+
+**Hâlâ çalışmayan tek halka:** gerçek `ACL_DISCONNECTED` → `BtReceiver` → `evaluateDisconnect`.
+Bunun için ikinci bir Bluetooth cihazı gerekiyordu; kulaklık yoktu, dizüstüyle eşleştirme
+Windows tarafında onay tıklaması istiyor ve erişim verilmedi. `no_motion` kararı ve
+`IN_VEHICLE` geçişinin gerçekten gelip gelmediği de bu yüzden hâlâ denenmedi — ikisi de arabada
+görülecek.
+
 Cihazda bulunan ve düzeltilen üç hata: **K-33** (izin geri alınınca bayrak bayat kalıyor),
 **K-34** (yeniden başlatma aboneliği düşürüyor + soğuk açılışta kural okunamıyor).
 Bağımsız inceleme (4 mercek, 9 ajan) aynı üçünü bağımsız olarak işaretledi; ayrıca
