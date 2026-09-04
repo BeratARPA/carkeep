@@ -609,6 +609,35 @@ void main() {
     await disposeTree(tester);
   });
 
+  test('K-34: soğuk açılışta kural akışı beklenir, abonelik kurulur', () async {
+    // `pumpSettings` yok: bilerek widget ağacı kurulmadan, `main.dart`'ın
+    // açılış sırasını taklit ediyor. Kural DB'de açık ama sağlayıcı henüz
+    // hiç okunmamış — eski kod burada `null` görüp abonelik kurmuyordu.
+    await seedVehicle();
+    await db.settingsDao.setRules(
+      const Rules().copyWith(requireMotion: true),
+    );
+    bridge.motionAvailable = true;
+    bridge.motionPermission = true;
+    bridge.motionActive = false;
+
+    final ProviderContainer c = ProviderContainer(
+      overrides: <Override>[
+        databaseProvider.overrideWithValue(db),
+        seedProvider.overrideWithValue(seed),
+        platformBridgeProvider.overrideWithValue(bridge),
+        todayProvider.overrideWith((Ref ref) => today),
+        installDayProvider.overrideWith((Ref ref) => installDay),
+      ],
+    );
+    addTearDown(c.dispose);
+
+    await c.read(appLifecycleProvider).syncMotionRule();
+
+    expect(bridge.motionActive, isTrue);
+    expect((await db.settingsDao.getRules()).requireMotion, isTrue);
+  });
+
   testWidgets('yedek bildirim seçenekleri arasında geziyor', (
     WidgetTester tester,
   ) async {

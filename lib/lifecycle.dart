@@ -97,8 +97,16 @@ class AppLifecycle {
   /// (K-33): motor o durumda doğrulamayı atlıyor, açık kalan anahtar yalan
   /// söylerdi.
   Future<void> syncMotionRule() async {
-    final Rules? rules = _ref.read(rulesProvider).valueOrNull;
-    if (rules == null || !rules.requireMotion) {
+    // `valueOrNull` **değil**: soğuk açılışta Drift akışı henüz yayın
+    // yapmamış oluyor, kural `null` okunuyordu ve abonelik hiç kurulmuyordu
+    // (cihaz testinde ve bağımsız incelemede aynı anda bulundu).
+    final Rules rules;
+    try {
+      rules = await _ref.read(rulesProvider.future);
+    } on Object {
+      return;
+    }
+    if (!rules.requireMotion) {
       return;
     }
     if (await _ref.read(permissionsProvider.notifier).ensureMotion()) {
