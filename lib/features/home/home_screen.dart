@@ -39,11 +39,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final PlatformBridge bridge = ref.read(platformBridgeProvider);
     switch (banner) {
       case HomeBanner.noBluetooth:
-        await bridge.requestBluetoothPermission();
-        await ref.read(permissionsProvider.notifier).refresh();
+        await ref.read(permissionsProvider.notifier).requestBluetooth();
       case HomeBanner.noNotification:
-        await bridge.requestNotificationPermission();
-        await ref.read(permissionsProvider.notifier).refresh();
+        await ref.read(permissionsProvider.notifier).requestNotification();
+      case HomeBanner.notificationsOff:
+        // İzin verili; kapalı olan kanalın kendisi, o yüzden sistem ayarı.
+        await bridge.openNotificationSettings();
       case HomeBanner.battery:
         await bridge.openBatteryOptimizationSettings();
       case HomeBanner.noDevice:

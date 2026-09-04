@@ -103,10 +103,16 @@ class _Chip extends StatelessWidget {
             color: connected ? AppColors.green : AppColors.ink2,
           ),
           const SizedBox(width: 6),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: connected ? AppColors.green : AppColors.ink2,
+          // Cihaz adı uzun olabiliyor ("Uconnect NM000000000N00000"); büyük
+          // yazı ölçeğinde chip ekrandan taşıyordu (cihaz testi, 1.3).
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                color: connected ? AppColors.green : AppColors.ink2,
+              ),
             ),
           ),
         ],

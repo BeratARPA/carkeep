@@ -63,6 +63,13 @@ class FakeBridge extends PlatformBridge {
   /// K-27: tepsideki bildirim kaç kez iptal edildi.
   int cancelCalls = 0;
 
+  /// 01-spec §9: sistem "bir daha gerekçe gösterme" diyorsa false.
+  bool rationale = true;
+  int openAppSettingsCalls = 0;
+  int openNotificationSettingsCalls = 0;
+  int deleteDatabaseCalls = 0;
+  bool notificationsEnabled = true;
+
   @override
   Future<bool> hasBluetoothPermission() async => bluetooth;
 
@@ -82,7 +89,27 @@ class FakeBridge extends PlatformBridge {
   }
 
   @override
-  Future<bool> areNotificationsEnabled() async => true;
+  Future<bool> areNotificationsEnabled() async => notificationsEnabled;
+
+  @override
+  Future<bool> shouldShowPermissionRationale(String permission) async =>
+      rationale;
+
+  @override
+  Future<void> openAppSettings() async {
+    openAppSettingsCalls++;
+  }
+
+  @override
+  Future<void> openNotificationSettings() async {
+    openNotificationSettingsCalls++;
+  }
+
+  @override
+  Future<int> deleteDatabase() async {
+    deleteDatabaseCalls++;
+    return 1;
+  }
 
   @override
   Future<bool> isIgnoringBatteryOptimizations() async => battery;

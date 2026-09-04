@@ -45,8 +45,7 @@ class DevicePickerNotifier extends Notifier<DevicePickerState> {
   }
 
   Future<void> requestPermission() async {
-    await ref.read(platformBridgeProvider).requestBluetoothPermission();
-    await ref.read(permissionsProvider.notifier).refresh();
+    await ref.read(permissionsProvider.notifier).requestBluetooth();
     await load();
   }
 }

@@ -5,6 +5,7 @@ import 'app.dart';
 import 'core/strings_tr.dart';
 import 'core/theme.dart';
 import 'data/db/database.dart';
+import 'data/platform/platform_bridge.dart';
 import 'data/repositories/item_repo.dart';
 import 'data/repositories/settings_repo.dart';
 import 'data/repositories/vehicle_repo.dart';
@@ -23,7 +24,14 @@ Future<void> main() async {
     db = AppDatabase();
     seed = await const SeedLoader().load();
   } on Object catch (e) {
-    runApp(_StartupError(_startupMessage(e)));
+    // 01-spec §9: şablon bozuksa geliştirici hatası, sıfırlamak fayda etmez;
+    // DB açılamıyorsa tek çıkış verileri silmek.
+    runApp(
+      StartupErrorApp(
+        message: _startupMessage(e),
+        canReset: e is! SeedFormatException,
+      ),
+    );
     return;
   }
 
@@ -64,10 +72,61 @@ String _startupMessage(Object error) =>
     error is SeedFormatException ? S.errSeedLoad : S.errDbOpen;
 
 /// DB veya şablon açılamazsa tam ekran hata (01-spec §9).
-class _StartupError extends StatelessWidget {
-  const _StartupError(this.message);
+class StartupErrorApp extends StatefulWidget {
+  const StartupErrorApp({
+    required this.message,
+    this.canReset = false,
+    this.bridge,
+    super.key,
+  });
 
   final String message;
+
+  /// DB açılamadıysa "Verileri sıfırla" sunulur.
+  final bool canReset;
+
+  /// Test için enjekte edilebilir.
+  final PlatformBridge? bridge;
+
+  @override
+  State<StartupErrorApp> createState() => _StartupErrorAppState();
+}
+
+class _StartupErrorAppState extends State<StartupErrorApp> {
+  late final PlatformBridge _bridge = widget.bridge ?? PlatformBridge();
+  bool _reset = false;
+
+  Future<void> _confirmReset(BuildContext context) async {
+    final bool? ok = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) => AlertDialog(
+        content: const Text(S.settingsResetConfirm),
+        actions: <Widget>[
+          TextButton(
+            key: const Key('startup_reset_cancel'),
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text(S.cancel),
+          ),
+          TextButton(
+            key: const Key('startup_reset_confirm'),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text(S.settingsReset),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) {
+      return;
+    }
+    try {
+      await _bridge.deleteDatabase();
+    } on Object {
+      // Silinemezse de kullanıcıya söyleyecek başka şey yok.
+    }
+    if (mounted) {
+      setState(() => _reset = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -75,14 +134,40 @@ class _StartupError extends StatelessWidget {
       title: S.appName,
       debugShowCheckedModeBanner: false,
       theme: buildCarKeepTheme(),
-      home: Scaffold(
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSizes.screenPadding),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium,
+      home: Builder(
+        builder: (BuildContext context) => Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.screenPadding),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    _reset ? S.errDbResetDone : widget.message,
+                    key: const Key('startup_error_text'),
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  if (widget.canReset && !_reset) ...<Widget>[
+                    const SizedBox(height: 24),
+                    OutlinedButton(
+                      key: const Key('startup_reset'),
+                      onPressed: () => _confirmReset(context),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, AppSizes.minTapTarget),
+                        foregroundColor: AppColors.red,
+                        side: const BorderSide(color: AppColors.line),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(AppSizes.buttonRadius),
+                          ),
+                        ),
+                      ),
+                      child: const Text(S.settingsReset),
+                    ),
+                  ],
+                ],
+              ),
             ),
           ),
         ),

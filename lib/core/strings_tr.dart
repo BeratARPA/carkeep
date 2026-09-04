@@ -207,6 +207,10 @@ abstract final class S {
   static const String bannerNoBluetooth =
       'Bluetooth izni yok, kopmayı yakalayamam.';
   static const String bannerNoNotification = 'Bildirim izni yok.';
+
+  /// 07 §8: izin verili ama kullanıcı kanalı kapatmış.
+  static const String bannerNotificationsOff =
+      'Bildirimler kapalı. Hatırlatma göremezsin.';
   static const String bannerNoDevice = 'Araba seçilmedi.';
   static const String bannerBattery =
       'Pil optimizasyonu açık, bildirim gecikebilir.';
@@ -219,6 +223,9 @@ abstract final class S {
 
   /// K-23: "Tarih/km düzelt" ile yazılan kayıt satırının etiketi.
   static const String logKindFix = 'düzeltme';
+  /// K-28: şablonda `verified != true` olan maddelerin kaynak notu.
+  static const String detailVerifyPrefix = 'Kılavuzdan doğrula:';
+
   static const String detailNoteLabel = 'Not (isteğe bağlı)';
   static const String detailNoteHint = 'Örn. arka sağ hep düşük';
   static const String detailSaveDone = 'Yaptım olarak kaydet';
@@ -410,5 +417,9 @@ abstract final class S {
   // ------------------------------------------------------------- hatalar
   static const String errSeedLoad = 'Şablon dosyası okunamadı.';
   static const String errDbOpen = 'Veriler açılamadı.';
+
+  /// 01-spec §9: DB açılamazsa tam ekran hatada sıfırlama sunulur.
+  static const String errDbResetDone =
+      'Veriler silindi. Uygulamayı kapatıp tekrar aç.';
   static const String errGeneric = 'Bir şey ters gitti.';
 }

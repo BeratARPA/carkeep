@@ -57,6 +57,10 @@ class CheckItem {
   final String? snoozeUntilDay;
 
   bool get isTemplateItem => templateKey != null;
+
+  /// K-28: şablon aralığı doğrulanmamış ve söyleyecek bir notu var.
+  bool get needsVerification =>
+      verified != 'true' && (sourceNote?.isNotEmpty ?? false);
   bool get hasLastDone => lastDoneDay != null;
 
   CheckItem copyWith({

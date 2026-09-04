@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/constants.dart';
 import 'core/date_utils.dart';
+import 'data/db/daos/settings_dao.dart';
 import 'data/db/database.dart';
 import 'data/platform/platform_bridge.dart';
 import 'data/repositories/item_list_repo.dart';
@@ -151,6 +152,8 @@ class PermissionState {
     required this.notificationsEnabled,
     required this.batteryIgnored,
     required this.bluetoothEnabled,
+    this.bluetoothBlocked = false,
+    this.notificationBlocked = false,
   });
 
   static const PermissionState unknown = PermissionState(
@@ -163,6 +166,11 @@ class PermissionState {
 
   final bool bluetooth;
   final bool notification;
+
+  /// 01-spec §9: bir kez soruldu, verilmedi ve sistem artık gerekçe
+  /// göstermeyecek → "bir daha sorma". Tek çıkış sistem ayarları.
+  final bool bluetoothBlocked;
+  final bool notificationBlocked;
 
   /// Kanal kullanıcı tarafından kapatılmış mı (07 §8).
   final bool notificationsEnabled;
@@ -177,6 +185,8 @@ class PermissionState {
     bool? notificationsEnabled,
     bool? batteryIgnored,
     bool? bluetoothEnabled,
+    bool? bluetoothBlocked,
+    bool? notificationBlocked,
   }) {
     return PermissionState(
       bluetooth: bluetooth ?? this.bluetooth,
@@ -184,6 +194,8 @@ class PermissionState {
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       batteryIgnored: batteryIgnored ?? this.batteryIgnored,
       bluetoothEnabled: bluetoothEnabled ?? this.bluetoothEnabled,
+      bluetoothBlocked: bluetoothBlocked ?? this.bluetoothBlocked,
+      notificationBlocked: notificationBlocked ?? this.notificationBlocked,
     );
   }
 }
@@ -203,18 +215,79 @@ class PermissionsNotifier extends Notifier<PermissionState> {
     }
     final PlatformBridge bridge = ref.read(platformBridgeProvider);
     try {
+      final bool bt = await bridge.hasBluetoothPermission();
+      final bool notif = await bridge.hasNotificationPermission();
       final PermissionState next = PermissionState(
-        bluetooth: await bridge.hasBluetoothPermission(),
-        notification: await bridge.hasNotificationPermission(),
+        bluetooth: bt,
+        notification: notif,
         notificationsEnabled: await bridge.areNotificationsEnabled(),
         batteryIgnored: await bridge.isIgnoringBatteryOptimizations(),
         bluetoothEnabled: await bridge.isBluetoothEnabled(),
+        bluetoothBlocked: await _blocked(
+          granted: bt,
+          which: 'bluetooth',
+          askedKey: SettingKeys.askedBluetooth,
+        ),
+        notificationBlocked: await _blocked(
+          granted: notif,
+          which: 'notification',
+          askedKey: SettingKeys.askedNotification,
+        ),
       );
       if (!_disposed) {
         state = next;
       }
     } on Object {
       // Kanal yoksa (test/masaüstü) varsayılanda kal.
+    }
+  }
+
+  /// Soruldu + verilmedi + sistem gerekçe göstermeyecek → kalıcı ret.
+  /// "Soruldu mu" olmadan ilk açılışta da kalıcı ret görünürdü.
+  Future<bool> _blocked({
+    required bool granted,
+    required String which,
+    required String askedKey,
+  }) async {
+    if (granted) {
+      return false;
+    }
+    if (!await ref.read(settingsRepoProvider).permissionAsked(askedKey)) {
+      return false;
+    }
+    return !await ref
+        .read(platformBridgeProvider)
+        .shouldShowPermissionRationale(which);
+  }
+
+  /// İzin isteme tek yerden: "soruldu" işareti burada yazılır.
+  Future<void> requestBluetooth() =>
+      _request(SettingKeys.askedBluetooth, (PlatformBridge b) =>
+          b.requestBluetoothPermission());
+
+  Future<void> requestNotification() =>
+      _request(SettingKeys.askedNotification, (PlatformBridge b) =>
+          b.requestNotificationPermission());
+
+  Future<void> _request(
+    String askedKey,
+    Future<bool> Function(PlatformBridge) ask,
+  ) async {
+    await ref.read(settingsRepoProvider).markPermissionAsked(askedKey);
+    try {
+      await ask(ref.read(platformBridgeProvider));
+    } on Object {
+      // Kanal yoksa sessiz; `refresh` durumu yine okur.
+    }
+    await refresh();
+  }
+
+  /// Kalıcı retten çıkış yolu (01-spec §9).
+  Future<void> openSystemSettings() async {
+    try {
+      await ref.read(platformBridgeProvider).openAppSettings();
+    } on Object {
+      // Kanal yoksa sessiz.
     }
   }
 }

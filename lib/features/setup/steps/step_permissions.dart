@@ -27,14 +27,18 @@ class StepPermissions extends ConsumerWidget {
           title: S.permBluetooth,
           why: S.permBluetoothWhy,
           granted: p.bluetooth,
+          blocked: p.bluetoothBlocked,
           onAction: c.requestBluetooth,
+          onOpenSettings: c.openSystemSettings,
         ),
         PermissionRow(
           rowKey: const Key('perm_notification'),
           title: S.permNotification,
           why: S.permNotificationWhy,
           granted: p.notification,
+          blocked: p.notificationBlocked,
           onAction: c.requestNotification,
+          onOpenSettings: c.openSystemSettings,
         ),
         PermissionRow(
           rowKey: const Key('perm_battery'),
@@ -60,6 +64,8 @@ class PermissionRow extends StatelessWidget {
     required this.granted,
     required this.onAction,
     this.optional = false,
+    this.blocked = false,
+    this.onOpenSettings,
     this.grantedLabel = S.granted,
     this.deniedLabel = S.notGranted,
     this.actionLabel = S.allow,
@@ -72,6 +78,11 @@ class PermissionRow extends StatelessWidget {
   final bool granted;
   final Future<void> Function() onAction;
   final bool optional;
+
+  /// 01-spec §9: "bir daha sorma" seçilmiş; sistem diyaloğu artık açılmaz.
+  final bool blocked;
+  final Future<void> Function()? onOpenSettings;
+
   final String grantedLabel;
   final String deniedLabel;
   final String actionLabel;
@@ -99,6 +110,14 @@ class PermissionRow extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(why, style: text.bodySmall),
+          if (blocked) ...<Widget>[
+            const SizedBox(height: 4),
+            Text(
+              S.permDeniedPermanently,
+              key: const Key('perm_blocked'),
+              style: text.bodySmall?.copyWith(color: AppColors.red),
+            ),
+          ],
           if (optional) ...<Widget>[
             const SizedBox(height: 2),
             Text(
@@ -110,7 +129,9 @@ class PermissionRow extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton(
-              onPressed: granted && !optional ? null : () => onAction(),
+              onPressed: granted && !optional
+                  ? null
+                  : () => blocked ? onOpenSettings?.call() : onAction(),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(0, AppSizes.minTapTarget),
                 foregroundColor: AppColors.ink,
@@ -121,7 +142,7 @@ class PermissionRow extends StatelessWidget {
                   ),
                 ),
               ),
-              child: Text(actionLabel),
+              child: Text(blocked ? S.openSettings : actionLabel),
             ),
           ),
         ],

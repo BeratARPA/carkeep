@@ -159,6 +159,7 @@ class _ItemDetailSheetState extends ConsumerState<ItemDetailSheet> {
                     const SizedBox(height: 14),
                   ],
                   if (item.warn != null) _WarnRow(item.warn!),
+                  if (item.needsVerification) _VerifyRow(item.sourceNote!),
                   _MeasureBlock(
                     item: item,
                     vehicle: vehicle,
@@ -263,6 +264,38 @@ class _WarnRow extends StatelessWidget {
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: AppColors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// K-28: şablondaki aralık doğrulanmamışsa kaynak notu gösterilir. README
+/// kullanıcıya ◐/❌ maddeleri kılavuzdan doğrulamasını söylüyordu ama
+/// uygulama hangisinin ne olduğunu göstermiyordu (denetim md. 14).
+class _VerifyRow extends StatelessWidget {
+  const _VerifyRow(this.note);
+
+  final String note;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      key: const Key('detail_verify'),
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Icon(Icons.help_outline, size: 18, color: AppColors.amber),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '${S.detailVerifyPrefix} $note',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.amber),
             ),
           ),
         ],

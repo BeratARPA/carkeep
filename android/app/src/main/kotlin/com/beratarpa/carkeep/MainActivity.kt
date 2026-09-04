@@ -73,6 +73,25 @@ class MainActivity : FlutterActivity() {
                     requestPermission(Manifest.permission.POST_NOTIFICATIONS, result)
                 }
 
+            // 01-spec 9: kalici ret. Android'de dogrudan API yok; konvansiyon
+            // "izin yok + gerekce gosterilmeyecek". "Daha once soruldu mu"
+            // bilgisini Dart tutuyor (ilk acilista da false doner).
+            "shouldShowPermissionRationale" -> {
+                val which = call.argument<String>("permission")
+                val permission = when (which) {
+                    "bluetooth" -> Manifest.permission.BLUETOOTH_CONNECT
+                    "notification" -> Manifest.permission.POST_NOTIFICATIONS
+                    else -> null
+                }
+                if (permission == null) {
+                    result.error("BAD_ARGS", "permission: bluetooth|notification", null)
+                    return
+                }
+                result.success(
+                    ActivityCompat.shouldShowRequestPermissionRationale(this, permission),
+                )
+            }
+
             "areNotificationsEnabled" ->
                 result.success(Notifications.areNotificationsEnabled(this))
 
@@ -216,6 +235,17 @@ class MainActivity : FlutterActivity() {
                 result.success(null)
             }
 
+            // 01-spec 9: DB acilamazsa tam ekran hatadaki "Verileri sifirla".
+            // Drift dosyasi Flutter'in belge dizininde; kanal Dart'tan once
+            // hazir oldugu icin acilisin en basinda cagrilabilir.
+            "deleteDatabase" -> {
+                val deleted = deleteDatabaseFiles()
+                prefs.clearAll()
+                Notifications.cancel(this)
+                Log.d(TAG, "database files deleted: $deleted")
+                result.success(deleted)
+            }
+
             "clearEngine" -> {
                 prefs.clearAll()
                 Notifications.cancel(this)
@@ -232,6 +262,18 @@ class MainActivity : FlutterActivity() {
         // Ust uste istek gelirse onceki cagriyi bosta birakma.
         previous?.success(false)
         ActivityCompat.requestPermissions(this, arrayOf(permission), REQ_PERM)
+    }
+
+    /** `carkeep.sqlite*` dosyalarini uygulama veri dizininde arar ve siler. */
+    private fun deleteDatabaseFiles(): Int {
+        val root = applicationInfo.dataDir?.let { java.io.File(it) } ?: return 0
+        var count = 0
+        root.walkTopDown().forEach { file ->
+            if (file.isFile && file.name.startsWith("carkeep.sqlite")) {
+                if (file.delete()) count++
+            }
+        }
+        return count
     }
 
     private fun appDetailsIntent(): Intent =

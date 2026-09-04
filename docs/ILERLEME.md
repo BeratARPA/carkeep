@@ -42,7 +42,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T13 Pending events ve Bluetooth durumu | bitti | `feat(T13)` | 458 Dart + 58 Kotlin testi; cihazda doğrulandı |
 | T14 DailyCheckWorker | bitti | `feat(T14)` | 458 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T15 Snapshot senkronu ve yaşam döngüsü | bitti | `feat(T15)` | 477 Dart + 72 Kotlin testi; cihazda doğrulandı |
-| T16 Hata/boş durumlar, metin turu | bekliyor | | |
+| T16 Hata/boş durumlar, metin turu | bitti | `feat(T16)` | 494 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T17 Cihaz testi düzeltmeleri | bekliyor | | |
 | T18 Release | bekliyor | | kontrol noktası |
 
@@ -179,7 +179,8 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 14. **`verified` / `sourceNote` hiçbir yere gitmiyor.** Seed'de zorunlu, T03'te doğrulanıyor,
     ama DB şemasında sütunu yok ve hiçbir ekranda görünmüyor. README kullanıcıya ◐/❌
     maddeleri kılavuzdan doğrulamasını söylüyor, ama uygulama hangi maddenin ◐ olduğunu
-    göstermiyor. → **Karar gerekiyor** (öneri: `source_note` sütunu + madde detayında not satırı).
+    göstermiyor. → **T16'da kapandı, K-28.** Sütunlar T02'de eklenmişti; madde detayında
+    "Kılavuzdan doğrula: …" satırı olarak gösteriliyor.
 15. **`custom` grubunun Türkçe başlığı yok.** Şema `group_key`'de `custom` bekliyor, seed'in
     `groups` sözlüğünde yok; madde ekleme ekranında grup alanı da tanımlı değil.
 16. **Kural varsayılanları eksik**: "Sadece gecikmiş varsa" ve "Günde en fazla bir" için
@@ -243,6 +244,8 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
     komut listesinde Kotlin testi çalıştıran komut yok.
 32. **07 §8 bildirim kanalının kapalı olmasını T16'ya havale ediyor**, ama T16 kapsamında
     bu iş yok ve durumu ölçecek kanal metodu tanımlı değil.
+    → **T16'da kapandı.** Kanal metodu T05'te (`areNotificationsEnabled`), uyarı şeridi
+    burada eklendi.
 33. **T17 `Build.MANUFACTURER`'a göre OEM metni istiyor**, ama bu bilgiyi Dart'a taşıyan
     kanal metodu 02 §6'da yok.
 
@@ -602,5 +605,38 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 - Cihazda doğrulandı: 35 gün gecikmiş madde + 25 dk simülasyon → bildirim; maddeyi "Yaptım"
   diye kaydedince `dumpsys notification` çıktısında CarKeep kaydı kalmadı, durum çubuğu
   temiz. Test verisi (düzeltme + Yaptım kayıtları) Geçmiş'ten silinerek geri alındı.
+
+### T16
+- **Türkçe literal kontrolü teste dönüştü** (`test/core/turkish_literals_test.dart`). Kabul
+  kriteri `grep` diyordu; grep bir kez çalışıp geçer, test her koşuda tutar. Yorum ayıklayıcı
+  dizge içindeki `//`yi (URL) korur, kendi doğruluğunu da test eder.
+- **01-spec §9'un iki maddesi hiç uygulanmamıştı**:
+  - *Kalıcı izin reddi*. `permDeniedPermanently` ve `openSettings` metinleri yazılmış ama
+    hiçbir yerde kullanılmıyordu. Android'de "bir daha sorma"yı doğrudan okuyan API yok;
+    ölçüt "soruldu + verilmedi + `shouldShowRequestPermissionRationale` false". "Soruldu mu"
+    bilgisi Dart'ta (`settings.asked_*`) tutuluyor, yoksa ilk açılışta da kalıcı ret görünürdü.
+    İzin isteme artık tek yerden (`PermissionsNotifier`), işareti o yazıyor.
+  - *DB açılamadığında "Verileri sıfırla"*. Tam ekran hata vardı, buton yoktu. Kanal
+    `deleteDatabase` ile veri dizinindeki `carkeep.sqlite*` dosyalarını siliyor; onay
+    isteniyor, sonra "Uygulamayı kapatıp tekrar aç" yazıyor. Şablon bozuksa buton çıkmıyor —
+    geliştirici hatası, veriyi silmek çözmez.
+- **Bildirim kanalı kapalı şeridi** eklendi (07 §8 → denetim md. 32 kapandı). İzin verili ama
+  kanal kapalıysa ayrı şerit; dokununca bildirim ayarları açılır.
+- **K-28**: şablon aralığı doğrulanmamış maddelerde (`verified != true`) kaynak notu madde
+  detayında "Kılavuzdan doğrula: …" olarak gösteriliyor (denetim md. 14 kapandı). 11 maddenin
+  notu vardı ve hiçbiri hiçbir ekrana çıkmıyordu; README ise kullanıcıya bunları kılavuzdan
+  doğrulamasını söylüyordu.
+- **Taşma testleri iki kez yalan söyledi, ikisi de düzeltildi.**
+  1. Test yüzeyi 800 dp genişti, telefon 411 dp. Cihazda taşan Bluetooth chip'i testte
+     geçiyordu. Artık `tester.view` gerçek telefon ölçüsüne kuruluyor.
+  2. Widget testi uygulama fontunu yüklemiyor; metinler yedek fontla ölçülüyordu ve
+     genişlikler yanlış çıkıyordu (yanlış alarm da veriyordu). `test/test_fonts.dart`
+     Manrope'un beş kesimini yüklüyor.
+  Bu ikisinden sonra test gerçek hatayı yakalıyor: 1.3 ölçeğinde chip 26 px taşıyor.
+- **Gerçek hata**: uzun cihaz adıyla ("Uconnect NM000000000N00000") Bluetooth chip'i 1.3
+  yazı ölçeğinde ekrandan taşıyordu. `Flexible` + ellipsis. Cihazda 1.3'e alınıp
+  doğrulandı, sonra ölçek 1.0'a döndürüldü.
+- Simge düğmelerinin hepsinin `tooltip`u var (ekran okuyucu etiketi); dokunma alanlarının
+  hepsi ≥48 dp. İkisi de test edildi.
 
 ## Bilinen sorunlar

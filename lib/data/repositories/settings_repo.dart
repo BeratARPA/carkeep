@@ -40,6 +40,13 @@ class SettingsRepo {
   Future<void> setGlobalSnoozeUntilDay(String? day) =>
       _dao.set(SettingKeys.globalSnoozeUntilDay, day);
 
+  // -------------------------------------------------------- izin soruldu mu
+
+  Future<bool> permissionAsked(String key) async =>
+      await _dao.getBool(key) ?? false;
+
+  Future<void> markPermissionAsked(String key) => _dao.setBool(key, true);
+
   // ------------------------------------------------------------ pil şeridi
 
   Future<bool> batteryBannerDismissed() async =>

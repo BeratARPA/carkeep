@@ -9,7 +9,7 @@ import '../../domain/models/vehicle.dart';
 import '../../providers.dart';
 
 /// Ana ekranın hangi uyarı şeridini göstereceği (01-spec §3.2).
-enum HomeBanner { noBluetooth, noNotification, noDevice, battery }
+enum HomeBanner { noBluetooth, noNotification, notificationsOff, noDevice, battery }
 
 /// Alt sekmeler (01-spec §3.2).
 enum HomeTab { home, history, settings }
@@ -59,6 +59,9 @@ final Provider<List<HomeBanner>> homeBannersProvider =
       return <HomeBanner>[
         if (!p.bluetooth) HomeBanner.noBluetooth,
         if (!p.notification) HomeBanner.noNotification,
+        // 07 §8: izin verili ama kanal kapalıysa motor bildirim basamaz.
+        if (p.notification && !p.notificationsEnabled)
+          HomeBanner.notificationsOff,
         if (vehicle != null && !vehicle.hasDevice) HomeBanner.noDevice,
         if (!p.batteryIgnored && !batteryDismissed) HomeBanner.battery,
       ];
@@ -67,6 +70,7 @@ final Provider<List<HomeBanner>> homeBannersProvider =
 String bannerText(HomeBanner banner) => switch (banner) {
   HomeBanner.noBluetooth => S.bannerNoBluetooth,
   HomeBanner.noNotification => S.bannerNoNotification,
+  HomeBanner.notificationsOff => S.bannerNotificationsOff,
   HomeBanner.noDevice => S.bannerNoDevice,
   HomeBanner.battery => S.bannerBattery,
 };

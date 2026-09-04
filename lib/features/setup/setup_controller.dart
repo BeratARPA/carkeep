@@ -175,7 +175,8 @@ class SetupController extends Notifier<SetupState> {
   }
 
   Future<void> requestBluetooth() async {
-    await ref.read(platformBridgeProvider).requestBluetoothPermission();
+    // İzin isteme tek yerden: "soruldu" işaretini de o yazıyor (01-spec §9).
+    await ref.read(permissionsProvider.notifier).requestBluetooth();
     await refreshPermissions();
     if (state.step == 4 || state.permissions.bluetooth) {
       await loadDevices();
@@ -183,9 +184,13 @@ class SetupController extends Notifier<SetupState> {
   }
 
   Future<void> requestNotification() async {
-    await ref.read(platformBridgeProvider).requestNotificationPermission();
+    await ref.read(permissionsProvider.notifier).requestNotification();
     await refreshPermissions();
   }
+
+  /// Kalıcı ret: sistem diyaloğu açılmaz, uygulama ayarına gidilir.
+  Future<void> openSystemSettings() =>
+      ref.read(permissionsProvider.notifier).openSystemSettings();
 
   Future<void> openBatterySettings() async {
     await ref.read(platformBridgeProvider).openBatteryOptimizationSettings();

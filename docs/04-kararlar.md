@@ -164,3 +164,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: Snapshot her yazıldığında motorun "gecikmiş" saydığı madde sayısı hesaplanır (açık + gecikmiş + ertelenmemiş, 01-spec §7.1 adım 5). Sayı **>0'dan 0'a düştüğünde** `cancelNotification` çağrılır. Açılışta sayı zaten 0 ise hiçbir şey yapılmaz.
 - Gerekçe: Yalnız geçişte iptal etmek, az önce basılmış bir bildirimi silme riskini ortadan kaldırıyor. Ölçüt ekranın Gecikmiş bölümü değil motorun listesi: ertelenmiş madde ekranda gecikmiş görünmeye devam eder (K-13) ama bildirime girmez, dolayısıyla erteleme de bildirimi anlamsız kılar.
 - Sonuç: `SnapshotSync._cancelIfNothingOverdue`, `item_grouping.engineOverdue`.
+
+## K-28 Doğrulanmamış şablon aralıkları madde detayında söylenir
+- Bağlam: Şablonda 11 maddenin `verified` değeri `partial`/`false` ve her birinin ne doğrulanacağını anlatan bir `sourceNote`'u var. README kullanıcıya "◐ ve ❌ işaretli maddeleri kılavuzdan doğrula" diyor, ama uygulama hangisinin hangisi olduğunu göstermiyordu; iki alan da DB'de duruyor, hiçbir ekrana çıkmıyordu (denetim md. 14).
+- Karar: Madde detayında, `verified != 'true'` ve `sourceNote` doluysa amber bir satır: `Kılavuzdan doğrula: <not>`. Uyarı (`warn`) satırının hemen altında; ölçüm bloğundan önce.
+- Gerekçe: Not zaten yazılmış ve tam olarak kullanıcının ihtiyaç duyduğu şeyi söylüyor ("Yaygın öneri 30.000 km; kılavuzu doğrula"). Aralığı değiştirecek yer Ayarlar; kararı verecek bilgi ise maddeyi açtığı yerde olmalı.
+- Sonuç: `CheckItem.needsVerification`, `item_detail_sheet._VerifyRow`, `strings_tr.detailVerifyPrefix`.

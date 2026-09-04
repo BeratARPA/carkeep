@@ -438,10 +438,10 @@ class _AppSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final PermissionState p = ref.watch(permissionsProvider);
     final PlatformBridge bridge = ref.read(platformBridgeProvider);
+    final PermissionsNotifier permissions = ref.read(
+      permissionsProvider.notifier,
+    );
     final int? version = ref.watch(templateVersionProvider).valueOrNull;
-
-    Future<void> refresh() =>
-        ref.read(permissionsProvider.notifier).refresh();
 
     return SettingsSection(
       title: S.settingsSectionApp,
@@ -456,20 +456,18 @@ class _AppSection extends ConsumerWidget {
                 title: S.permBluetooth,
                 why: S.permBluetoothWhy,
                 granted: p.bluetooth,
-                onAction: () async {
-                  await bridge.requestBluetoothPermission();
-                  await refresh();
-                },
+                blocked: p.bluetoothBlocked,
+                onAction: permissions.requestBluetooth,
+                onOpenSettings: permissions.openSystemSettings,
               ),
               PermissionRow(
                 rowKey: const Key('settings_perm_notification'),
                 title: S.permNotification,
                 why: S.permNotificationWhy,
                 granted: p.notification,
-                onAction: () async {
-                  await bridge.requestNotificationPermission();
-                  await refresh();
-                },
+                blocked: p.notificationBlocked,
+                onAction: permissions.requestNotification,
+                onOpenSettings: permissions.openSystemSettings,
               ),
               PermissionRow(
                 rowKey: const Key('settings_perm_battery'),

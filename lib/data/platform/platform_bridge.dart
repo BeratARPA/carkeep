@@ -252,6 +252,17 @@ class PlatformBridge {
       await channel.invokeMethod<bool>('requestNotificationPermission') ?? false;
 
   /// Kanal kullanıcı tarafından kapatılmış mı (07 §8).
+  /// Kalıcı ret tespiti (01-spec §9). `permission`: `bluetooth`|`notification`.
+  /// İzin verilmemişken **false** dönmesi "bir daha sorma" seçildi demektir —
+  /// ama ilk soruştan önce de false döner, o yüzden çağıran taraf "daha önce
+  /// soruldu mu" bilgisini ayrıca tutar.
+  Future<bool> shouldShowPermissionRationale(String permission) async =>
+      await channel.invokeMethod<bool>(
+        'shouldShowPermissionRationale',
+        <String, Object?>{'permission': permission},
+      ) ??
+      false;
+
   Future<bool> areNotificationsEnabled() async =>
       await channel.invokeMethod<bool>('areNotificationsEnabled') ?? true;
 
@@ -355,6 +366,11 @@ class PlatformBridge {
 
   /// "Verileri sıfırla": prefs temizlenir, bildirim iptal edilir.
   Future<void> clearEngine() => channel.invokeMethod<void>('clearEngine');
+
+  /// DB açılamadığında son çare (01-spec §9): veri dosyaları silinir.
+  /// Dönen sayı silinen dosya adedi.
+  Future<int> deleteDatabase() async =>
+      await channel.invokeMethod<int>('deleteDatabase') ?? 0;
 
   // ----------------------------------------------------------- geliştirici
 
