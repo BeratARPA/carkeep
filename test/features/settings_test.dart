@@ -8,6 +8,7 @@ import 'package:carkeep/data/db/database.dart';
 import 'package:carkeep/data/db/daos/settings_dao.dart';
 import 'package:carkeep/data/platform/platform_bridge.dart';
 import 'package:carkeep/data/repositories/item_repo.dart';
+import 'package:carkeep/data/repositories/item_list_repo.dart';
 import 'package:carkeep/data/repositories/settings_repo.dart';
 import 'package:carkeep/data/repositories/trip_repo.dart';
 import 'package:carkeep/data/seed/seed_loader.dart';
@@ -636,6 +637,103 @@ void main() {
 
     expect(bridge.motionActive, isTrue);
     expect((await db.settingsDao.getRules()).requireMotion, isTrue);
+  });
+
+  test('K-31: ölçüm tipi değişince eski biçimli son değer siliniyor', () async {
+    final int v = await seedVehicle();
+    final CheckItemRow tires = (await db.itemDao.getAll(
+      v,
+    )).firstWhere((CheckItemRow e) => e.templateKey == 'tire_pressure');
+    await db.itemDao.setLastDone(
+      tires.id,
+      day: '2026-09-01',
+      km: 150000,
+      value: '2,3 / 2,3 / 2,3 / 2,2 bar',
+    );
+    expect((await db.itemDao.getById(tires.id))!.lastValue, isNotNull);
+
+    final ItemListRepo repo = ItemListRepo(db);
+    // Tip değişiyor: eski değer yeni ekranda anlamsız.
+    await repo.updateItemForm(
+      tires.id,
+      name: 'Lastik basıncı',
+      schedule: Schedule.days(14),
+      measure: const Measure.none(),
+    );
+    expect((await db.itemDao.getById(tires.id))!.lastValue, isNull);
+
+    // Tip aynı kalırsa değere dokunulmuyor.
+    await db.itemDao.setLastDone(
+      tires.id,
+      day: '2026-09-01',
+      km: 150000,
+      value: 'bir şey',
+    );
+    await repo.updateItemForm(
+      tires.id,
+      name: 'Lastik basıncı',
+      schedule: Schedule.days(21),
+      measure: const Measure.none(),
+    );
+    expect((await db.itemDao.getById(tires.id))!.lastValue, 'bir şey');
+  });
+
+  test('K-31: birden çok silinen şablon anahtarı birikiyor', () async {
+    final int v = await seedVehicle();
+    final List<CheckItemRow> rows = await db.itemDao.getAll(v);
+    final ItemListRepo repo = ItemListRepo(db);
+    for (final String key in <String>['oil_level', 'tire_pressure']) {
+      await repo.deleteItem(
+        rows.firstWhere((CheckItemRow e) => e.templateKey == key).id,
+      );
+    }
+
+    expect(
+      await SettingsRepo(db).deletedTemplateKeys(),
+      <String>{'oil_level', 'tire_pressure'},
+    );
+
+    // İkisi de yükseltmede geri gelmiyor.
+    final Seed v2 = Seed(
+      version: seed.version + 1,
+      targetVehicle: seed.targetVehicle,
+      groups: seed.groups,
+      items: seed.items,
+    );
+    await ItemRepo(db).upgradeTemplateIfNeeded(v, v2);
+    final Set<String?> after = (await db.itemDao.getAll(
+      v,
+    )).map((CheckItemRow e) => e.templateKey).toSet();
+    expect(after.contains('oil_level'), isFalse);
+    expect(after.contains('tire_pressure'), isFalse);
+  });
+
+  testWidgets('K-30: izin var ama kayıt kurulamazsa kural açılmıyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    // Birinci emniyet kilidi: kural yalnız abonelik **gerçekten** kurulunca
+    // yazılıyor. İzin verilmiş olması yetmiyor.
+    bridge.motionAvailable = true;
+    bridge.motionPermission = true;
+    bridge.motionRegisterFails = true;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('rule_require_motion')),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect((await db.settingsDao.getRules()).requireMotion, isFalse);
+    expect(bridge.motionActive, isFalse);
+    expect(find.text(S.ruleRequireMotionNoPermission), findsOneWidget);
+
+    await flushToast(tester);
+    await disposeTree(tester);
   });
 
   testWidgets('yedek bildirim seçenekleri arasında geziyor', (

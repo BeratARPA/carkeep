@@ -102,6 +102,9 @@ class FakeBridge extends PlatformBridge {
   /// İzin isteği kabul mü edilsin (kalıcı ret senaryosu).
   bool motionGrantOnRequest = true;
 
+  /// İzin var ama Play Services kaydı başarısız (K-30 birinci emniyet kilidi).
+  bool motionRegisterFails = false;
+
   @override
   Future<bool> isMotionAvailable() async => motionAvailable;
 
@@ -117,7 +120,8 @@ class FakeBridge extends PlatformBridge {
   @override
   Future<bool> setMotionUpdates({required bool enabled}) async {
     setMotionCalls++;
-    motionActive = enabled && motionAvailable && motionPermission;
+    motionActive =
+        enabled && motionAvailable && motionPermission && !motionRegisterFails;
     return motionActive;
   }
 

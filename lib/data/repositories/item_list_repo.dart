@@ -79,12 +79,16 @@ class ItemListRepo {
     required Schedule schedule,
     required Measure measure,
   }) async {
+    final CheckItemRow? before = await _db.itemDao.getById(id);
+    final String type = measureTypeToString(measure.type);
     await _db.transaction(() async {
       await _db.itemDao.setNameAndMeasure(
         id,
         name: name,
-        measureType: measureTypeToString(measure.type),
+        measureType: type,
         measureJson: measure.json,
+        // Tip değiştiyse eski biçimli son değer artık okunamaz.
+        clearLastValue: before != null && before.measureType != type,
       );
       await setSchedule(id, schedule);
     });

@@ -585,19 +585,22 @@ class ReminderEngineTest {
             "reconnect", "fallback", "ok",
             // Denetim md. 19 uyarinca eklenenler:
             "no_snapshot", "no_permission",
+            // K-30:
+            "no_motion",
         )
-        val produced = setOf(
-            ReminderEngine.NOTE_OK,
-            ReminderEngine.NOTE_SHORT_TRIP,
-            ReminderEngine.NOTE_NO_SNAPSHOT,
-            ReminderEngine.NOTE_SNOOZED,
-            ReminderEngine.NOTE_NO_OVERDUE,
-            ReminderEngine.NOTE_ONCE_PER_DAY,
-            ReminderEngine.NOTE_RECONNECT,
-            ReminderEngine.NOTE_NO_PERMISSION,
-            ReminderEngine.NOTE_FALLBACK,
-        )
-        assertTrue(documented.containsAll(produced), "beklenmeyen not: ${produced - documented}")
+        // Elle sayilan liste sapmayi yakalayamiyordu: K-30'da NOTE_NO_MOTION
+        // eklendi, bu set guncellenmedi ve test yesil kaldi (bagimsiz denetim
+        // bulgusu). Artik sabitler yansimayla toplaniyor.
+        val produced = ReminderEngine::class.java.declaredFields
+            .filter { it.name.startsWith("NOTE_") }
+            .map {
+                it.isAccessible = true
+                it.get(ReminderEngine) as String
+            }
+            .toSet()
+
+        assertTrue(produced.size >= 10, "not sabitleri okunamadi: $produced")
+        assertEquals(documented, produced, "sozluk ile sabitler ayristi")
     }
     // ------------------------------------------------------------ K-30 hareket
 
@@ -677,13 +680,28 @@ class ReminderEngineTest {
             durationMin = 30,
             motion = ReminderEngine.Motion(
                 active = true,
-                lastInVehicleAt = connectedAt -
-                    (ReminderEngine.MOTION_LEAD_MINUTES - 1) * 60_000L,
+                // Sabitten turetilmiyor: sabit buyurse test sessizce
+                // genisleyip sinirini kaybederdi (bagimsiz denetim bulgusu).
+                lastInVehicleAt = connectedAt - 9 * 60_000L,
                 connectedAt = connectedAt,
                 disconnectedAt = connectedAt + 30 * 60_000L,
             ),
         )
         assertIs<ReminderEngine.Decision.Notify>(decision)
+        assertEquals(10, ReminderEngine.MOTION_LEAD_MINUTES)
+    }
+
+    /** Pencerenin disi: 11 dk once gelen gecis bu surusu dogrulamaz. */
+    @Test
+    fun `motion just outside the lead window does not count`() {
+        val connectedAt = 10_000_000L
+        val motion = ReminderEngine.Motion(
+            active = true,
+            lastInVehicleAt = connectedAt - 11 * 60_000L,
+            connectedAt = connectedAt,
+            disconnectedAt = connectedAt + 30 * 60_000L,
+        )
+        assertFalse(motion.seenInTrip())
     }
 
     /**

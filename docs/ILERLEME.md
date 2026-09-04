@@ -715,6 +715,33 @@ bulgunun 5'i doğrulandı, 5'i elendi. Hepsi kapatıldı:
   kayboluyordu. Hareket okumaları artık en sonda ve ayrı `try` içinde.
 - Cihazda hiç denenmedi. Adımlar `06 §3b` (12–19).
 
+### Cihaz testi — 4 Eyl 2026, K-30/K-31 (Galaxy A55, SM-A556E, release APK)
+Yapılanlar ve sonuçlar. Gerçek araba protokolü (§3) hâlâ çalıştırılmadı.
+
+| Adım | Sonuç |
+|---|---|
+| Kurulum (aynı imza, üstüne) | Veri korundu: Egea, 150.386 km, Uconnect, 16 madde. Soğuk açılış 952 ms. |
+| Receiver kaydı | `BtReceiver` (iki ACL action) ve `MotionReceiver` manifest'te kayıtlı. |
+| Play Hizmetleri | Var; satır aktif, yardım metni normal hâlinde. |
+| Hareket izni **reddedildi** | Anahtar kapalı kaldı, "Hareket izni verilmedi" uyarısı çıktı, izin `granted=false`. |
+| Hareket izni **verildi** | `motion updates registered` — Play Services aboneliği gerçek cihazda kabul etti. Anahtar açık. |
+| Soğuk açılış (düzeltme öncesi) | Abonelik **kurulmadı** (kayıt yok); arka plan→ön plan çevriminde kuruldu. K-34'ün ikinci yarısı buradan çıktı. |
+| Soğuk açılış (düzeltme sonrası) | `motion updates registered` — açılışta kuruluyor. |
+| İzin `pm revoke` ile geri alındı | `motion permission revoked: updates marked inactive`; uygulama açılınca **anahtar kendiliğinden kapandı**. K-33'ün iki yarısı da doğrulandı. |
+| Sürüm derlemesi | arm64 19,9 MB; `mapping.txt` gerekli `ActivityTransition*` sınıflarının korunduğunu gösteriyor. |
+
+Cihazda bulunan ve düzeltilen üç hata: **K-33** (izin geri alınınca bayrak bayat kalıyor),
+**K-34** (yeniden başlatma aboneliği düşürüyor + soğuk açılışta kural okunamıyor).
+Bağımsız inceleme (4 mercek, 9 ajan) aynı üçünü bağımsız olarak işaretledi; ayrıca
+şu düzeltmeler ondan geldi: not sözlüğü testi yansımaya çevrildi (elle liste
+`no_motion`'ı kaçırmıştı, sapmayı yakalayamıyordu), `MOTION_LEAD_MINUTES`'tan türetilen
+totolojik test gerçek sınıra bağlandı, ölçüm tipi değişince eski biçimli `last_value`
+siliniyor, `_MotionRow` `await` sonrası `ref` okumuyor.
+
+**Yapılmadı:** gerçek yeniden başlatma denemesi (kullanıcının telefonu kullanımdaydı;
+mantık JVM testli ve yükseltme yolunda aynı dal cihazda tetiklendi), şablon maddesi
+silmenin cihazda denenmesi (kullanıcının gerçek verisini kalıcı olarak değiştirirdi).
+
 ## Bilinen sorunlar
 Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
 
@@ -734,4 +761,10 @@ Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
   Pencere birkaç saniye (kopma ile geri bağlanma arasında uygulamayı açmak gerekir) ve
   01-spec §7.3 bu sınıf kaybı v1 için kabul ediyor.
 - **`DayKey.daysBetween` negatif farkta doğru ama hiç çağrılmıyor** — kayıt için.
+- **Yedek bildirimdeki "kaç gündür sürmedin" sayısı `counted`'a bakmıyor.** `DailyCheckWorker.lastTripDay`
+  son trip'in `disconnectedAt`'ini okuyor; `short_trip` ve K-30 `no_motion` trip'leri de "son sürüş"
+  sayılıyor. Kararı etkilemiyor (yalnız bildirim metnindeki sayı), K-12'den beri böyle. Bağımsız
+  incelemede işaretlendi; düşük.
+- **Aynı anda iki izin isteği** `MainActivity.pendingPermission` tek yuva olduğu için ilk çağrıyı
+  `false` ile kapatıyor. K-30 öncesinden beri böyle; pratikte iki diyalog aynı anda açılmıyor.
 - Eski PNG mipmap'ler (Flutter logosu) APK'da duruyor, API 26+'da kullanılmıyor.

@@ -169,6 +169,9 @@ class _MotionRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final PermissionState perms = ref.watch(permissionsProvider);
     final SettingsController c = ref.read(settingsControllerProvider);
+    // `await`'ten sonra `ref.read` çağırmıyoruz: kullanıcı yazma sürerken
+    // Ayarlar'dan çıkarsa widget düşer ve `disableMotion` atlanırdı.
+    final PermissionsNotifier perm = ref.read(permissionsProvider.notifier);
     final bool available = perms.motionAvailable;
 
     return SettingsSwitchRow(
@@ -183,12 +186,10 @@ class _MotionRow extends ConsumerWidget {
           : (bool v) async {
               if (!v) {
                 await c.setRules(rules.copyWith(requireMotion: false));
-                await ref.read(permissionsProvider.notifier).disableMotion();
+                await perm.disableMotion();
                 return;
               }
-              final bool ok = await ref
-                  .read(permissionsProvider.notifier)
-                  .enableMotion();
+              final bool ok = await perm.enableMotion();
               if (ok) {
                 await c.setRules(rules.copyWith(requireMotion: true));
                 return;

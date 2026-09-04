@@ -99,11 +99,15 @@ class ItemDao extends DatabaseAccessor<AppDatabase> with _$ItemDaoMixin {
   }
 
   /// Madde düzenleme sayfası (01-spec §3.7).
+  /// [clearLastValue] verilirse `last_value` da silinir: ölçüm tipi
+  /// değiştiğinde eski biçimli değer ("2,3 / 2,3 / 2,3 / 2,2 bar") yeni tipin
+  /// ekranında anlamsız görünüyordu (K-31 ölçüm kilidi kalkınca ortaya çıktı).
   Future<int> setNameAndMeasure(
     int id, {
     required String name,
     required String measureType,
     String? measureJson,
+    bool clearLastValue = false,
   }) {
     return (update(checkItems)..where(($CheckItemsTable t) => t.id.equals(id)))
         .write(
@@ -111,6 +115,9 @@ class ItemDao extends DatabaseAccessor<AppDatabase> with _$ItemDaoMixin {
             name: Value<String>(name),
             measureType: Value<String>(measureType),
             measureJson: Value<String?>(measureJson),
+            lastValue: clearLastValue
+                ? const Value<String?>(null)
+                : const Value<String?>.absent(),
           ),
         );
   }
