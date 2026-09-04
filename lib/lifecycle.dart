@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/date_utils.dart';
 import 'data/platform/platform_bridge.dart';
+import 'domain/models/rules.dart';
+import 'features/settings/settings_controller.dart';
 import 'providers.dart';
 
 /// Kotlin'in biriktirdiklerini DB'ye işler ve platform durumunu tazeler.
@@ -84,14 +86,26 @@ class AppLifecycle {
     await readLaunchAction();
     await _ref.read(bluetoothStateProvider.notifier).refresh();
     await _ref.read(permissionsProvider.notifier).refresh();
-    // K-30: yeniden başlatma ve "force stop" geçiş aboneliğini düşürüyor;
-    // kural açıkken her `resume`'da yeniden kuruluyor.
-    await _ref.read(permissionsProvider.notifier).ensureMotion(
-      wanted:
-          _ref.read(rulesProvider).valueOrNull?.requireMotion ?? false,
-    );
+    await _syncMotionRule();
     // 01-spec §6: `resume` de bir snapshot tetikleyicisi.
     await _ref.read(snapshotSyncProvider).write();
+  }
+
+  /// K-30: yeniden başlatma ve "force stop" geçiş aboneliğini düşürüyor;
+  /// kural açıkken her `resume`'da yeniden kuruluyor. İzin sistem
+  /// ayarlarından geri alınmışsa kural da kapanıyor: motor o durumda
+  /// doğrulamayı atlıyor, açık kalan anahtar yalan söylerdi.
+  Future<void> _syncMotionRule() async {
+    final Rules? rules = _ref.read(rulesProvider).valueOrNull;
+    if (rules == null || !rules.requireMotion) {
+      return;
+    }
+    if (await _ref.read(permissionsProvider.notifier).ensureMotion()) {
+      return;
+    }
+    await _ref
+        .read(settingsControllerProvider)
+        .setRules(rules.copyWith(requireMotion: false));
   }
 }
 

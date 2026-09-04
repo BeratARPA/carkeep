@@ -361,18 +361,22 @@ class PermissionsNotifier extends Notifier<PermissionState> {
 
   /// Açılışta/`resume`'da aboneliği tazeler: yeniden başlatma veya
   /// "force stop" aboneliği düşürebiliyor, kural açık kalıyor.
-  Future<void> ensureMotion({required bool wanted}) async {
-    if (!wanted) {
-      return;
-    }
+  ///
+  /// Dönen değer: kural açık kalabilir mi. `false` ise izin ya da Play
+  /// Hizmetleri gitmiştir; çağıran taraf kuralı kapatır, yoksa anahtar açık
+  /// görünüp motor doğrulamayı atlıyor olurdu (cihaz testi bulgusu).
+  Future<bool> ensureMotion() async {
     try {
       final PlatformBridge bridge = ref.read(platformBridgeProvider);
-      if (await bridge.isMotionAvailable() &&
-          await bridge.hasMotionPermission()) {
-        await bridge.setMotionUpdates(enabled: true);
+      if (!await bridge.isMotionAvailable() ||
+          !await bridge.hasMotionPermission()) {
+        return false;
       }
+      await bridge.setMotionUpdates(enabled: true);
+      return true;
     } on Object {
-      // Kanal yoksa sessiz.
+      // Kanal yoksa (test/masaüstü) kurala dokunma.
+      return true;
     }
   }
 

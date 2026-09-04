@@ -198,3 +198,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Bağlam: K-30 konuşulurken gündeme geldi ("belki gps geofence'de düşünebiliriz").
 - Karar: Yapılmadı. `00-vizyon.md` konum/GPS'i kapsam dışı sayıyor; geofence sürekli konum izni ister, pil tüketir ve "ev/iş yakınında değilse sürüştür" gibi bir tahmin üretir. Activity Recognition aynı soruyu konum izni istemeden cevaplıyor.
 - Yeniden açılma koşulu: K-30 gerçek arabada denendikten sonra hâlâ yanlış alarm kalıyorsa.
+
+## K-33 Hareket doğrulaması izni karar anında sorulur
+- Bağlam: K-30 iki emniyet kilidi tanımlamıştı, ama ikisi de "abonelik hiç kurulamadı" hâlini kapsıyordu. Cihaz testinde üçüncü bir yol çıktı: kullanıcı `ACTIVITY_RECOGNITION` iznini **sonradan** sistem ayarlarından geri alırsa Play Hizmetleri geçiş göndermeyi keser, `motion_updates_active` bayrağı ise `true` kalır. Bayrağı yalnız `MotionTracker.start/stop` değiştiriyor, ikisi de uygulamanın çalışmasını gerektiriyor; motor uygulama ölüyken çalıştığı için (K-03) bunu hiç öğrenemezdi. Sonuç: her sürüş `no_motion` sayılır, bildirim **sessizce ve süresiz** kesilirdi — K-30'un "asla olmamalı" dediği sınıf.
+- Karar: Motor karar anında bayrağa değil `MotionTracker.isActive(ctx)`'e bakıyor: bayrak **ve** `checkSelfPermission`. İzin gitmişse bayrak orada düzeltiliyor (tek prefs yazımı, receiver için sorun değil). Ayrıca `resume`'da kural açık ama izin yoksa kural kapatılıyor: motor doğrulamayı atlıyorken açık kalan anahtar yalan söylerdi.
+- Gerekçe: İzin kontrolü yerel ve ucuz; bayrağa güvenmenin bedeli uygulamanın asıl işini kaybetmek. `06 §3b` adım 16 tam bunu iddia ediyordu ve düzeltmeden önce **başarısız olurdu**.
+- Sonuç: `MotionTracker.isActive`, `ReminderEngine.onDisconnected`, `MainActivity.isMotionActive`, `PermissionsNotifier.ensureMotion` (artık `bool` dönüyor), `AppLifecycle._syncMotionRule`.

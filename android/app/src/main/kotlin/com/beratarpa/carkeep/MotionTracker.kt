@@ -91,6 +91,27 @@ object MotionTracker {
         }
     }
 
+    /**
+     * Karar anindaki gercek durum: bayrak **ve** izin.
+     *
+     * Bayrak tek basina yetmiyor. Kullanici izni sistem ayarlarindan geri
+     * alirsa Play Services gecis gondermeyi keser, ama bayrak true kalir:
+     * motor uygulama calismadan da calistigi icin (K-03) bunu hic ogrenemez ve
+     * her surusu "hareket gormedim" sayip bildirimi sessizce yutar. Cihaz
+     * testinde bulundu.
+     *
+     * Izin gitmisse bayrak burada duzeltiliyor; tek bir prefs yazimi, receiver
+     * icin sorun degil.
+     */
+    fun isActive(ctx: Context): Boolean {
+        val prefs = EnginePrefs(ctx)
+        if (!prefs.motionUpdatesActive) return false
+        if (hasPermission(ctx)) return true
+        prefs.motionUpdatesActive = false
+        Log.d(TAG, "motion permission revoked: updates marked inactive")
+        return false
+    }
+
     fun stop(ctx: Context) {
         val prefs = EnginePrefs(ctx)
         prefs.motionUpdatesActive = false

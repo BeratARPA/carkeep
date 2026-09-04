@@ -122,7 +122,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
-            "isMotionActive" -> result.success(prefs.motionUpdatesActive)
+            "isMotionActive" -> result.success(MotionTracker.isActive(this))
 
             // Adaptor kapaliyken `getBondedDevices` bos liste doner; cihaz
             // secici "eslesmis cihaz yok" yerine "Bluetooth kapali" demeli.

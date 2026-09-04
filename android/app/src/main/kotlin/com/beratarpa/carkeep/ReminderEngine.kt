@@ -286,7 +286,8 @@ object ReminderEngine {
         val snapshot = Snapshot.parse(prefs.snapshotJson)
         val state = readState(prefs).copy(connectedAt = connectedAt)
         val motion = Motion(
-            active = prefs.motionUpdatesActive,
+            // K-30 emniyet: bayrak degil, bayrak + izin (MotionTracker.isActive).
+            active = MotionTracker.isActive(ctx),
             lastInVehicleAt = prefs.lastInVehicleAt,
             connectedAt = connectedAt,
             disconnectedAt = now,

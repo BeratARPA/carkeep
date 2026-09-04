@@ -17,6 +17,7 @@ import 'package:carkeep/domain/models/schedule.dart';
 import 'package:carkeep/domain/models/trip.dart';
 import 'package:carkeep/domain/models/vehicle.dart';
 import 'package:carkeep/features/settings/settings_screen.dart';
+import 'package:carkeep/lifecycle.dart';
 import 'package:carkeep/providers.dart';
 import 'package:drift/drift.dart' hide isNotNull, isNull;
 import 'package:drift/native.dart';
@@ -541,6 +542,69 @@ void main() {
 
     expect((await db.settingsDao.getRules()).requireMotion, isFalse);
     expect(bridge.motionActive, isFalse);
+
+    await disposeTree(tester);
+  });
+
+  testWidgets(
+    'K-30: izin sistem ayarlarından geri alınırsa kural kendini kapatıyor',
+    (WidgetTester tester) async {
+      await seedVehicle();
+      // Kural açık ve abonelik kurulu bir durumdan başla.
+      await db.settingsDao.setRules(
+        const Rules().copyWith(requireMotion: true),
+      );
+      bridge.motionAvailable = true;
+      bridge.motionPermission = true;
+      bridge.motionActive = true;
+      await pumpSettings(tester);
+
+      // Kullanıcı izni sistem ayarlarından geri aldı; Android süreci öldürür,
+      // uygulama açılınca `resume` bunu görmeli.
+      bridge.motionPermission = false;
+      bridge.motionActive = false;
+      await ProviderScope.containerOf(
+        tester.element(find.byType(CarKeepApp)),
+      ).read(appLifecycleProvider).onResume();
+      await tester.pumpAndSettle();
+
+      expect((await db.settingsDao.getRules()).requireMotion, isFalse);
+      await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+      expect(
+        tester.widget<Switch>(
+          find.descendant(
+            of: find.byKey(const Key('rule_require_motion')),
+            matching: find.byType(Switch),
+          ),
+        ).value,
+        isFalse,
+      );
+
+      await disposeTree(tester);
+    },
+  );
+
+  testWidgets('K-30: izin duruyorsa resume kuralı kapatmıyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    await db.settingsDao.setRules(
+      const Rules().copyWith(requireMotion: true),
+    );
+    bridge.motionAvailable = true;
+    bridge.motionPermission = true;
+    bridge.motionActive = true;
+    await pumpSettings(tester);
+
+    final int before = bridge.setMotionCalls;
+    await ProviderScope.containerOf(
+      tester.element(find.byType(CarKeepApp)),
+    ).read(appLifecycleProvider).onResume();
+    await tester.pumpAndSettle();
+
+    expect((await db.settingsDao.getRules()).requireMotion, isTrue);
+    // Abonelik tazelendi (yeniden başlatma sonrası düşmüş olabilir).
+    expect(bridge.setMotionCalls, greaterThan(before));
 
     await disposeTree(tester);
   });
