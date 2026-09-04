@@ -66,6 +66,7 @@ abstract final class SnapshotBuilder {
         'minTripMinutes': rules.minTripMinutes,
         'graceMinutes': rules.graceMinutes,
         'fallbackAfterDays': rules.fallbackAfterDays,
+        'requireMotion': rules.requireMotion,
       },
       'items': snapshotItems,
     };

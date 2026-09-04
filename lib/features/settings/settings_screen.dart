@@ -158,6 +158,56 @@ class _BluetoothSection extends ConsumerWidget {
 
 // ------------------------------------------------------------- hatırlatma
 
+/// K-30 hareket doğrulaması. Açmak izin + abonelik gerektirdiği için ayrı
+/// widget: kural yalnız abonelik gerçekten kurulunca yazılır.
+class _MotionRow extends ConsumerWidget {
+  const _MotionRow({required this.rules});
+
+  final Rules rules;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final PermissionState perms = ref.watch(permissionsProvider);
+    final SettingsController c = ref.read(settingsControllerProvider);
+    final bool available = perms.motionAvailable;
+
+    return SettingsSwitchRow(
+      key: const Key('rule_require_motion'),
+      title: S.ruleRequireMotion,
+      help: available
+          ? S.ruleRequireMotionHelp
+          : S.ruleRequireMotionUnavailable,
+      value: rules.requireMotion && available,
+      onChanged: !available
+          ? null
+          : (bool v) async {
+              if (!v) {
+                await c.setRules(rules.copyWith(requireMotion: false));
+                await ref.read(permissionsProvider.notifier).disableMotion();
+                return;
+              }
+              final bool ok = await ref
+                  .read(permissionsProvider.notifier)
+                  .enableMotion();
+              if (ok) {
+                await c.setRules(rules.copyWith(requireMotion: true));
+                return;
+              }
+              if (context.mounted) {
+                ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(
+                    const SnackBar(
+                      content: Text(S.ruleRequireMotionNoPermission),
+                    ),
+                  );
+              }
+            },
+    );
+  }
+}
+
+
 class _RulesSection extends ConsumerWidget {
   const _RulesSection();
 
@@ -225,6 +275,7 @@ class _RulesSection extends ConsumerWidget {
                 )
               : null,
         ),
+        _MotionRow(rules: rules),
         SettingsStepperRow(
           key: const Key('rule_fallback'),
           decreaseKey: const Key('rule_fallback_minus'),

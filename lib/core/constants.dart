@@ -43,6 +43,10 @@ const int kDefaultFallbackAfterDays = 7;
 /// Ayarlardaki seçenekler: kapalı / 3 / 7 / 14 gün.
 const List<int> kFallbackAfterDaysOptions = <int>[0, 3, 7, 14];
 
+/// K-30: hareket doğrulaması varsayılan kapalı. İzin/Play Services yoksa
+/// açılmıyor; açık kalıp bildirimleri sessizce yutmasın.
+const bool kDefaultRequireMotion = false;
+
 // ---------------------------------------------------------------------------
 // Aralık adımlayıcı presetleri (01-spec §3.7)
 // ---------------------------------------------------------------------------
@@ -116,6 +120,9 @@ const String kTripNoteNoPermission = 'no_permission';
 
 /// Sürüşsüz dönem yedeği (K-12). Sürüş değil; tanı satırına girmez (K-26).
 const String kTripNoteFallback = 'fallback';
+
+/// K-30: bağlantı vardı ama araç hareketi görülmedi.
+const String kTripNoteNoMotion = 'no_motion';
 
 // ---------------------------------------------------------------------------
 // Diğer

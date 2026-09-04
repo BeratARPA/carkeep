@@ -3,6 +3,7 @@ package com.beratarpa.carkeep
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -159,5 +160,23 @@ class SnapshotTest {
         assertEquals("00:11:22:33:44:55", Snapshot.parseCarAddress(json("")))
         assertNull(Snapshot.parseCarAddress(json("", address = "null")))
         assertNull(Snapshot.parseCarAddress("bozuk"))
+    }
+    /** K-30: alan yoksa varsayilan (kapali) — eski snapshot'lar bozulmaz. */
+    @Test
+    fun `requireMotion eksikse kapali gelir`() {
+        val snap = Snapshot.parse(json(""))
+        assertNotNull(snap)
+        assertFalse(snap.rules.requireMotion)
+    }
+
+    @Test
+    fun `requireMotion true okunur`() {
+        val raw = json("").replace(
+            "\"fallbackAfterDays\": 7",
+            "\"fallbackAfterDays\": 7, \"requireMotion\": true",
+        )
+        val snap = Snapshot.parse(raw)
+        assertNotNull(snap)
+        assertTrue(snap.rules.requireMotion)
     }
 }

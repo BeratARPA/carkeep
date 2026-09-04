@@ -5,7 +5,7 @@ Buradaki kodlar iskelettir: yapı ve davranış bağlayıcı, satır satır kopy
 ## 1. Gradle
 `android/app/build.gradle(.kts)`:
 - `applicationId = "com.beratarpa.carkeep"`, `minSdk = 26`, `targetSdk`/`compileSdk` = kurulu en yüksek stable.
-- Bağımlılıklar (güncel stable sürümler): `androidx.core:core-ktx`, `androidx.work:work-runtime-ktx`. Başka yok.
+- Bağımlılıklar (güncel stable sürümler): `androidx.core:core-ktx`, `androidx.work:work-runtime-ktx`, **`com.google.android.gms:play-services-location`** (K-30, hareket doğrulaması; AOSP karşılığı yok). Başka yok.
 - Release: `isMinifyEnabled = true` ise `proguard-rules.pro`:
   ```
   -keep class com.beratarpa.carkeep.** { *; }
@@ -18,6 +18,8 @@ Buradaki kodlar iskelettir: yapı ve davranış bağlayıcı, satır satır kopy
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <!-- K-30: API 29+ çalışma zamanı izni; öncesinde gms'in kendi izni. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
 

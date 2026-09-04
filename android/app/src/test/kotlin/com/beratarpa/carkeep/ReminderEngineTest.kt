@@ -31,6 +31,7 @@ class ReminderEngineTest {
         minTripMinutes: Int = 5,
         graceMinutes: Int = 2,
         fallbackAfterDays: Int = 7,
+        requireMotion: Boolean = false,
         items: List<SnapshotItem> = defaultItems(),
         km: Long = 118_420,
     ) = Snapshot(
@@ -38,7 +39,14 @@ class ReminderEngineTest {
         carAddress = car,
         carName = "Uconnect",
         km = km,
-        rules = Rules(onlyOverdue, oncePerDay, minTripMinutes, graceMinutes, fallbackAfterDays),
+        rules = Rules(
+            onlyOverdue,
+            oncePerDay,
+            minTripMinutes,
+            graceMinutes,
+            fallbackAfterDays,
+            requireMotion,
+        ),
         items = items,
     )
 
@@ -590,5 +598,180 @@ class ReminderEngineTest {
             ReminderEngine.NOTE_FALLBACK,
         )
         assertTrue(documented.containsAll(produced), "beklenmeyen not: ${produced - documented}")
+    }
+    // ------------------------------------------------------------ K-30 hareket
+
+    /** Kural acik, abonelik kurulu, gecis surus penceresinde: bildirim var. */
+    @Test
+    fun `motion seen inside trip notifies`() {
+        val connectedAt = 1_000_000L
+        val now = connectedAt + 30 * 60_000L
+        val decision = ReminderEngine.evaluateDisconnect(
+            snapshot(requireMotion = true),
+            state(connectedAt = connectedAt),
+            today,
+            durationMin = 30,
+            motion = ReminderEngine.Motion(
+                active = true,
+                lastInVehicleAt = connectedAt + 5 * 60_000L,
+                connectedAt = connectedAt,
+                disconnectedAt = now,
+            ),
+        )
+        assertIs<ReminderEngine.Decision.Notify>(decision)
+    }
+
+    /** Kural acik, hicbir zaman `IN_VEHICLE` gorulmemis: `no_motion`. */
+    @Test
+    fun `motion never seen skips`() {
+        val connectedAt = 1_000_000L
+        val decision = ReminderEngine.evaluateDisconnect(
+            snapshot(requireMotion = true),
+            state(connectedAt = connectedAt),
+            today,
+            durationMin = 30,
+            motion = ReminderEngine.Motion(
+                active = true,
+                lastInVehicleAt = -1L,
+                connectedAt = connectedAt,
+                disconnectedAt = connectedAt + 30 * 60_000L,
+            ),
+        )
+        assertEquals(
+            ReminderEngine.NOTE_NO_MOTION,
+            (decision as ReminderEngine.Decision.Skip).note,
+        )
+    }
+
+    /** Onceki surusun hareketi bu surusu dogrulamaz. */
+    @Test
+    fun `motion from a previous trip does not count`() {
+        val connectedAt = 10_000_000L
+        val decision = ReminderEngine.evaluateDisconnect(
+            snapshot(requireMotion = true),
+            state(connectedAt = connectedAt),
+            today,
+            durationMin = 30,
+            motion = ReminderEngine.Motion(
+                active = true,
+                // Pencere baglanti - 10 dk'da basliyor; bu 60 dk once.
+                lastInVehicleAt = connectedAt - 60 * 60_000L,
+                connectedAt = connectedAt,
+                disconnectedAt = connectedAt + 30 * 60_000L,
+            ),
+        )
+        assertEquals(
+            ReminderEngine.NOTE_NO_MOTION,
+            (decision as ReminderEngine.Decision.Skip).note,
+        )
+    }
+
+    /** Gecis baglantidan biraz once gelebilir (arabaya bin, sonra eslesir). */
+    @Test
+    fun `motion shortly before connect counts`() {
+        val connectedAt = 10_000_000L
+        val decision = ReminderEngine.evaluateDisconnect(
+            snapshot(requireMotion = true),
+            state(connectedAt = connectedAt),
+            today,
+            durationMin = 30,
+            motion = ReminderEngine.Motion(
+                active = true,
+                lastInVehicleAt = connectedAt -
+                    (ReminderEngine.MOTION_LEAD_MINUTES - 1) * 60_000L,
+                connectedAt = connectedAt,
+                disconnectedAt = connectedAt + 30 * 60_000L,
+            ),
+        )
+        assertIs<ReminderEngine.Decision.Notify>(decision)
+    }
+
+    /**
+     * Guvenlik kilidi: kural acik ama abonelik kurulu degil (izin geri
+     * alinmis, Play Services yok). Kontrol atlanir; bildirim yine gelir.
+     */
+    @Test
+    fun `require motion is ignored when updates are not active`() {
+        val connectedAt = 1_000_000L
+        val decision = ReminderEngine.evaluateDisconnect(
+            snapshot(requireMotion = true),
+            state(connectedAt = connectedAt),
+            today,
+            durationMin = 30,
+            motion = ReminderEngine.Motion(
+                active = false,
+                lastInVehicleAt = -1L,
+                connectedAt = connectedAt,
+                disconnectedAt = connectedAt + 30 * 60_000L,
+            ),
+        )
+        assertIs<ReminderEngine.Decision.Notify>(decision)
+    }
+
+    /** Kural kapaliyken hareket hic sorulmaz. */
+    @Test
+    fun `motion is not checked when the rule is off`() {
+        val connectedAt = 1_000_000L
+        val decision = ReminderEngine.evaluateDisconnect(
+            snapshot(requireMotion = false),
+            state(connectedAt = connectedAt),
+            today,
+            durationMin = 30,
+            motion = ReminderEngine.Motion(
+                active = true,
+                lastInVehicleAt = -1L,
+                connectedAt = connectedAt,
+                disconnectedAt = connectedAt + 30 * 60_000L,
+            ),
+        )
+        assertIs<ReminderEngine.Decision.Notify>(decision)
+    }
+
+    /** Kisa surus once elenir: `no_motion` degil `short_trip` yazilir. */
+    @Test
+    fun `short trip wins over no motion`() {
+        val decision = ReminderEngine.evaluateDisconnect(
+            snapshot(requireMotion = true),
+            state(),
+            today,
+            durationMin = 2,
+            motion = ReminderEngine.Motion(
+                active = true,
+                lastInVehicleAt = -1L,
+                connectedAt = 1_000L,
+                disconnectedAt = 2_000L,
+            ),
+        )
+        assertEquals(
+            ReminderEngine.NOTE_SHORT_TRIP,
+            (decision as ReminderEngine.Decision.Skip).note,
+        )
+    }
+
+    /** Baglanti ani bilinmiyorsa pencere kopmadan geriye acilir. */
+    @Test
+    fun `unknown connect time uses the disconnect window`() {
+        val now = 10_000_000L
+        val motion = ReminderEngine.Motion(
+            active = true,
+            lastInVehicleAt = now - 5 * 60_000L,
+            connectedAt = -1L,
+            disconnectedAt = now,
+        )
+        assertTrue(motion.seenInTrip())
+        assertFalse(motion.copy(lastInVehicleAt = now - 60 * 60_000L).seenInTrip())
+    }
+
+    /** Kopmadan **sonraki** damga sayilmaz (saat kaymasi / gec broadcast). */
+    @Test
+    fun `motion after disconnect does not count`() {
+        val now = 10_000_000L
+        val motion = ReminderEngine.Motion(
+            active = true,
+            lastInVehicleAt = now + 60_000L,
+            connectedAt = now - 30 * 60_000L,
+            disconnectedAt = now,
+        )
+        assertFalse(motion.seenInTrip())
     }
 }

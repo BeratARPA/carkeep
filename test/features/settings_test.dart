@@ -443,6 +443,108 @@ void main() {
     await disposeTree(tester);
   });
 
+  // K-30 --------------------------------------------------------- hareket
+
+  testWidgets('K-30: Play Services yoksa hareket satırı pasif', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    bridge.motionAvailable = false;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    expect(find.text(S.ruleRequireMotionUnavailable), findsOneWidget);
+    expect(
+      tester.widget<Switch>(
+        find.descendant(
+          of: find.byKey(const Key('rule_require_motion')),
+          matching: find.byType(Switch),
+        ),
+      ).onChanged,
+      isNull,
+    );
+
+    await disposeTree(tester);
+  });
+
+  testWidgets("K-30: izin verilince kural açılıyor ve snapshot'a giriyor", (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    bridge.motionAvailable = true;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('rule_require_motion')),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect((await db.settingsDao.getRules()).requireMotion, isTrue);
+    expect(bridge.motionActive, isTrue);
+    final Map<String, Object?> rules =
+        (jsonDecode(bridge.snapshotJson!) as Map<String, Object?>)['rules']!
+            as Map<String, Object?>;
+    expect(rules['requireMotion'], isTrue);
+
+    await disposeTree(tester);
+  });
+
+  testWidgets('K-30: izin verilmezse kural açılmıyor, uyarı çıkıyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    // Play Services var ama izin isteği reddediliyor.
+    bridge.motionAvailable = true;
+    bridge.motionGrantOnRequest = false;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('rule_require_motion')),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect((await db.settingsDao.getRules()).requireMotion, isFalse);
+    expect(find.text(S.ruleRequireMotionNoPermission), findsOneWidget);
+
+    await flushToast(tester);
+    await disposeTree(tester);
+  });
+
+  testWidgets('K-30: kapatınca abonelik de kapanıyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    bridge.motionAvailable = true;
+    await db.settingsDao.setRules(
+      const Rules().copyWith(requireMotion: true),
+    );
+    bridge.motionPermission = true;
+    bridge.motionActive = true;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const Key('rule_require_motion')),
+        matching: find.byType(Switch),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect((await db.settingsDao.getRules()).requireMotion, isFalse);
+    expect(bridge.motionActive, isFalse);
+
+    await disposeTree(tester);
+  });
+
   testWidgets('yedek bildirim seçenekleri arasında geziyor', (
     WidgetTester tester,
   ) async {

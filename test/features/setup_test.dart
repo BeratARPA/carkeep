@@ -91,6 +91,39 @@ class FakeBridge extends PlatformBridge {
   @override
   Future<bool> areNotificationsEnabled() async => notificationsEnabled;
 
+  // K-30 -------------------------------------------------------- hareket
+
+  /// Play Services var mı; izin verildi mi; abonelik kuruldu mu.
+  bool motionAvailable = false;
+  bool motionPermission = false;
+  bool motionActive = false;
+  int setMotionCalls = 0;
+
+  /// İzin isteği kabul mü edilsin (kalıcı ret senaryosu).
+  bool motionGrantOnRequest = true;
+
+  @override
+  Future<bool> isMotionAvailable() async => motionAvailable;
+
+  @override
+  Future<bool> hasMotionPermission() async => motionPermission;
+
+  @override
+  Future<bool> requestMotionPermission() async {
+    motionPermission = motionAvailable && motionGrantOnRequest;
+    return motionPermission;
+  }
+
+  @override
+  Future<bool> setMotionUpdates({required bool enabled}) async {
+    setMotionCalls++;
+    motionActive = enabled && motionAvailable && motionPermission;
+    return motionActive;
+  }
+
+  @override
+  Future<bool> isMotionActive() async => motionActive;
+
   @override
   Future<bool> shouldShowPermissionRationale(String permission) async =>
       rationale;

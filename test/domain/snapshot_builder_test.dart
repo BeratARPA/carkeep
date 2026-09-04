@@ -75,6 +75,7 @@ void main() {
         'minTripMinutes': 5,
         'graceMinutes': 2,
         'fallbackAfterDays': 7,
+        'requireMotion': false,
       });
     });
 

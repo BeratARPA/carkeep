@@ -184,3 +184,17 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: Her madde silinebilir. Şablon maddesi silinince `templateKey` `settings.deleted_template_keys` içine (JSON dizi) yazılır; `upgradeTemplateIfNeeded` birleştirmeden önce bu anahtarları seed'den düşürür. Ölçüm tipi kilidi kalktı. Onay metni şablon maddesinde farklı: silmenin kalıcı olduğunu söylüyor.
 - Gerekçe: Kapatmak yetmiyordu — kapalı madde Ayarlar listesinde durmaya devam ediyor. Silmeyi mümkün kılan tek şey "geri gelmesin" garantisiydi; onu tek bir ayar satırı veriyor. Ölçüm kilidi, madde tamamen silinip elle yeniden eklenebildiği için yalnız sürtünme ekliyordu. Anahtar listesi "verileri sıfırla"da DB ile birlikte gidiyor; sıfırlama zaten şablonu baştan kuruyor.
 - Sonuç: `SettingKeys.deletedTemplateKeys`, `SettingsRepo.deletedTemplateKeys/markTemplateKeyDeleted`, `ItemListRepo.deleteItem`, `ItemRepo.upgradeTemplateIfNeeded`, `strings_tr.itemEditDeleteTemplateConfirm`. **K-07 gevşetildi**, 01-spec §3.7'deki ölçüm kilidi kalktı.
+
+## K-30 Hareket doğrulaması (Activity Recognition), varsayılan kapalı
+- Bağlam: "Arabada mıyım?" sorusunun tek cevabı, eşleşmiş cihazın ACL bağlan/kop olayı. Gerçek yanlış alarm: arabaya girip telefonu bağlayıp bir şey alıp inmek, ya da garajda kontak açmak. `minTripMinutes` bunu ancak süreyle eliyor; motor gerçekten çalıştı mı bilmiyoruz. Kullanıcı isteği: "activity recognition ekle".
+- Karar: `Rules.requireMotion` eklendi. Açıkken, kopmada Activity Recognition'ın `IN_VEHICLE` geçişini sürüş penceresinde görmüş olması şart; görmemişse `note="no_motion"`, `counted=false`, bildirim yok. Pencere bağlantı anından **10 dk önce** başlar (`MOTION_LEAD_MINUTES`): arabaya binmek, geçişin algılanması ve Bluetooth eşleşmesi aynı anda olmuyor.
+- **Yeni bağımlılık**: `com.google.android.gms:play-services-location`. AOSP'de karşılığı yok; activity transition API yalnız Play Hizmetleri'nde. Sürüm APK'sına maliyeti +265 KB (R8 kullanılmayanı atıyor). 07-android-notlar §1'in "başka bağımlılık yok" maddesi bununla değişti.
+- **İki bağımsız emniyet kilidi**, çünkü yanlış kurulmuş bir kural uygulamanın asıl özelliğini sessizce öldürür: (1) Dart kuralı yalnız `setMotionUpdates` **true** dönerse açıyor — izin verilmediyse kural hiç yazılmıyor; (2) Kotlin `motionUpdatesActive` bayrağı false ise `evaluateDisconnect` kontrolü atlıyor. Yani izin sonradan geri alınırsa bildirimler durmaz, doğrulama devre dışı kalır.
+- Abonelik yeniden başlatmada ve "force stop"ta düşebiliyor; her `resume`'da kural açıksa yeniden kuruluyor (`ensureMotion`).
+- Gerekçe: Varsayılan kapalı, çünkü hareket algılanmayan gerçek bir sürüş = kaçırılmış bildirim, yanlış alarmdan pahalı. Açmak kullanıcının bilinçli tercihi; Ayarlar'daki yardım metni bedeli açıkça söylüyor.
+- Sonuç: `MotionTracker`, `MotionReceiver`, `ReminderEngine.Motion`, `NOTE_NO_MOTION`, `EnginePrefs.lastInVehicleAt/motionUpdatesActive`, `Rules.requireMotion`, `PermissionsNotifier.enableMotion/disableMotion/ensureMotion`, `_MotionRow`. Tanı satırı sözlüğü K-24'te sekizden **dokuza** çıktı.
+
+## K-32 GPS geofence ertelendi
+- Bağlam: K-30 konuşulurken gündeme geldi ("belki gps geofence'de düşünebiliriz").
+- Karar: Yapılmadı. `00-vizyon.md` konum/GPS'i kapsam dışı sayıyor; geofence sürekli konum izni ister, pil tüketir ve "ev/iş yakınında değilse sürüştür" gibi bir tahmin üretir. Activity Recognition aynı soruyu konum izni istemeden cevaplıyor.
+- Yeniden açılma koşulu: K-30 gerçek arabada denendikten sonra hâlâ yanlış alarm kalıyorsa.

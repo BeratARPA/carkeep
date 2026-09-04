@@ -29,6 +29,13 @@ data class Rules(
     val minTripMinutes: Int,
     val graceMinutes: Int,
     val fallbackAfterDays: Int,
+    /**
+     * K-30: baglanti gercekten surus muydu? Acikken, kopmada Activity
+     * Recognition'dan `IN_VEHICLE` gorulmemisse bildirim basilmaz.
+     * Varsayilan **kapali**: izin/Play Services yoksa uygulamanin asil
+     * ozelligi sessizce olmemeli.
+     */
+    val requireMotion: Boolean,
 ) {
     companion object {
         val DEFAULTS = Rules(
@@ -37,6 +44,7 @@ data class Rules(
             minTripMinutes = 5,
             graceMinutes = 2,
             fallbackAfterDays = 7,
+            requireMotion = false,
         )
     }
 }
@@ -97,6 +105,10 @@ data class Snapshot(
                         fallbackAfterDays = r.optInt(
                             "fallbackAfterDays",
                             Rules.DEFAULTS.fallbackAfterDays,
+                        ),
+                        requireMotion = r.optBoolean(
+                            "requireMotion",
+                            Rules.DEFAULTS.requireMotion,
                         ),
                     ),
                     items = items,

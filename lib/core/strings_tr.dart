@@ -326,6 +326,9 @@ abstract final class S {
   static const String lastTripNoSnapshot = 'veri hazır değildi';
   static const String lastTripNoPermission = 'bildirim izni yok';
 
+  /// K-30: bağlantı vardı ama araç hareketi görülmedi.
+  static const String lastTripNoMotion = 'hareket görülmedi, bildirim yok';
+
   // --------------------------------------------------------- hatırlatma
   static const String settingsSectionRules = 'Hatırlatma';
   static const String ruleOnlyOverdue = 'Sadece gecikmiş varsa';
@@ -343,6 +346,23 @@ abstract final class S {
   static const String ruleFallback = 'Sürüş yoksa yedek bildirim';
   static const String ruleFallbackHelp =
       'Uzun süre araca binmediysen yine de hatırlatır.';
+
+  // K-30 -------------------------------------------------------- hareket
+
+  static const String ruleRequireMotion = 'Hareket doğrulaması';
+  static const String ruleRequireMotionHelp =
+      'Bildirimden önce telefonun araç hareketi görmüş olmasını şart koşar. '
+      'Garajda bağlanıp inmek gibi yanlış alarmları keser; buna karşılık '
+      'hareket algılanmazsa o sürüşte bildirim gelmez.';
+
+  /// Play Services yok: satır kapalı görünür.
+  static const String ruleRequireMotionUnavailable =
+      'Bu cihazda Google Play Hizmetleri yok; hareket doğrulaması '
+      'kullanılamıyor.';
+
+  /// İzin verilmedi ya da abonelik kurulamadı.
+  static const String ruleRequireMotionNoPermission =
+      'Hareket izni verilmedi; doğrulama açılamadı.';
   static const String ruleFallbackOff = 'Kapalı';
   static const String unitMinutesShort = 'dk';
   static const String unitDaysSuffix = 'gün sonra';

@@ -84,6 +84,11 @@ dependencies {
     implementation("androidx.core:core-ktx:1.18.0")
     implementation("androidx.work:work-runtime-ktx:2.11.2")
 
+    // K-30: Activity Recognition gecisleri. AOSP'de karsiligi yok; "arabada
+    // miyim" sorusunu Play Services disinda soracak API bulunmuyor. Ozellik
+    // varsayilan **kapali**; Play Services yoksa uygulama aynen calisir.
+    implementation("com.google.android.gms:play-services-location:21.3.0")
+
     // 07-android-notlar §9: JVM testleri Android sınıfı kullanmaz; `org.json`
     // Android'e gömülü olduğu için host JVM'de ayrıca gerekir. Robolectric yok.
     testImplementation("org.json:json:20260814")

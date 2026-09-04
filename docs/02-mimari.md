@@ -173,7 +173,12 @@ Dart → Kotlin:
 | `scheduleDailyWorker` | – | – (REPLACE) |
 | `clearEngine` | – | – (prefs temizle + bildirimi iptal; "Verileri sıfırla") |
 | `getSdkInt` | – | int |
-| `debugSimulate` | `{event: "connect"\|"disconnect", minutes: int}` | – (yalnız `BuildConfig.DEBUG`) |
+| `isMotionAvailable` | – | bool (K-30; Play Hizmetleri var mı) |
+| `hasMotionPermission` | – | bool |
+| `requestMotionPermission` | – | bool |
+| `setMotionUpdates` | `{enabled: bool}` | bool — **abonelik gerçekten kuruldu mu**; kural yalnız `true` gelince açılır |
+| `isMotionActive` | – | bool (motorun gördüğü bayrak; tanı) |
+| `debugSimulate` | `{event: "connect"\|"disconnect"\|"motion", minutes: int}` | – (yalnız `BuildConfig.DEBUG`; `motion` = `IN_VEHICLE` damgası taklidi, K-30) |
 | `debugRunDailyWorker` | – | – (debug) |
 
 Kotlin → Dart: `onLaunchAction(String)` (uygulama açıkken bildirime dokunulursa, `onNewIntent`).

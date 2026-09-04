@@ -147,7 +147,9 @@ class SettingsSwitchRow extends StatelessWidget {
   final String title;
   final String? help;
   final bool value;
-  final ValueChanged<bool> onChanged;
+
+  /// `null` → anahtar pasif (K-30: Play Services yoksa).
+  final ValueChanged<bool>? onChanged;
 
   @override
   Widget build(BuildContext context) {

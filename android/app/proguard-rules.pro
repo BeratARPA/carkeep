@@ -5,6 +5,7 @@
 -keep class com.beratarpa.carkeep.BtReceiver { *; }
 -keep class com.beratarpa.carkeep.NotifActionReceiver { *; }
 -keep class com.beratarpa.carkeep.DailyCheckWorker { *; }
+-keep class com.beratarpa.carkeep.MotionReceiver { *; }
 
 # WorkManager isi adiyla (reflection) kuruluyor.
 -keep class * extends androidx.work.Worker { *; }

@@ -263,6 +263,30 @@ class PlatformBridge {
       ) ??
       false;
 
+  // ------------------------------------------------------------ K-30 hareket
+
+  /// Play Services kurulu mu. Değilse hareket doğrulaması hiç açılamaz.
+  Future<bool> isMotionAvailable() async =>
+      await channel.invokeMethod<bool>('isMotionAvailable') ?? false;
+
+  Future<bool> hasMotionPermission() async =>
+      await channel.invokeMethod<bool>('hasMotionPermission') ?? false;
+
+  Future<bool> requestMotionPermission() async =>
+      await channel.invokeMethod<bool>('requestMotionPermission') ?? false;
+
+  /// Geçiş aboneliğini açar/kapatır. Dönen değer **abonelik kuruldu mu**;
+  /// kural yalnız `true` gelince açılır.
+  Future<bool> setMotionUpdates({required bool enabled}) async =>
+      await channel.invokeMethod<bool>('setMotionUpdates', <String, Object?>{
+        'enabled': enabled,
+      }) ??
+      false;
+
+  /// Motorun gördüğü bayrak; tanı için.
+  Future<bool> isMotionActive() async =>
+      await channel.invokeMethod<bool>('isMotionActive') ?? false;
+
   Future<bool> areNotificationsEnabled() async =>
       await channel.invokeMethod<bool>('areNotificationsEnabled') ?? true;
 

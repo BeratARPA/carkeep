@@ -8,6 +8,7 @@ class Rules {
     this.minTripMinutes = kDefaultMinTripMinutes,
     this.graceMinutes = kDefaultGraceMinutes,
     this.fallbackAfterDays = kDefaultFallbackAfterDays,
+    this.requireMotion = kDefaultRequireMotion,
   });
 
   /// Yalnız gecikmiş madde varken bildir.
@@ -25,6 +26,10 @@ class Rules {
   /// Sürüşsüz dönem yedeği eşiği, gün. 0 = kapalı. K-12.
   final int fallbackAfterDays;
 
+  /// K-30: bildirimden önce Activity Recognition'ın araç hareketi görmüş
+  /// olmasını şart koş. Yalnız izin verildiyse açılabiliyor.
+  final bool requireMotion;
+
   static const Rules defaults = Rules();
 
   Rules copyWith({
@@ -33,6 +38,7 @@ class Rules {
     int? minTripMinutes,
     int? graceMinutes,
     int? fallbackAfterDays,
+    bool? requireMotion,
   }) {
     return Rules(
       onlyOverdue: onlyOverdue ?? this.onlyOverdue,
@@ -40,6 +46,7 @@ class Rules {
       minTripMinutes: minTripMinutes ?? this.minTripMinutes,
       graceMinutes: graceMinutes ?? this.graceMinutes,
       fallbackAfterDays: fallbackAfterDays ?? this.fallbackAfterDays,
+      requireMotion: requireMotion ?? this.requireMotion,
     );
   }
 
@@ -51,7 +58,8 @@ class Rules {
           other.oncePerDay == oncePerDay &&
           other.minTripMinutes == minTripMinutes &&
           other.graceMinutes == graceMinutes &&
-          other.fallbackAfterDays == fallbackAfterDays;
+          other.fallbackAfterDays == fallbackAfterDays &&
+          other.requireMotion == requireMotion;
 
   @override
   int get hashCode => Object.hash(
@@ -60,11 +68,12 @@ class Rules {
     minTripMinutes,
     graceMinutes,
     fallbackAfterDays,
+    requireMotion,
   );
 
   @override
   String toString() =>
       'Rules(onlyOverdue: $onlyOverdue, oncePerDay: $oncePerDay, '
       'minTripMinutes: $minTripMinutes, graceMinutes: $graceMinutes, '
-      'fallbackAfterDays: $fallbackAfterDays)';
+      'fallbackAfterDays: $fallbackAfterDays, requireMotion: $requireMotion)';
 }

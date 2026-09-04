@@ -154,6 +154,9 @@ class PermissionState {
     required this.bluetoothEnabled,
     this.bluetoothBlocked = false,
     this.notificationBlocked = false,
+    this.motionAvailable = false,
+    this.motionPermission = false,
+    this.motionActive = false,
   });
 
   static const PermissionState unknown = PermissionState(
@@ -179,6 +182,11 @@ class PermissionState {
   /// Adaptör açık mı (T05 cihaz testi bulgusu).
   final bool bluetoothEnabled;
 
+  /// K-30: Play Services var mı; hareket izni verildi mi; abonelik kurulu mu.
+  final bool motionAvailable;
+  final bool motionPermission;
+  final bool motionActive;
+
   PermissionState copyWith({
     bool? bluetooth,
     bool? notification,
@@ -187,6 +195,9 @@ class PermissionState {
     bool? bluetoothEnabled,
     bool? bluetoothBlocked,
     bool? notificationBlocked,
+    bool? motionAvailable,
+    bool? motionPermission,
+    bool? motionActive,
   }) {
     return PermissionState(
       bluetooth: bluetooth ?? this.bluetooth,
@@ -196,8 +207,23 @@ class PermissionState {
       bluetoothEnabled: bluetoothEnabled ?? this.bluetoothEnabled,
       bluetoothBlocked: bluetoothBlocked ?? this.bluetoothBlocked,
       notificationBlocked: notificationBlocked ?? this.notificationBlocked,
+      motionAvailable: motionAvailable ?? this.motionAvailable,
+      motionPermission: motionPermission ?? this.motionPermission,
+      motionActive: motionActive ?? this.motionActive,
     );
   }
+}
+
+class _MotionPermissions {
+  const _MotionPermissions({
+    required this.available,
+    required this.permission,
+    required this.active,
+  });
+
+  final bool available;
+  final bool permission;
+  final bool active;
 }
 
 class PermissionsNotifier extends Notifier<PermissionState> {
@@ -233,12 +259,42 @@ class PermissionsNotifier extends Notifier<PermissionState> {
           which: 'notification',
           askedKey: SettingKeys.askedNotification,
         ),
+        motionAvailable: state.motionAvailable,
+        motionPermission: state.motionPermission,
+        motionActive: state.motionActive,
       );
       if (!_disposed) {
         state = next;
       }
     } on Object {
       // Kanal yoksa (test/masaüstü) varsayılanda kal.
+    }
+    // K-30 en sonda ve ayrı korumada: hareket katmanı (Play Services) yavaş
+    // olabilir veya hiç olmayabilir; şeritleri bekletmemeli, düşürmemeli.
+    final _MotionPermissions motion = await _readMotion(bridge);
+    if (!_disposed) {
+      state = state.copyWith(
+        motionAvailable: motion.available,
+        motionPermission: motion.permission,
+        motionActive: motion.active,
+      );
+    }
+  }
+
+  /// K-30 üçlüsü; kanal metodu yoksa hepsi false.
+  Future<_MotionPermissions> _readMotion(PlatformBridge bridge) async {
+    try {
+      return _MotionPermissions(
+        available: await bridge.isMotionAvailable(),
+        permission: await bridge.hasMotionPermission(),
+        active: await bridge.isMotionActive(),
+      );
+    } on Object {
+      return const _MotionPermissions(
+        available: false,
+        permission: false,
+        active: false,
+      );
     }
   }
 
@@ -268,6 +324,57 @@ class PermissionsNotifier extends Notifier<PermissionState> {
   Future<void> requestNotification() =>
       _request(SettingKeys.askedNotification, (PlatformBridge b) =>
           b.requestNotificationPermission());
+
+  /// K-30. Dönen değer: abonelik gerçekten kuruldu mu. Kural yalnız `true`
+  /// gelirse açılır; aksi halde kural açık kalıp bildirimleri yutardı.
+  Future<bool> enableMotion() async {
+    final PlatformBridge bridge = ref.read(platformBridgeProvider);
+    try {
+      if (!await bridge.isMotionAvailable()) {
+        return false;
+      }
+      if (!await bridge.hasMotionPermission()) {
+        await _request(
+          SettingKeys.askedMotion,
+          (PlatformBridge b) => b.requestMotionPermission(),
+        );
+        if (!await bridge.hasMotionPermission()) {
+          return false;
+        }
+      }
+      final bool ok = await bridge.setMotionUpdates(enabled: true);
+      await refresh();
+      return ok;
+    } on Object {
+      return false;
+    }
+  }
+
+  Future<void> disableMotion() async {
+    try {
+      await ref.read(platformBridgeProvider).setMotionUpdates(enabled: false);
+    } on Object {
+      // Kanal yoksa sessiz.
+    }
+    await refresh();
+  }
+
+  /// Açılışta/`resume`'da aboneliği tazeler: yeniden başlatma veya
+  /// "force stop" aboneliği düşürebiliyor, kural açık kalıyor.
+  Future<void> ensureMotion({required bool wanted}) async {
+    if (!wanted) {
+      return;
+    }
+    try {
+      final PlatformBridge bridge = ref.read(platformBridgeProvider);
+      if (await bridge.isMotionAvailable() &&
+          await bridge.hasMotionPermission()) {
+        await bridge.setMotionUpdates(enabled: true);
+      }
+    } on Object {
+      // Kanal yoksa sessiz.
+    }
+  }
 
   Future<void> _request(
     String askedKey,

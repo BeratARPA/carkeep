@@ -56,6 +56,21 @@ class EnginePrefs(context: Context) {
         get() = str(KEY_LAST_TRIP)
         set(v) = put(KEY_LAST_TRIP, v)
 
+    /** K-30: son `IN_VEHICLE` gecisinin zamani; hic gorulmediyse -1. */
+    var lastInVehicleAt: Long
+        get() = sp.getLong(KEY_LAST_IN_VEHICLE_AT, -1L)
+        set(v) = putLong(KEY_LAST_IN_VEHICLE_AT, v)
+
+    /**
+     * K-30: gecis aboneligi gercekten kurulu mu. Kural acik ama abonelik yoksa
+     * motor hareket kontrolunu **atlar**; aksi halde bildirim hic gelmezdi.
+     */
+    var motionUpdatesActive: Boolean
+        get() = sp.getBoolean(KEY_MOTION_ACTIVE, false)
+        set(v) {
+            sp.edit().putBoolean(KEY_MOTION_ACTIVE, v).commit()
+        }
+
     fun appendPendingEvent(obj: JSONObject) {
         val arr = readPendingEvents()
         arr.put(obj)
@@ -119,5 +134,7 @@ class EnginePrefs(context: Context) {
         const val KEY_GLOBAL_SNOOZE = "global_snooze_until_day"
         const val KEY_PENDING_EVENTS = "pending_events_json"
         const val KEY_LAST_TRIP = "last_trip_json"
+        const val KEY_LAST_IN_VEHICLE_AT = "last_in_vehicle_at"
+        const val KEY_MOTION_ACTIVE = "motion_updates_active"
     }
 }

@@ -245,7 +245,8 @@ String lastTripText({
       '${lastTripReason(note: note, counted: counted, notified: notified)}';
 }
 
-/// Tanı satırının son parçası (K-24: sekiz `note`, sekiz metin). Motorun
+/// Tanı satırının son parçası (K-24: dokuz `note`, dokuz metin; dokuzuncusu
+/// K-30 `no_motion`). Motorun
 /// yazdığı `note` bilinmiyorsa `counted`/`notified` bayraklarına düşer.
 String lastTripReason({
   required String? note,
@@ -269,6 +270,8 @@ String lastTripReason({
       return S.lastTripNoSnapshot;
     case kTripNoteNoPermission:
       return S.lastTripNoPermission;
+    case kTripNoteNoMotion:
+      return S.lastTripNoMotion;
   }
   if (!counted) {
     return S.lastTripNotCounted;

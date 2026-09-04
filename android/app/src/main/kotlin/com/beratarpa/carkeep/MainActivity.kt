@@ -81,10 +81,11 @@ class MainActivity : FlutterActivity() {
                 val permission = when (which) {
                     "bluetooth" -> Manifest.permission.BLUETOOTH_CONNECT
                     "notification" -> Manifest.permission.POST_NOTIFICATIONS
+                    "motion" -> MotionTracker.PERMISSION
                     else -> null
                 }
                 if (permission == null) {
-                    result.error("BAD_ARGS", "permission: bluetooth|notification", null)
+                    result.error("BAD_ARGS", "permission: bluetooth|notification|motion", null)
                     return
                 }
                 result.success(
@@ -94,6 +95,34 @@ class MainActivity : FlutterActivity() {
 
             "areNotificationsEnabled" ->
                 result.success(Notifications.areNotificationsEnabled(this))
+
+            // K-30 -------------------------------------------------- hareket
+            "isMotionAvailable" -> result.success(MotionTracker.isAvailable(this))
+
+            "hasMotionPermission" -> result.success(MotionTracker.hasPermission(this))
+
+            "requestMotionPermission" ->
+                if (MotionTracker.hasPermission(this)) {
+                    result.success(true)
+                } else {
+                    requestPermission(MotionTracker.PERMISSION, result)
+                }
+
+            /**
+             * Aboneligi acar/kapatir. Donen deger "abonelik gercekten kuruldu
+             * mu"; Dart kurali yalniz true donunce aciyor.
+             */
+            "setMotionUpdates" -> {
+                val on = call.argument<Boolean>("enabled") == true
+                if (on) {
+                    result.success(MotionTracker.start(this))
+                } else {
+                    MotionTracker.stop(this)
+                    result.success(false)
+                }
+            }
+
+            "isMotionActive" -> result.success(prefs.motionUpdatesActive)
 
             // Adaptor kapaliyken `getBondedDevices` bos liste doner; cihaz
             // secici "eslesmis cihaz yok" yerine "Bluetooth kapali" demeli.
@@ -216,8 +245,11 @@ class MainActivity : FlutterActivity() {
                         }
                         ReminderEngine.onDisconnected(this, prefs, now)
                     }
+                    // K-30: `IN_VEHICLE` gecisi taklidi; hareket kuralini
+                    // cihazda arabaya binmeden denemek icin.
+                    "motion" -> prefs.lastInVehicleAt = now
                     else -> {
-                        result.error("BAD_ARGS", "event: connect|disconnect", null)
+                        result.error("BAD_ARGS", "event: connect|disconnect|motion", null)
                         return
                     }
                 }
@@ -247,6 +279,8 @@ class MainActivity : FlutterActivity() {
             }
 
             "clearEngine" -> {
+                // K-30: abonelik prefs disinda; bayrakla birlikte o da gitmeli.
+                MotionTracker.stop(this)
                 prefs.clearAll()
                 Notifications.cancel(this)
                 result.success(null)

@@ -33,6 +33,16 @@ object ReminderEngine {
     /** Bildirim izni yok: bildirim basilamadi, durum da yazilmadi (denetim md. 4). */
     const val NOTE_NO_PERMISSION = "no_permission"
 
+    /** K-30: baglanti vardi ama Activity Recognition arac hareketi gormedi. */
+    const val NOTE_NO_MOTION = "no_motion"
+
+    /**
+     * K-30: `IN_VEHICLE` gecisi Bluetooth baglantisindan once de gelebilir
+     * (arabaya bin, motoru calistir, telefon sonra eslesir). Pencere bu kadar
+     * dakika geriye acilir.
+     */
+    const val MOTION_LEAD_MINUTES = 10
+
     /** Yedek bildirim satiri (K-12, K-26). */
     const val NOTE_FALLBACK = "fallback"
 
@@ -40,6 +50,37 @@ object ReminderEngine {
     // loga dusulur; K-24 sozlugune girmezler.
     const val SKIP_FALLBACK_OFF = "fallback_off"
     const val SKIP_RECENTLY_NOTIFIED = "recently_notified"
+
+    /**
+     * K-30 hareket kaniti; prefs'ten okunur, saf fonksiyona verilir.
+     *
+     * [active] abonelik kurulu mu (izin + Play Services). [lastInVehicleAt]
+     * son `IN_VEHICLE` gecisi, hic gorulmediyse -1. Pencere: baglanti
+     * anindan [MOTION_LEAD_MINUTES] once basliyor, kopma aninda bitiyor.
+     */
+    data class Motion(
+        val active: Boolean,
+        val lastInVehicleAt: Long,
+        val connectedAt: Long,
+        val disconnectedAt: Long,
+    ) {
+        fun seenInTrip(): Boolean {
+            if (lastInVehicleAt <= 0L) return false
+            val lead = MOTION_LEAD_MINUTES * 60_000L
+            val from = if (connectedAt > 0L) connectedAt - lead else disconnectedAt - lead
+            return lastInVehicleAt >= from && lastInVehicleAt <= disconnectedAt
+        }
+
+        companion object {
+            /** Kural kapali / abonelik yok: kontrol calismaz. */
+            val DISABLED = Motion(
+                active = false,
+                lastInVehicleAt = -1L,
+                connectedAt = -1L,
+                disconnectedAt = 0L,
+            )
+        }
+    }
 
     /** Motorun karar anindaki durumu; prefs'ten okunur, saf fonksiyona verilir. */
     data class State(
@@ -78,6 +119,7 @@ object ReminderEngine {
         state: State,
         today: String,
         durationMin: Int,
+        motion: Motion = Motion.DISABLED,
     ): Decision {
         // 1-2: baglanti bilinmiyorsa duration 0 gelir; kisa surus sayilmaz.
         val minTrip = snapshot?.rules?.minTripMinutes ?: Rules.DEFAULTS.minTripMinutes
@@ -85,6 +127,12 @@ object ReminderEngine {
 
         // 3: snapshot yok.
         if (snapshot == null) return Decision.Skip(NOTE_NO_SNAPSHOT)
+
+        // 3b (K-30): hareket dogrulamasi. Yalniz kural aciksa **ve** abonelik
+        // gercekten kuruluysa; degilse kural yokmus gibi devam edilir.
+        if (snapshot.rules.requireMotion && motion.active && !motion.seenInTrip()) {
+            return Decision.Skip(NOTE_NO_MOTION)
+        }
 
         // 4: genel erteleme ("Yarin").
         state.globalSnoozeUntilDay?.let { if (it > today) return Decision.Skip(NOTE_SNOOZED) }
@@ -237,7 +285,13 @@ object ReminderEngine {
         val today = DayKey.of(now)
         val snapshot = Snapshot.parse(prefs.snapshotJson)
         val state = readState(prefs).copy(connectedAt = connectedAt)
-        val decision = evaluateDisconnect(snapshot, state, today, durationMin)
+        val motion = Motion(
+            active = prefs.motionUpdatesActive,
+            lastInVehicleAt = prefs.lastInVehicleAt,
+            connectedAt = connectedAt,
+            disconnectedAt = now,
+        )
+        val decision = evaluateDisconnect(snapshot, state, today, durationMin, motion)
 
         val trip = JSONObject()
             .put("type", "trip")
@@ -247,8 +301,13 @@ object ReminderEngine {
             .put("overdueCount", snapshot?.overdueItems(today)?.size ?: 0)
 
         when (decision) {
+            // K-30: hareket gorulmeyen baglanti surus sayilmaz; yedek is de
+            // bunu "son surus" kabul etmemeli.
             is Decision.Skip -> trip
-                .put("counted", decision.note != NOTE_SHORT_TRIP)
+                .put(
+                    "counted",
+                    decision.note != NOTE_SHORT_TRIP && decision.note != NOTE_NO_MOTION,
+                )
                 .put("notified", false)
                 .put("note", decision.note)
 

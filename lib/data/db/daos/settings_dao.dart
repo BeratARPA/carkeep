@@ -15,6 +15,9 @@ abstract final class SettingKeys {
   static const String ruleMinTripMinutes = 'rule_min_trip_minutes';
   static const String ruleGraceMinutes = 'rule_grace_minutes';
   static const String ruleFallbackAfterDays = 'rule_fallback_after_days';
+
+  /// K-30: hareket doğrulaması.
+  static const String ruleRequireMotion = 'rule_require_motion';
   static const String globalSnoozeUntilDay = 'global_snooze_until_day';
   static const String batteryBannerDismissed = 'battery_banner_dismissed';
 
@@ -25,6 +28,9 @@ abstract final class SettingKeys {
   /// Kalıcı ret ayrımı için: izin bir kez soruldu mu (01-spec §9).
   static const String askedBluetooth = 'asked_bluetooth';
   static const String askedNotification = 'asked_notification';
+
+  /// K-30: hareket izni bir kez soruldu mu (kalıcı ret tespiti).
+  static const String askedMotion = 'asked_motion';
 }
 
 @DriftAccessor(tables: <Type>[Settings])
@@ -105,6 +111,10 @@ class SettingsDao extends DatabaseAccessor<AppDatabase>
           key: SettingKeys.ruleFallbackAfterDays,
           value: rules.fallbackAfterDays.toString(),
         ),
+        SettingsCompanion.insert(
+          key: SettingKeys.ruleRequireMotion,
+          value: rules.requireMotion ? '1' : '0',
+        ),
       ]);
     });
   }
@@ -129,6 +139,7 @@ Rules rulesFromMap(Map<String, String> m) {
     fallbackAfterDays:
         int.tryParse(m[SettingKeys.ruleFallbackAfterDays] ?? '') ??
         d.fallbackAfterDays,
+    requireMotion: _boolOr(m[SettingKeys.ruleRequireMotion], d.requireMotion),
   );
 }
 

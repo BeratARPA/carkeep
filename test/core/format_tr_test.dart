@@ -255,7 +255,7 @@ void main() {
     String r(String? note, {bool counted = true, bool notified = false}) =>
         lastTripReason(note: note, counted: counted, notified: notified);
 
-    test('motorun ürettiği yedi not karşılığını buluyor', () {
+    test('motorun ürettiği dokuz not karşılığını buluyor', () {
       expect(r(kTripNoteOk), 'bildirim gönderildi');
       expect(r(kTripNoteShortTrip, counted: false), 'sürüş sayılmadı');
       expect(r(kTripNoteOncePerDay), 'bugün zaten hatırlatıldı');
@@ -264,6 +264,11 @@ void main() {
       expect(r(kTripNoteReconnect, counted: false), 'geri bağlandı, sürüş sürüyor');
       expect(r(kTripNoteNoSnapshot), 'veri hazır değildi');
       expect(r(kTripNoteNoPermission), 'bildirim izni yok');
+      // K-30.
+      expect(
+        r(kTripNoteNoMotion, counted: false),
+        'hareket görülmedi, bildirim yok',
+      );
     });
 
     test('not yoksa bayraklara düşüyor', () {

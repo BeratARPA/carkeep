@@ -110,7 +110,7 @@ Kayıtlar tarihe göre gruplu (`3 Eyl 2026` başlığı), yeni üstte. Satır: m
 Bölümler ve satırlar:
 - **Araç**: marka/model/yıl düzenle; km düzelt (her değere izin, onay: "Km geriye alınıyor, emin misin?"); hedef lastik basıncı ön/arka (bar, isteğe bağlı).
 - **Arabanın Bluetooth'u**: seçili cihaz (dokun → cihaz listesi alt sayfası); altında tanı satırı: `Son kopma: 3 Eyl 14:30, 25 dk sürüş, bildirim gönderildi` / `... 2 dk, sürüş sayılmadı` / `Henüz kopma görülmedi`.
-- **Hatırlatma** (kurallar, §7): "Sadece gecikmiş varsa" (aç/kapat), "Günde en fazla bir" (aç/kapat), "En az sürüş süresi" (dk, 1–30, varsayılan 5), "Geri bağlanma toleransı" (dk, 0–5, varsayılan 2), "Sürüş yoksa yedek bildirim" (kapalı / 3 / 7 / 14 gün sonra, varsayılan 7).
+- **Hatırlatma** (kurallar, §7): "Sadece gecikmiş varsa" (aç/kapat), "Günde en fazla bir" (aç/kapat), "En az sürüş süresi" (dk, 1–30, varsayılan 5), "Geri bağlanma toleransı" (dk, 0–5, varsayılan 2), "Hareket doğrulaması" (aç/kapat, varsayılan **kapalı**, K-30; açmak ACTIVITY_RECOGNITION izni ister, Play Hizmetleri yoksa satır pasif), "Sürüş yoksa yedek bildirim" (kapalı / 3 / 7 / 14 gün sonra, varsayılan 7).
 - **Kontrol listesi**: her madde: ad, aralık metni; sağda aralık adımlayıcı (−/+ preset üzerinde: gün `7,14,30,60,90,180,365,730,1825`; km `5.000,10.000,15.000,20.000,30.000,60.000,80.000,120.000`; `both` maddede + ve − yalnız km'yi değiştirir, gün için satıra dokunup düzenleme sayfası), aç/kapat. Satıra dokun → madde düzenleme sayfası: ad, takvim türü ve değerleri, ölçüm tipi, "Tarih/km düzelt", "Sil" (K-31: kilit kalktı, şablon maddesi de silinir; silinen anahtar hatırlanır, şablon yükseltmesi geri eklemez). Listenin altında "Madde ekle" (aynı sayfa, boş).
 - **Uygulama**: izin durumları (üçü) + düzelt butonları; "Şablon sürümü 1"; "Verileri sıfırla" (onay, her şeyi siler, kuruluma döner); debug derlemede "Geliştirici": `Kopmayı simüle et (25 dk)`, `Kopmayı simüle et (2 dk)`, `Bağlanmayı simüle et`, `Snapshot'ı göster`, `Yedek işi şimdi çalıştır`.
 
@@ -147,6 +147,7 @@ Snapshot yalnız `enabled=true` ve durumu `unknown` olmayan maddeleri içerir. `
   1. `connected_at` yoksa (bilinmeyen bağlantı) → `duration = 0`.
   2. `duration < minTripMinutes` → dur. Trip `counted=false`.
   3. Snapshot yok / araç adresi eşleşmiyor → dur.
+  3b. **K-30**: `requireMotion` açık **ve** geçiş aboneliği kuruluysa, `last_in_vehicle_at` sürüş penceresinde (`connected_at − 10 dk` … kopma anı) değilse → dur (`note="no_motion"`, `counted=false`). Abonelik kurulu değilse (izin geri alınmış, Play Hizmetleri yok) adım atlanır: kural bildirimi sessizce yutmamalı.
   4. `global_snooze_until_day > today` → dur (`note="snoozed"`).
   5. Gecikmiş liste = snapshot maddelerinden `(dueDay != null && dueDay < today) || (dueKm != null && dueKm < km)` ve `snoozeUntilDay` bugünden sonra olmayanlar.
   6. `onlyOverdue && liste boş` → dur.

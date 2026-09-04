@@ -84,6 +84,12 @@ class AppLifecycle {
     await readLaunchAction();
     await _ref.read(bluetoothStateProvider.notifier).refresh();
     await _ref.read(permissionsProvider.notifier).refresh();
+    // K-30: yeniden başlatma ve "force stop" geçiş aboneliğini düşürüyor;
+    // kural açıkken her `resume`'da yeniden kuruluyor.
+    await _ref.read(permissionsProvider.notifier).ensureMotion(
+      wanted:
+          _ref.read(rulesProvider).valueOrNull?.requireMotion ?? false,
+    );
     // 01-spec §6: `resume` de bir snapshot tetikleyicisi.
     await _ref.read(snapshotSyncProvider).write();
   }
