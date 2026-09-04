@@ -641,14 +641,15 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 
 ### T18
 - **Uygulama ikonu uyarlanabilir (adaptive) ikon.** `minSdk 26` olduğu için PNG mipmap'lere
-  gerek yok; `mipmap-anydpi-v26/ic_launcher.xml` her cihazda kullanılıyor. Ön plan: bildirim
-  simgesiyle aynı araba silueti + sağ altta beyaz daire içinde onay rozeti; arka plan `ink`
-  (#141A24). Flutter'ın varsayılan logosu hem çekmecede hem bildirimin büyük simgesinde
-  görünüyordu (T12 notu), ikisi de düzeldi. Eski PNG'ler dosyada duruyor ama API 26+'da hiç
-  kullanılmıyor.
-  İlk deneme (arabanın üstüne binen kocaman onay işareti) kullanıcı tarafından reddedildi;
-  rozet ayrı bir daireye alınıp araba ile çakışması kaldırıldı. Temalı ikon (Android 13+)
-  tek renk olmak zorunda olduğu için ayrı bir `ic_launcher_monochrome` var: yalnız araba.
+  gerek yok; `mipmap-anydpi-v26/ic_launcher.xml` her cihazda kullanılıyor. Arka plan koyu
+  eğim (`ink` #232F40 → #0D1219), ön plan geometrik işaret: altı hafif açık halka (bakım
+  döngüsü) ve içinde onay işareti. Aynı çizim temalı ikon (Android 13+) olarak da kullanılıyor
+  — tek renk olduğu için sorun çıkarmıyor. Flutter'ın varsayılan logosu hem çekmecede hem
+  bildirimin büyük simgesinde görünüyordu (T12 notu), ikisi de düzeldi. Eski PNG mipmap'ler
+  dosyada duruyor ama API 26+'da hiç kullanılmıyor.
+  **İki tasarım reddedildi**: (1) arabanın üstüne binen kocaman onay işareti, (2) araba
+  silueti + köşede onay rozeti. İkisi de "clip-art araba" olduğu için; üçüncüde çizim
+  bırakılıp geometrik işarete geçildi.
 - **İmzalama**: `~/carkeep-upload-keystore.jks` (repo dışı), `android/key.properties` ile
   gösteriliyor, ikisi de `.gitignore`'da. Anahtar bulunamazsa release derlemesi debug
   imzasına düşüyor — temiz klonda derleme kırılmasın diye.

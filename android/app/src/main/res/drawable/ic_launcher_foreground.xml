@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Uygulama ikonunun ön planı (T18). Uyarlanabilir ikon: 108x108 tuval,
-  güvenli alan ortadaki 72x72 (18..90). minSdk 26 olduğu için her cihazda
-  bu kullanılır.
-
-  Araba silueti (bildirim simgesiyle aynı dil) + sağ altta onay rozeti.
-  Rozet beyaz daire içinde koyu onay işareti; araba ile çakışmıyor.
+  Uygulama ikonu ön planı (T18). 108x108 tuval, güvenli alan ortadaki 72x72
+  (18..90). Geometrik işaret: açık halka (bakım döngüsü / gösterge) ve
+  içinde onay işareti. Ayrıntılı çizim yok; 48 dp'de de okunuyor.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -13,32 +10,18 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- 24 birimlik araba çizimi güvenli alanın üst kısmına ölçekleniyor. -->
-    <group
-        android:scaleX="2.35"
-        android:scaleY="2.35"
-        android:translateX="25.8"
-        android:translateY="13.7">
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M5.6,11 L7.7,6.5 C8,5.9 8.5,5.5 9.1,5.5 H14.9 C15.5,5.5 16,5.9 16.3,6.5 L18.4,11 H20 C21.1,11 22,11.9 22,13 V16.4 C22,17 21.6,17.4 21,17.4 H3 C2.4,17.4 2,17 2,16.4 V13 C2,11.9 2.9,11 4,11 Z" />
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M6.6,16 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0 Z" />
-        <path
-            android:fillColor="#FFFFFFFF"
-            android:pathData="M17.4,16 m-2.2,0 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0 Z" />
-    </group>
+    <!-- Altı açık halka: merkez (54,54), yarıçap 27, boşluk aşağıda. -->
+    <path
+        android:pathData="M41.3,77.8 A27,27 0 1 1 66.7,77.8"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="9"
+        android:strokeLineCap="round" />
 
-    <!-- Onay rozeti: beyaz daire. -->
+    <!-- Onay işareti. -->
     <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M72,75 m-15,0 a15,15 0 1,0 30,0 a15,15 0 1,0 -30,0 Z" />
-    <!-- İçindeki onay işareti arka plan rengiyle. -->
-    <path
-        android:pathData="M64.5,75.5 L70,81 L80,69"
-        android:strokeColor="#FF141A24"
-        android:strokeWidth="5"
+        android:pathData="M41,55.5 L49,63.5 L66,43.5"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="9"
         android:strokeLineCap="round"
         android:strokeLineJoin="round" />
 </vector>
