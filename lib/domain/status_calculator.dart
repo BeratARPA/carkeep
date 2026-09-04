@@ -150,9 +150,21 @@ abstract final class StatusCalculator {
     // §2.1: vade = son yapılıştan (null ise kurulum günü − 1) **sonraki ilk**
     // tarih. `startsFromInstall`ın mevsimselde rolü tanımlı değil; spec'in
     // koşulsuz ifadesi uygulanıyor (ILERLEME notu).
-    final DateTime after =
-        tryParseDay(item.lastDoneDay) ?? addDays(installDay, -1);
-    final DateTime due = nextSeasonalDate(item.schedule.dates, after);
+    final DateTime? lastDone = tryParseDay(item.lastDoneDay);
+    final DateTime after = lastDone ?? addDays(installDay, -1);
+    DateTime due = nextSeasonalDate(item.schedule.dates, after);
+
+    // K-29: mevsimsel işi tarihinden birkaç gün önce yapmak normaldir (20 Eki'de
+    // kışlık lastik). Ham kural o tarihi hâlâ "yaklaşan" gösterip kullanıcıyı
+    // yaptığı işe tekrar çağırıyordu. Son yapılış, vadeye `kSoonSeasonalDays`
+    // içindeyse o tarih yapılmış sayılır ve sıradaki tarihe geçilir.
+    //
+    // Yalnız gerçek son yapılışta: kurulum günü yedeği bir iş yapıldığı anlamına
+    // gelmez (25 Eki'de kurulan uygulama 1 Kas'ı atlamamalı).
+    if (lastDone != null && daysBetween(lastDone, due) <= kSoonSeasonalDays) {
+      due = nextSeasonalDate(item.schedule.dates, due);
+    }
+
     final int daysLeft = daysBetween(today, due);
 
     return _fromDays(

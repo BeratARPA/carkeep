@@ -55,11 +55,16 @@ CheckItem item({
   );
 }
 
-ItemStatus status(CheckItem i, {DateTime? today, int? currentKm}) {
+ItemStatus status(
+  CheckItem i, {
+  DateTime? today,
+  int? currentKm,
+  DateTime? installDay,
+}) {
   return StatusCalculator.compute(
     item: i,
     currentKm: currentKm ?? kCurrentKm,
-    installDay: kInstallDay,
+    installDay: installDay ?? kInstallDay,
     today: today ?? kToday,
   );
 }
@@ -330,14 +335,77 @@ void main() {
       expect(s.longText, '1 Kas. Her yıl 1 Kas ve 1 Nis.');
     });
 
-    test('#24 son 2025-10-20 → overdue, vade 2025-11-01, daysLeft −306', () {
+    test('#24 son 2025-10-20 → overdue, vade 2026-04-01 (K-29)', () {
+      // 06 §1 satır 24 vade olarak 2025-11-01 ve −306 gün bekliyordu. K-29 ile
+      // değişti: 20 Eki'de yapılan iş 1 Kas 2025 değişimiydi; onu tekrar
+      // istemek yerine sıradaki tarihe (1 Nis 2026) geçiyoruz. Kaçırılan gerçek
+      // iş o.
       final ItemStatus s = status(
         item(schedule: seasonal(), lastDoneDay: '2025-10-20'),
       );
       expect(s.state, ItemState.overdue);
-      expect(s.dueDay, '2025-11-01');
-      expect(s.daysLeft, -306);
-      expect(s.shortText, '306 gün gecikti');
+      expect(s.dueDay, '2026-04-01');
+      expect(s.daysLeft, -155);
+      expect(s.shortText, '155 gün gecikti');
+    });
+
+    // ------------------------------------------------------------------ K-29
+
+    test('tarihinden 12 gün önce yapılırsa sıradaki tarihe geçer', () {
+      // 20 Eki'de kışlık lastik takıldı; vade 1 Kas değil, 1 Nis olmalı.
+      final ItemStatus s = status(
+        item(schedule: seasonal(), lastDoneDay: '2026-10-20'),
+      );
+      expect(s.dueDay, '2027-04-01');
+    });
+
+    test('eşik dahil: tam 14 gün önce', () {
+      final ItemStatus s = status(
+        item(schedule: seasonal(), lastDoneDay: '2026-10-18'),
+      );
+      expect(s.dueDay, '2027-04-01');
+    });
+
+    test('eşiğin dışında: 15 gün önce vadeyi ilerletmez', () {
+      final ItemStatus s = status(
+        item(schedule: seasonal(), lastDoneDay: '2026-10-17'),
+      );
+      expect(s.dueDay, '2026-11-01');
+    });
+
+    test('tarihin kendisinde yapılırsa değişmez', () {
+      // `nextSeasonalDate` zaten "sonraki"ni veriyor; K-29 tekrar atlamamalı.
+      final ItemStatus s = status(
+        item(schedule: seasonal(), lastDoneDay: '2026-11-01'),
+      );
+      expect(s.dueDay, '2027-04-01');
+    });
+
+    test('tarihten sonra yapılırsa değişmez', () {
+      final ItemStatus s = status(
+        item(schedule: seasonal(), lastDoneDay: '2026-11-02'),
+      );
+      expect(s.dueDay, '2027-04-01');
+    });
+
+    test("kurulum günü yedeği K-29'u tetiklemez", () {
+      // 25 Eki'de kurulan uygulama 1 Kas'ı "yapılmış" saymamalı.
+      final ItemStatus s = status(
+        item(schedule: seasonal(), startsFromInstall: true),
+        today: DateTime(2026, 10, 26),
+        installDay: DateTime(2026, 10, 25),
+      );
+      expect(s.dueDay, '2026-11-01');
+    });
+
+    test('tek tarihli maddede bir yıl sonraya geçer', () {
+      final ItemStatus s = status(
+        item(
+          schedule: Schedule.seasonal(const <SeasonalDate>[SeasonalDate(11, 1)]),
+          lastDoneDay: '2026-10-25',
+        ),
+      );
+      expect(s.dueDay, '2027-11-01');
     });
 
     test('#25 son 2026-04-05, today 2026-10-20 → soon, daysLeft 12', () {

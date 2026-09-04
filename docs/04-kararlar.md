@@ -170,3 +170,9 @@ onaylanmış kararlardır. Ayrıntılı bulgu listesi `docs/ILERLEME.md` → Not
 - Karar: Madde detayında, `verified != 'true'` ve `sourceNote` doluysa amber bir satır: `Kılavuzdan doğrula: <not>`. Uyarı (`warn`) satırının hemen altında; ölçüm bloğundan önce.
 - Gerekçe: Not zaten yazılmış ve tam olarak kullanıcının ihtiyaç duyduğu şeyi söylüyor ("Yaygın öneri 30.000 km; kılavuzu doğrula"). Aralığı değiştirecek yer Ayarlar; kararı verecek bilgi ise maddeyi açtığı yerde olmalı.
 - Sonuç: `CheckItem.needsVerification`, `item_detail_sheet._VerifyRow`, `strings_tr.detailVerifyPrefix`.
+
+## K-29 Mevsimsel işi tarihinden birkaç gün önce yapmak vadeyi ilerletir
+- Bağlam: 01-spec §2.1 mevsimsel vadeyi "son yapılıştan sonraki ilk tarih" diye tanımlıyor. Kışlık lastik 20 Eki'de takılırsa vade 1 Kas'ta kalıyor ve madde "12 gün kaldı" demeye devam ediyor; kullanıcı yaptığı işe tekrar çağrılıyor (denetim md. 13). Mevsimsel işler doğası gereği tarihinden önce yapılır — kimse ilk kar yağana kadar beklemez.
+- Karar: Son yapılış, hesaplanan vadeye `kSoonSeasonalDays` (14 gün) **veya daha yakınsa** o tarih yapılmış sayılır ve sıradaki mevsimsel tarihe geçilir. Yalnız gerçek son yapılışta; kurulum günü yedeğinde uygulanmaz (25 Eki'de kurulan uygulama 1 Kas'ı atlamış saymamalı).
+- Gerekçe: Eşik zaten "yaklaşan" eşiği — madde 14 gün kala kullanıcıya gösterilmeye başlıyor. Gösterilmeye başladıktan sonra yapılan iş, gösterilen iştir. 14 günden önce yapılmışsa muhtemelen başka bir sebeple yapılmıştır ve bir sonraki mevsim değişimi hâlâ duruyordur.
+- Sonuç: `StatusCalculator._seasonal`. **06 §1 satır 24 değişti**: son yapılış 2025-10-20 için vade artık 2025-11-01 (−306 gün) değil **2026-04-01** (−155 gün). Eski cevap kullanıcıya zaten yaptığı kasım değişimini gösteriyordu; yeni cevap gerçekten kaçırdığı nisan değişimini gösteriyor. Diğer mevsimsel satırlar (23, 25, 26, 27, 28) değişmedi.

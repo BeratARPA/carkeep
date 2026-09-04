@@ -44,7 +44,7 @@ Yeni açılan terminallerde geçerli olur. Android Studio kurulmadı (gerekmiyor
 | T15 Snapshot senkronu ve yaşam döngüsü | bitti | `feat(T15)` | 477 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T16 Hata/boş durumlar, metin turu | bitti | `feat(T16)` | 494 Dart + 72 Kotlin testi; cihazda doğrulandı |
 | T17 Cihaz testi düzeltmeleri | atlandı | | gerçek araba protokolünün sonuçlarına dayanıyor; sonuçlar gelince açılacak |
-| T18 Release | bitti | `feat(T18)` | 494 Dart + 72 Kotlin testi; **kontrol noktası: release APK cihaza kurulmadı** |
+| T18 Release | bitti | `feat(T18)` | 501 Dart + 72 Kotlin testi; release APK cihaza kuruldu ve çalışıyor |
 
 ## Cihaz testi
 
@@ -173,10 +173,8 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
     → **T15'te kapandı, K-27.** Motorun gecikmiş sayısı >0'dan 0'a düşünce iptal edilir.
 13. **Mevsimsel maddeyi erken yapmak vadeyi ilerletmiyor.** "Son yapılıştan sonraki ilk tarih"
     kuralı gereği 20 Eki'de kışlık lastik takılırsa vade hâlâ 1 Kas kalır ve madde
-    "2 gün kaldı" demeye devam eder. → **HÂLÂ AÇIK.** Kod 01-spec §2.1'i birebir
-    uyguluyor (`_seasonal`), yani erken yapmak vadeyi ilerletmiyor. Öneri: son yapılış
-    tarihi yaklaşan mevsimsel tarihe `kSoonSeasonalDays` (14 gün) içindeyse o tarih
-    yapılmış sayılsın. Karar senin.
+    "2 gün kaldı" demeye devam eder. → **Kapandı, K-29.** Son yapılış vadeye 14 gün veya
+    daha yakınsa o tarih yapılmış sayılıyor. 06 §1 satır 24'ün beklentisi değişti.
 14. **`verified` / `sourceNote` hiçbir yere gitmiyor.** Seed'de zorunlu, T03'te doğrulanıyor,
     ama DB şemasında sütunu yok ve hiçbir ekranda görünmüyor. README kullanıcıya ◐/❌
     maddeleri kılavuzdan doğrulamasını söylüyor, ama uygulama hangi maddenin ◐ olduğunu
@@ -665,19 +663,23 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
   bildirim metinleri) beklendiği gibi karartıldı.
 - **Boyut**: `app-release.apk` 56,4 MB (üç ABI birden), `app-arm64-v8a-release.apk` 19,7 MB,
   `app-armeabi-v7a-release.apk` 17,2 MB, `app-x86_64-release.apk` 21,0 MB.
-- **Kullanıcının verisi yedeklendi**: `~/carkeep-veri-yedegi-2026-09-04/carkeep.sqlite` (57 KB)
-  ve `carkeep_engine.xml`. Release APK farklı anahtarla imzalı olduğu için debug sürümünün
-  üstüne kurulamıyor; kurmak için önce kaldırmak, kaldırmak da veriyi silmek demek. Bu yüzden
-  release cihaza **kurulmadı**; karar kullanıcının.
-- **Açık kalan**: başlangıç süresi ölçümü (`am start -W`) release kurulmadığı için yapılmadı.
+- **Release cihaza kuruldu** (kullanıcı onayıyla). Release farklı anahtarla imzalı olduğu
+  için debug'ın üstüne kurulamıyor; debug kaldırıldı, veri silindi. Öncesinde yedek alındı
+  (`~/carkeep-veri-yedegi-son/carkeep.sqlite`), ama release `run-as`a kapalı olduğu için geri
+  yüklenemiyor — kurulum sihirbazı aynı değerlerle elden dolduruldu (Fiat Egea 1.6 MultiJet
+  2019, 150.386 km, Uconnect NM000000000N00000), iki izin `pm grant` ile, pil muafiyeti
+  `deviceidle whitelist +` ile geri verildi.
+- **Release doğrulaması, cihazda**: `dumpsys package` → `BtReceiver` her iki ACL eylemine
+  kayıtlı (R8 sınıf adını korumuş, 06 §4 komutu); soğuk açılış `am start -W` → **TotalTime
+  657 ms**; açılışta `daily check scheduled in 836 min` (05:03 + 836 = 19:00).
+- **Kurulum sırasında dışarıdan verilen izin ekranda hemen görünmüyor.** `SetupState` kendi
+  izin kopyasını tutuyor; kullanıcı sihirbazın ortasında Android ayarlarından izni verirse
+  satır "Verilmedi" kalıyor, "İzin ver"e basınca (sistem diyaloğu açılmadan) tazeleniyor.
+  Normal akışta görünmez; kayıt için.
 
 ## Bilinen sorunlar
 Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
 
-- **Mevsimsel maddeyi erken yapmak vadeyi ilerletmiyor** (denetim md. 13, hâlâ açık).
-  20 Eki'de kışlık lastik takılırsa vade 1 Kas'ta kalıyor ve madde "12 gün kaldı" demeye
-  devam ediyor. Kod 01-spec §2.1'i birebir uyguluyor; karar verilmedi. Tek etkilenen madde
-  şablonda `winter_tires`.
 - **Gerçek araba protokolü (06 §3) çalıştırılmadı.** Motor debug simülasyonuyla uçtan uca
   doğrulandı (T12–T15 cihaz notları), ama gerçek `ACL_DISCONNECTED` yayınıyla, gerçek Doze
   koşullarında ve arka arkaya üç günde hiç denenmedi. T17 bu sonuçlara göre açılacak.
