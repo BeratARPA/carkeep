@@ -95,6 +95,20 @@ TemplateMerge testleri: T03 kabul kriterleri.
 
 Her adımda `adb logcat -s CarKeep` çıktısı `docs/ILERLEME.md` "Cihaz testi" bölümüne özetlenir.
 
+### 3b. K-30 hareket doğrulaması ve K-31 şablon silme (cihaz)
+Ön koşul: yukarıdakiler + release APK kurulu.
+
+| Adım | Yap | Bekle |
+|---|---|---|
+| 12 | Ayarlar → Hatırlatma → "Hareket doğrulaması" aç. | Sistem izin diyaloğu çıkar; izin verilince anahtar açık kalır. Reddedilirse anahtar **kapalı** kalır ve "Hareket izni verilmedi" uyarısı çıkar. |
+| 13 | Play Hizmetleri olmayan bir cihazda aç (varsa). | Satır pasif, "Play Hizmetleri yok" yazar. |
+| 14 | Kural açıkken **arabaya binmeden** Bluetooth'a bağlan, 6 dk bekle, kop. | Bildirim **yok**. Tanı satırı: "hareket görülmedi, bildirim yok". `logcat`'te `no_motion`. |
+| 15 | Kural açıkken gerçekten 6 dk sür, kontağı kapat. | Bildirim var. `logcat`'te `IN_VEHICLE transition at ...` satırı kopmadan önce görünmüş olmalı. |
+| 16 | Ayarlar → Uygulama izinleri → "Fiziksel aktivite" iznini geri al, sonra 6 dk sür ve kop. | Bildirim **yine gelir** (abonelik düştüğü için kontrol atlanır). Emniyet kilidi budur. |
+| 17 | Telefonu yeniden başlat, uygulamayı bir kez aç, sür ve kop. | Bildirim var; abonelik `resume`'da yeniden kurulmuş olmalı. |
+| 18 | Ayarlar → herhangi bir şablon maddesi → "Sil". | Onay metni "şablon güncellense de geri gelmez" diyor; silinince madde listeden ve Kontroller'den kayboluyor. |
+| 19 | Uygulamayı kapat/aç. | Silinen madde geri gelmiyor. |
+
 ## 4. adb komutları
 ```
 # receiver kayıtlı mı

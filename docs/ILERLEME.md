@@ -698,6 +698,23 @@ bulgunun 5'i doğrulandı, 5'i elendi. Hepsi kapatıldı:
   güncellendi, K-29 vakaları için 29–36 satırları eklendi, testler bu numaralarla eşleştirildi.
 - **`docs/01-spec.md` §2.1** hâlâ koşulsuz "sonraki ilk tarih" diyordu; sapma notu eklendi.
 
+### K-30 / K-31 (ticket dışı, kullanıcı isteği)
+- **K-31 şablon maddesi silme.** K-07 silmeyi yasaklıyordu çünkü şablon yükseltmesi silineni
+  geri ekliyordu (`TemplateMerge` "DB'de yok = yeni madde" sayıyor). Silinen `templateKey`
+  artık `settings.deleted_template_keys` içinde; yükseltme birleştirmeden önce onları
+  seed'den düşüyor. Testi mutasyonla doğrulandı: filtre kaldırılınca test kırmızı.
+- Aynı gerekçeyle konmuş **ölçüm tipi kilidi** de kalktı (01-spec §3.7 güncellendi): madde
+  tamamen silinip elle yeniden eklenebildiği için kilit yalnız sürtünme ekliyordu.
+- **K-30 hareket doğrulaması.** İlk Play Services bağımlılığı; sürüm APK'sına maliyeti
+  ölçüldü: arm64 20.618.620 → 20.883.177 bayt (**+265 KB**), R8 kullanılmayan her şeyi
+  atıyor. `mapping.txt` `ActivityTransitionRequest/Result/Event` ve
+  `ActivityRecognitionClient`'ın korunduğunu gösteriyor (`DetectedActivity` yok, çünkü
+  yalnız sabit `IN_VEHICLE` kullanılıyor ve derleme sırasında gömülüyor).
+- Testler ilk turda **üretim hatası** buldu: yeni kanal metotları eksik olduğunda
+  `PermissionsNotifier.refresh()` tümüyle düşüyor ve Bluetooth/bildirim şeritleri
+  kayboluyordu. Hareket okumaları artık en sonda ve ayrı `try` içinde.
+- Cihazda hiç denenmedi. Adımlar `06 §3b` (12–19).
+
 ## Bilinen sorunlar
 Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
 
