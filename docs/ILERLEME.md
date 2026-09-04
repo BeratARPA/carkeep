@@ -134,8 +134,8 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 3. **Yedek (sürüşsüz) bildirim, grace penceresini açıyor** (01-spec §7.2 + 07 §5).
    `DailyCheckWorker` `last_notified_at = now` yazıyor. Kullanıcı 19:00 bildirimini alıp
    `graceMinutes` (2 dk) içinde arabaya binerse `ACL_CONNECTED` bunu "hızlı geri bağlanma"
-   sanır: bildirimi iptal eder ve `last_notified_day`'i geri alır. → **Karar gerekiyor**
-   (öneri: yedek bildirim `last_notified_at` yazmasın, yalnız `last_notified_day` yazsın).
+   sanır: bildirimi iptal eder ve `last_notified_day`'i geri alır.
+   → **T14'te kapandı, K-20.** Yedek bildirim `last_notified_at` yazmıyor.
 4. **Bildirim izni yokken motor bildirim basılmış gibi davranıyor** (07 §5 + §4).
    `showOverdue` izin yoksa sessizce `return` ediyor, ama `onDisconnected` ardından
    `last_notified_day/at` yazıyor ve `trip.notified = true` diyor. İzin sonradan verilirse
@@ -143,8 +143,7 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 5. **"Tarih/km düzelt" bir kayıt silinince sessizce yok oluyor** (01-spec §3.4 + §3.6).
    Düzeltme log üretmiyor; kayıt silme `last_done_*`'ı yalnız loglardan yeniden hesaplıyor.
    Kullanıcı trigeri düzeltir, sonra ilgisiz bir kaydı silerse düzeltme kaybolur.
-   → **Karar gerekiyor** (öneri: düzeltme de bir "düzeltme" satırı yazsın ya da
-   `last_done_*` yeniden hesabı yalnız silinen log en son log ise yapılsın).
+   → **T10'da kapandı, K-23.** Düzeltme `kind='fix'` ile bir kayıt satırı yazıyor.
 
 #### Boşluk — kod yazmadan önce bir değer seçmek gerekiyor
 6. **Aralık metni kuralı yok** (01-spec §2.4). Sadece örnek listesi var. Şablonda geçen
@@ -156,17 +155,17 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
    formül var ("bağlayıcı oran en negatif"). Gün ve km maddeleri aynı listede karışık;
    ortak ölçü hiçbir yerde yok. 06 §1 "normalize km" diyor ama tanımlamıyor; mockup üçüncü
    bir cevap veriyor (`kmLeft/100`) ve o da §2.5'in gecikmiş kuralıyla çelişiyor.
-   → **Karar gerekiyor** (öneri: her üç bölümde de tek anahtar = bağlayıcı oran
-   `kalan / aralık`, artan sıralama; gecikmiş için spec'in kuralına birebir uyar).
+   → **T07'de kapandı, K-17; T07 cihaz testinden sonra K-22 ile düzeltildi.** Gecikmişte
+   bağlayıcı oran, Yaklaşan/Zamanında'da "kaç gün sonra".
 8. **`seasonal` maddenin oranı hesaplanamıyor.** Bağlayıcı oran bölen ister; mevsimsel
    maddenin `intervalDays`i yok. → 7. maddeyle birlikte karar (öneri: bölen = 365).
 9. **1460 gün preset listesinde yok** (01-spec §3.7). Şablonda `battery_age` ve `aux_belt`
-   1460 gün. Preset dışı bir değerde −/+ ne yapar tanımsız. → **Karar gerekiyor**
-   (öneri: preset listesine 1460 eklensin; ayrıca adımlayıcı preset dışı değerden en yakın
-   preset'e atlasın).
+   1460 gün. Preset dışı bir değerde −/+ ne yapar tanımsız.
+   → **T11'de kapandı, K-19.** 1460 preset listesine eklendi; adımlayıcı preset dışı değerde
+   o yöndeki en yakın durağa gidiyor, durak yoksa değeri değiştirmiyor.
 10. **`unknown` maddenin ana ekran alt satırı tanımsız** (01-spec §3.2). "Son: …" metni
-    son yapılış yokken ne yazacak? Mockup'ta bu durum hiç yok. → **Karar gerekiyor**
-    (öneri: `Son yapılış girilmedi`).
+    son yapılış yokken ne yazacak? Mockup'ta bu durum hiç yok.
+    → **T07'de kapandı, K-18.** `Son yapılış girilmedi`.
 11. **`both` maddede "yaklaşan" eşiği hangi boyutun eşiği** (§2.3 md.3) yazmıyor.
     → Bağlayıcı boyutun eşiği kullanılacak (§2.2 ile tutarlı tek okuma).
 12. **Kayıt sonrası tepsideki bildirim ne olacak** tanımsız. Kullanıcı gecikmiş maddeleri
@@ -174,8 +173,10 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
     → **T15'te kapandı, K-27.** Motorun gecikmiş sayısı >0'dan 0'a düşünce iptal edilir.
 13. **Mevsimsel maddeyi erken yapmak vadeyi ilerletmiyor.** "Son yapılıştan sonraki ilk tarih"
     kuralı gereği 20 Eki'de kışlık lastik takılırsa vade hâlâ 1 Kas kalır ve madde
-    "2 gün kaldı" demeye devam eder. → **Karar gerekiyor** (öneri: son yapılış tarihi
-    yaklaşan mevsimsel tarihe `soonSeasonalDays` içindeyse o tarih yapılmış sayılsın).
+    "2 gün kaldı" demeye devam eder. → **HÂLÂ AÇIK.** Kod 01-spec §2.1'i birebir
+    uyguluyor (`_seasonal`), yani erken yapmak vadeyi ilerletmiyor. Öneri: son yapılış
+    tarihi yaklaşan mevsimsel tarihe `kSoonSeasonalDays` (14 gün) içindeyse o tarih
+    yapılmış sayılsın. Karar senin.
 14. **`verified` / `sourceNote` hiçbir yere gitmiyor.** Seed'de zorunlu, T03'te doğrulanıyor,
     ama DB şemasında sütunu yok ve hiçbir ekranda görünmüyor. README kullanıcıya ◐/❌
     maddeleri kılavuzdan doğrulamasını söylüyor, ama uygulama hangi maddenin ◐ olduğunu
@@ -673,6 +674,10 @@ Aşağıdakiler ticket dışı; hiçbiri kendi başına düzeltilmedi. Karar ger
 ## Bilinen sorunlar
 Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
 
+- **Mevsimsel maddeyi erken yapmak vadeyi ilerletmiyor** (denetim md. 13, hâlâ açık).
+  20 Eki'de kışlık lastik takılırsa vade 1 Kas'ta kalıyor ve madde "12 gün kaldı" demeye
+  devam ediyor. Kod 01-spec §2.1'i birebir uyguluyor; karar verilmedi. Tek etkilenen madde
+  şablonda `winter_tires`.
 - **Gerçek araba protokolü (06 §3) çalıştırılmadı.** Motor debug simülasyonuyla uçtan uca
   doğrulandı (T12–T15 cihaz notları), ama gerçek `ACL_DISCONNECTED` yayınıyla, gerçek Doze
   koşullarında ve arka arkaya üç günde hiç denenmedi. T17 bu sonuçlara göre açılacak.
