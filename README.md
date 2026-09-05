@@ -77,14 +77,17 @@ Uygulamayı **"Durmaya zorla"** yaparsan Android receiver'ı kapatır; bir kez a
 ## Geliştirme
 
 ```bash
-flutter pub get
-dart run build_runner build --delete-conflicting-outputs   # yalnız Drift
+flutter pub get                                             # android/local.properties'i de üretir
+dart run build_runner build --delete-conflicting-outputs    # yalnız Drift
 flutter analyze
 flutter test                                                # 516 test
 cd android && ./gradlew :app:testDebugUnitTest              # 88 JVM testi
 flutter run                                                 # fiziksel cihaz; emülatörde Bluetooth yok
 flutter build apk --release --split-per-abi
 ```
+
+Üretilen Drift dosyaları (`*.g.dart`) depoda: temiz bir klonda `build_runner` çalıştırmadan
+`flutter test` yeşil geçer. Şemayı değiştirirsen tekrar üretmen gerekir.
 
 İmzalama anahtarı repo dışında: `android/key.properties` yolunu gösterir ve `.gitignore`'dadır.
 Anahtar yoksa release derlemesi debug imzasıyla çıkar, yine çalışır.
