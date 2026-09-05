@@ -158,6 +158,23 @@ class _BluetoothSection extends ConsumerWidget {
 
 // ------------------------------------------------------------- hatırlatma
 
+/// K-35: kural açıkken doğrulamanın gerçekten çalışıp çalışmadığını söyler.
+/// Bu olmadan kullanıcının "çalışıyor mu" sorusuna bakabileceği bir yer yoktu;
+/// motor sessizce doğrulamayı atlıyor olabilirdi ve fark edilmezdi.
+String _motionStatus(WidgetRef ref, PermissionState perms) {
+  if (!perms.motionActive) {
+    return S.motionStatusInactive;
+  }
+  final DateTime? at = perms.motionLastAt;
+  if (at == null) {
+    return S.motionStatusNoneYet;
+  }
+  final int refYear = ref.read(todayProvider).year;
+  return S.motionStatusSeen(
+    '${formatDate(at, refYear: refYear)} ${formatTime(at)}',
+  );
+}
+
 /// K-30 hareket doğrulaması. Açmak izin + abonelik gerektirdiği için ayrı
 /// widget: kural yalnız abonelik gerçekten kurulunca yazılır.
 class _MotionRow extends ConsumerWidget {
@@ -177,9 +194,11 @@ class _MotionRow extends ConsumerWidget {
     return SettingsSwitchRow(
       key: const Key('rule_require_motion'),
       title: S.ruleRequireMotion,
-      help: available
-          ? S.ruleRequireMotionHelp
-          : S.ruleRequireMotionUnavailable,
+      help: !available
+          ? S.ruleRequireMotionUnavailable
+          : rules.requireMotion
+          ? '${S.ruleRequireMotionHelp}\n${_motionStatus(ref, perms)}'
+          : S.ruleRequireMotionHelp,
       value: rules.requireMotion && available,
       onChanged: !available
           ? null

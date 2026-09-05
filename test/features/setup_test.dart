@@ -128,6 +128,13 @@ class FakeBridge extends PlatformBridge {
   @override
   Future<bool> isMotionActive() async => motionActive;
 
+  /// K-35: motorun gördüğü son araç hareketi.
+  DateTime? motionLastAt;
+
+  @override
+  Future<({bool active, DateTime? lastAt})> getMotionState() async =>
+      (active: motionActive, lastAt: motionLastAt);
+
   @override
   Future<bool> shouldShowPermissionRationale(String permission) async =>
       rationale;

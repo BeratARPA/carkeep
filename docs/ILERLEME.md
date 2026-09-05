@@ -782,6 +782,16 @@ hesaplanmış, karar (`no_overdue`) doğru. Motor arabada çalışıyor.
 
 Kullanıcı ayrıca kendisi `minTripMinutes` 5 → 3 yapmış ve **hareket doğrulamasını açmış**.
 
+**Düzeltme (bağımsız inceleme):** "not `no_overdue` ⇒ hareket görüldü" çıkarımı **geçersiz**.
+Kapı `requireMotion && active && !seenInTrip()` üçlü bir VE; `no_overdue`'ya varmak yalnız bu
+birleşimin yanlış olduğunu söyler. Dört durum aynı notu üretir: (a) doğrulama geçti, (b) abonelik
+bayrağı false, (c) boot damgası tutmadı, (d) snapshot'ta kural henüz false. Üstelik 4 Eyl'de
+`pm revoke` ile izin geri alındığı için o günkü abonelik zaten düşmüştü — kullanıcının anahtarı
+kapalı bulmasının sebebi de bu. Kural 5 Eyl ~14:55'te açıldığında `MotionTracker.start` çağrıldı
+ama bayrağı yazan geri çağırma **asenkron**. Yani IN_VEHICLE'ın geldiği **muhtemel, kanıtlanmış
+değil**. K-35 bu belirsizliği kalıcı olarak kapatıyor: durum ve son hareket zamanı artık
+Ayarlar'da yazıyor.
+
 **Açık kalan:** kural kopma anında açık mıydı? Not `no_overdue`; hareket kontrolü sıralamada
 ondan **önce** olduğu için, kural o an açıksa `seenInTrip()` **true** dönmüş demektir — yani
 Play Services bu cihazda gerçekten `IN_VEHICLE` üretiyor. Kural sürüşten sonra açıldıysa kontrol
@@ -803,9 +813,11 @@ Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
 - **Bildirimdeki "Aç" düğmesi bildirimi tepsiden düşürmüyor**; gövdeye dokunmak düşürüyor
   (`setAutoCancel` yalnız içerik niyetinde çalışıyor). K-25'in iptal-önce-bas düzeltmesi
   sonucu zararsız kıldı.
-- **`onlyOverdue=false` modunda** ("Kontroller zamanında" bildirimi) K-27 gecikmiş sayısı
-  sıfır olduğu için uygulamayı açınca bildirimi iptal ediyor. Mod zaten motorun çalıştığını
-  görmek için; kayıt için not.
+- ~~`onlyOverdue=false` modunda K-27 bildirimi iptal ediyor~~ — **yanlışmış** (K-35 incelemesi).
+  `_cancelIfNothingOverdue` yalnız sayı **>0'dan 0'a düştüğünde** iptal ediyor; hiçbir şey
+  gecikmemişken sayı hep 0, `previous` null ya da 0 olduğu için iptal hiç çağrılmıyor. Yani
+  "Kontroller zamanında" bildirimi uygulamayı açınca silinmiyor; o mod motorun çalıştığını
+  görmek için güvenle kullanılabilir.
 - **Hızlı geri bağlanma düzeltmesi drain'den sonra ulaşamıyor.** Kotlin son trip olayını
   yerinde düzeltiyor; Dart o olayı çoktan `trips`'e yazdıysa satır eski hâliyle kalıyor.
   Pencere birkaç saniye (kopma ile geri bağlanma arasında uygulamayı açmak gerekir) ve

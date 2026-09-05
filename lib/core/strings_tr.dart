@@ -332,8 +332,12 @@ abstract final class S {
   // --------------------------------------------------------- hatırlatma
   static const String settingsSectionRules = 'Hatırlatma';
   static const String ruleOnlyOverdue = 'Sadece gecikmiş varsa';
+  /// K-35: eski metin "yaklaşanlar da bildirilir" diyordu ama motor yalnız
+  /// gecikmişleri listeliyor (01-spec §7.1); kapalıyken gecikmiş yoksa
+  /// "Kontroller zamanında" bildirimi gelir. Metin davranışa uyduruldu.
   static const String ruleOnlyOverdueHelp =
-      'Kapatırsan yaklaşanlar da bildirilir.';
+      'Kapatırsan gecikmiş bir şey olmasa da her sürüşten sonra bildirim '
+      'gelir. Motorun çalıştığını görmek için.';
   static const String ruleOncePerDay = 'Günde en fazla bir';
   static const String ruleOncePerDayHelp =
       'Aynı gün ikinci sürüşte tekrar bildirmez.';
@@ -363,6 +367,22 @@ abstract final class S {
   /// İzin verilmedi ya da abonelik kurulamadı.
   static const String ruleRequireMotionNoPermission =
       'Hareket izni verilmedi; doğrulama açılamadı.';
+
+  // K-35: doğrulamanın gerçekten çalışıp çalışmadığı Ayarlar'da görünür.
+  // Kural açıkken bu satır anahtarın altına eklenir.
+
+  /// Abonelik kurulu ve telefon araç hareketi görmüş.
+  static String motionStatusSeen(String when) =>
+      'Çalışıyor. Son araç hareketi: $when.';
+
+  /// Abonelik kurulu ama henüz hiç araç hareketi görülmemiş.
+  static const String motionStatusNoneYet =
+      'Çalışıyor. Henüz araç hareketi görülmedi.';
+
+  /// Kural açık ama abonelik düşmüş: motor doğrulamayı atlar, bildirim gelir.
+  static const String motionStatusInactive =
+      'Abonelik düşmüş; doğrulama şu an atlanıyor, bildirimler yine geliyor. '
+      'Uygulamayı bir kez açman yeniden kurar.';
   static const String ruleFallbackOff = 'Kapalı';
   static const String unitMinutesShort = 'dk';
   static const String unitDaysSuffix = 'gün sonra';

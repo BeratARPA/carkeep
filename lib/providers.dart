@@ -157,6 +157,7 @@ class PermissionState {
     this.motionAvailable = false,
     this.motionPermission = false,
     this.motionActive = false,
+    this.motionLastAt,
   });
 
   static const PermissionState unknown = PermissionState(
@@ -187,6 +188,9 @@ class PermissionState {
   final bool motionPermission;
   final bool motionActive;
 
+  /// K-35: motorun gördüğü son araç hareketi; hiç görülmediyse null.
+  final DateTime? motionLastAt;
+
   PermissionState copyWith({
     bool? bluetooth,
     bool? notification,
@@ -198,6 +202,7 @@ class PermissionState {
     bool? motionAvailable,
     bool? motionPermission,
     bool? motionActive,
+    DateTime? motionLastAt,
   }) {
     return PermissionState(
       bluetooth: bluetooth ?? this.bluetooth,
@@ -210,6 +215,7 @@ class PermissionState {
       motionAvailable: motionAvailable ?? this.motionAvailable,
       motionPermission: motionPermission ?? this.motionPermission,
       motionActive: motionActive ?? this.motionActive,
+      motionLastAt: motionLastAt ?? this.motionLastAt,
     );
   }
 }
@@ -219,11 +225,13 @@ class _MotionPermissions {
     required this.available,
     required this.permission,
     required this.active,
+    required this.lastAt,
   });
 
   final bool available;
   final bool permission;
   final bool active;
+  final DateTime? lastAt;
 }
 
 class PermissionsNotifier extends Notifier<PermissionState> {
@@ -262,6 +270,7 @@ class PermissionsNotifier extends Notifier<PermissionState> {
         motionAvailable: state.motionAvailable,
         motionPermission: state.motionPermission,
         motionActive: state.motionActive,
+        motionLastAt: state.motionLastAt,
       );
       if (!_disposed) {
         state = next;
@@ -277,23 +286,28 @@ class PermissionsNotifier extends Notifier<PermissionState> {
         motionAvailable: motion.available,
         motionPermission: motion.permission,
         motionActive: motion.active,
+        motionLastAt: motion.lastAt,
       );
     }
   }
 
-  /// K-30 üçlüsü; kanal metodu yoksa hepsi false.
+  /// K-30/K-35 dörtlüsü; kanal metodu yoksa hepsi boş.
   Future<_MotionPermissions> _readMotion(PlatformBridge bridge) async {
     try {
+      final ({bool active, DateTime? lastAt}) motion =
+          await bridge.getMotionState();
       return _MotionPermissions(
         available: await bridge.isMotionAvailable(),
         permission: await bridge.hasMotionPermission(),
-        active: await bridge.isMotionActive(),
+        active: motion.active,
+        lastAt: motion.lastAt,
       );
     } on Object {
       return const _MotionPermissions(
         available: false,
         permission: false,
         active: false,
+        lastAt: null,
       );
     }
   }

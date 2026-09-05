@@ -287,6 +287,23 @@ class PlatformBridge {
   Future<bool> isMotionActive() async =>
       await channel.invokeMethod<bool>('isMotionActive') ?? false;
 
+  /// K-35: doğrulama gerçekten çalışıyor mu ve telefon en son ne zaman araç
+  /// hareketi gördü. `(active, lastInVehicleAt)`; hiç görülmediyse tarih null.
+  Future<({bool active, DateTime? lastAt})> getMotionState() async {
+    final Map<Object?, Object?>? raw = await channel
+        .invokeMethod<Map<Object?, Object?>>('getMotionState');
+    if (raw == null) {
+      return (active: false, lastAt: null);
+    }
+    final Object? at = raw['lastInVehicleAt'];
+    return (
+      active: raw['active'] == true,
+      lastAt: at is num
+          ? DateTime.fromMillisecondsSinceEpoch(at.toInt())
+          : null,
+    );
+  }
+
   Future<bool> areNotificationsEnabled() async =>
       await channel.invokeMethod<bool>('areNotificationsEnabled') ?? true;
 

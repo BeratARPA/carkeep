@@ -124,6 +124,18 @@ class MainActivity : FlutterActivity() {
 
             "isMotionActive" -> result.success(MotionTracker.isActive(this))
 
+            /**
+             * K-35: Ayarlar'daki tani satiri icin. `active` **karar anindaki**
+             * gercek durum (bayrak + izin + boot damgasi); `lastInVehicleAt`
+             * motorun gordugu son arac hareketi, hic gorulmediyse null.
+             */
+            "getMotionState" -> result.success(
+                mapOf(
+                    "active" to MotionTracker.isActive(this),
+                    "lastInVehicleAt" to prefs.lastInVehicleAt.takeIf { it > 0 },
+                )
+            )
+
             // Adaptor kapaliyken `getBondedDevices` bos liste doner; cihaz
             // secici "eslesmis cihaz yok" yerine "Bluetooth kapali" demeli.
             "isBluetoothEnabled" -> {

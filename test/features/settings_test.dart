@@ -736,6 +736,81 @@ void main() {
     await disposeTree(tester);
   });
 
+  testWidgets("K-35: kural açıkken son araç hareketi Ayarlar'da yazıyor", (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    await db.settingsDao.setRules(
+      const Rules().copyWith(requireMotion: true),
+    );
+    bridge.motionAvailable = true;
+    bridge.motionPermission = true;
+    bridge.motionActive = true;
+    bridge.motionLastAt = DateTime(2026, 9, 5, 15, 12);
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    expect(
+      find.textContaining(S.motionStatusSeen('5 Eyl 15:12')),
+      findsOneWidget,
+    );
+
+    await disposeTree(tester);
+  });
+
+  testWidgets('K-35: hareket hiç görülmediyse öyle yazıyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    await db.settingsDao.setRules(
+      const Rules().copyWith(requireMotion: true),
+    );
+    bridge.motionAvailable = true;
+    bridge.motionPermission = true;
+    bridge.motionActive = true;
+    bridge.motionLastAt = null;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    expect(find.textContaining(S.motionStatusNoneYet), findsOneWidget);
+
+    await disposeTree(tester);
+  });
+
+  testWidgets('K-35: abonelik düşmüşse kullanıcı bunu görüyor', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    // Kural açık ama abonelik yok: motor doğrulamayı atlıyor. Sessiz kalırsa
+    // kullanıcı filtrenin çalıştığını sanır.
+    await db.settingsDao.setRules(
+      const Rules().copyWith(requireMotion: true),
+    );
+    bridge.motionAvailable = true;
+    bridge.motionPermission = true;
+    bridge.motionActive = false;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    expect(find.textContaining(S.motionStatusInactive), findsOneWidget);
+
+    await disposeTree(tester);
+  });
+
+  testWidgets('K-35: kural kapalıyken durum satırı yok', (
+    WidgetTester tester,
+  ) async {
+    await seedVehicle();
+    bridge.motionAvailable = true;
+    await pumpSettings(tester);
+
+    await scrollTo(tester, find.byKey(const Key('rule_require_motion')));
+    expect(find.textContaining(S.motionStatusNoneYet), findsNothing);
+    expect(find.textContaining(S.motionStatusInactive), findsNothing);
+
+    await disposeTree(tester);
+  });
+
   testWidgets('yedek bildirim seçenekleri arasında geziyor', (
     WidgetTester tester,
   ) async {
