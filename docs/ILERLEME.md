@@ -792,7 +792,18 @@ ama bayrağı yazan geri çağırma **asenkron**. Yani IN_VEHICLE'ın geldiği *
 değil**. K-35 bu belirsizliği kalıcı olarak kapatıyor: durum ve son hareket zamanı artık
 Ayarlar'da yazıyor.
 
-**Açık kalan:** kural kopma anında açık mıydı? Not `no_overdue`; hareket kontrolü sıralamada
+**Kapandı (5 Eyl 18:02, K-35 kurulduktan sonra):** Ayarlar'daki yeni durum satırı
+**"Çalışıyor. Son araç hareketi: 5 Eyl 15:27"** diyor. `last_in_vehicle_at` dolu, yani
+**Activity Recognition bu telefonda gerçekten `IN_VEHICLE` üretiyor.** Çıkarımla değil, motorun
+sakladığı damgayı okuyarak. K-30'un en büyük bilinmezi kapandı.
+
+**Yeni not — geçiş gecikmesi:** Damga 15:27, kopma 15:25:09. Yani `IN_VEHICLE` **çıkış** geçişi
+kopmadan ~2 dk **sonra** gelmiş; karar anında görülen damga daha eski bir giriş geçişi olmalı.
+`seenInTrip()` penceresi kopma anında kapanıyor (`MOTION_LEAD_MINUTES` yalnız **öne** açıyor).
+Bir sürüşte giriş geçişi hiç gelmez ve yalnız çıkış gelir, o da kopmadan sonraya düşerse, kural
+açıkken bildirim yutulur. Kısa sürüşlerde mümkün; henüz görülmedi, kayıt için.
+
+**Eski açık soru (artık tarihsel):** kural kopma anında açık mıydı? Not `no_overdue`; hareket kontrolü sıralamada
 ondan **önce** olduğu için, kural o an açıksa `seenInTrip()` **true** dönmüş demektir — yani
 Play Services bu cihazda gerçekten `IN_VEHICLE` üretiyor. Kural sürüşten sonra açıldıysa kontrol
 hiç çalışmamıştır. İkisi de motor açısından doğru davranış; ayrım yalnız "IN_VEHICLE geliyor mu"
