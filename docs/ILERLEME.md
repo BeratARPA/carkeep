@@ -764,6 +764,34 @@ siliniyor, `_MotionRow` `await` sonrası `ref` okumuyor.
 mantık JVM testli ve yükseltme yolunda aynı dal cihazda tetiklendi), şablon maddesi
 silmenin cihazda denenmesi (kullanıcının gerçek verisini kalıcı olarak değiştirirdi).
 
+### Cihaz testi — 5 Eyl 2026, **gerçek araba, ilk kez** (06 §3)
+Kullanıcı arabayla sürdü. Ne olduğunu bilmediği için kayıtlardan çıkarıldı; `logcat` tamponu
+bir günde dolup taştığı için kalıcı kaynaklar kullanıldı.
+
+| Kaynak | Bulgu |
+|---|---|
+| `dumpsys bluetooth_manager` | Uconnect (`…FD:1A`) 15:10:07'de bağlandı, **15:25:09'da koptu** (HFP durum makinesi: Connected → Disconnecting → Disconnected) |
+| Uygulamanın tanı satırı | **"Son kopma: 5 Eyl 15:25, 15 dk sürüş, gecikmiş yoktu"** |
+| Kontroller | 16 madde zamanında, gecikmiş yok; km 150.386 → 150.511 |
+| Bildirim | Basılmadı — **doğru davranış**, `onlyOverdue` açık ve gecikmiş madde yoktu |
+| `uptime` | 8 gündür açık; yeniden başlatma yok, yani 4 Eyl'de kurulan hareket aboneliği sürüş sırasında geçerliydi |
+
+**Bu, `BtReceiver` → `ReminderEngine` → karar zincirinin gerçek bir `ACL_DISCONNECTED` ile ilk kez
+çalışması.** Kopma anı Bluetooth yığınının kaydıyla saniyesi saniyesine uyuşuyor, süre doğru
+hesaplanmış, karar (`no_overdue`) doğru. Motor arabada çalışıyor.
+
+Kullanıcı ayrıca kendisi `minTripMinutes` 5 → 3 yapmış ve **hareket doğrulamasını açmış**.
+
+**Açık kalan:** kural kopma anında açık mıydı? Not `no_overdue`; hareket kontrolü sıralamada
+ondan **önce** olduğu için, kural o an açıksa `seenInTrip()` **true** dönmüş demektir — yani
+Play Services bu cihazda gerçekten `IN_VEHICLE` üretiyor. Kural sürüşten sonra açıldıysa kontrol
+hiç çalışmamıştır. İkisi de motor açısından doğru davranış; ayrım yalnız "IN_VEHICLE geliyor mu"
+sorusunu kapatıp kapatmadığımızı belirliyor. Kullanıcıya soruldu.
+
+**Hâlâ görülmeyen:** gerçek bir bildirimin arabada çıkışı. Bunun için gecikmiş bir madde gerekiyor;
+şu an en yakın vade 11 Eyl. 06 §3'ün 2, 4, 6, 7. adımları (bildirim, `once_per_day`, `reconnect`,
+erteleme) bu yüzden hâlâ denenmedi.
+
 ## Bilinen sorunlar
 Kapanmamış maddeler; hiçbiri v1'i engellemiyor.
 
