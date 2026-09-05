@@ -1,8 +1,9 @@
-gradle-wrapper.jar
+# Gradle sarmalayicisi (gradlew, gradlew.bat, gradle-wrapper.jar) bilerek
+# takip ediliyor: Flutter sablonu bunlari yok sayiyor, o zaman temiz bir klonda
+# `./gradlew` bulunamiyor ve README'deki Kotlin testi komutu calismiyor.
+# Gradle'in kendi tavsiyesi de sarmalayiciyi depoya koymak yonunde.
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
